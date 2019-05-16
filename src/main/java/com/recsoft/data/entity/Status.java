@@ -1,4 +1,5 @@
 package com.recsoft.data.entity;
 
-public class Status {
+public enum Status  {
+    NONE, DONE, NOT_COMPLITED;
 }
