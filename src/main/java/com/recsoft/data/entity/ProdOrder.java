@@ -2,16 +2,16 @@ package com.recsoft.data.entity;
 
 import javax.persistence.*;
 
-@Entity
+@Embeddable
 @Table(name = "prod_order")
 public class ProdOrder {
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(table = "order", name = "id")
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "id")
     private Order order;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(table = "product", name = "id")
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "id")
     private Product product;
 
     private Integer count;

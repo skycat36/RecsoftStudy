@@ -4,6 +4,8 @@ import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import java.util.Set;
 
+//TODO доделать связи
+
 @Entity
 @Table(name = "product")
 public class Product {
@@ -17,14 +19,14 @@ public class Product {
     @NotBlank(message = "Description product cannot be empty")
     private String description;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @ManyToMany (mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<UserProdCom> userProdComs;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @ManyToMany (mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<ProdOrder> prodOrders;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(table = "category", name = "id")
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "id")
     private Category category;
 
     private Double price;
