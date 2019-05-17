@@ -43,26 +43,36 @@ public class User implements UserDetails {
     @NotBlank(message = "Email cannot be empty")
     private String email;
 
-    @ElementCollection(targetClass = Role.class, fetch = FetchType.EAGER)
-    @CollectionTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"))
-    @Enumerated(EnumType.STRING)
-    private Set<Role> roles;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id")
+    private Role role;
 
-    Boolean block;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Set<Order> orders;
+
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Set<UserProdCom> userProdComs;
+
+
+    private Boolean block;
 
     private String filename;
 
     public User() {
     }
 
-    public User(@NotBlank(message = "Name cannot be empty") String name, @NotBlank(message = "Family cannot be empty") String fam, @NotBlank(message = "Second name cannot be empty") String sec_name, Double cash, Integer rating, @Email(message = "Email is not correct") @NotBlank(message = "Email cannot be empty") String email, Set<Role> roles, Boolean block, String filename) {
+    public User(@NotBlank(message = "Name cannot be empty") String name, @NotBlank(message = "Family cannot be empty") String fam, @NotBlank(message = "Second name cannot be empty") String sec_name, @NotBlank(message = "Поле Логин не может быть пустым") @Length(max = 50, message = "Login too long") String login, @NotBlank(message = "Поле Пароль не может быть пустым") @Length(max = 50, message = "Password too long") String password, Double cash, Integer rating, @Email(message = "Email is not correct") @NotBlank(message = "Email cannot be empty") String email, Role role, Set<Order> orders, Set<UserProdCom> userProdComs, Boolean block, String filename) {
         this.name = name;
         this.fam = fam;
         this.sec_name = sec_name;
+        this.login = login;
+        this.password = password;
         this.cash = cash;
         this.rating = rating;
         this.email = email;
-        this.roles = roles;
+        this.role = role;
+        this.orders = orders;
+        this.userProdComs = userProdComs;
         this.block = block;
         this.filename = filename;
     }
@@ -123,14 +133,6 @@ public class User implements UserDetails {
         this.email = email;
     }
 
-    public Set<Role> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(Set<Role> roles) {
-        this.roles = roles;
-    }
-
     public Boolean getBlock() {
         return block;
     }
@@ -159,6 +161,30 @@ public class User implements UserDetails {
         this.password = password;
     }
 
+    public Set<UserProdCom> getUserProdComs() {
+        return userProdComs;
+    }
+
+    public void setUserProdComs(Set<UserProdCom> userProdComs) {
+        this.userProdComs = userProdComs;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public Set<Order> getOrders() {
+        return orders;
+    }
+
+    public void setOrders(Set<Order> orders) {
+        this.orders = orders;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return null;
@@ -166,7 +192,7 @@ public class User implements UserDetails {
 
     @Override
     public String getPassword() {
-        return getPassword();
+        return password;
     }
 
     @Override

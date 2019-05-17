@@ -7,11 +7,11 @@ import javax.persistence.*;
 public class UserProdCom {
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(table = "usr", name = "id")
     private User author;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "product_id")
+    @JoinColumn(table = "product", name = "id")
     private Product product;
 
     private String comment;

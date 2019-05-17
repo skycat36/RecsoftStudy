@@ -11,20 +11,19 @@ public class Order {
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "id")
     private User user;
 
-    @ElementCollection(targetClass = Status.class, fetch = FetchType.EAGER)
-    @CollectionTable(name = "status_order", joinColumns = @JoinColumn(name = "status_id"))
-    @Enumerated(EnumType.STRING)
-    private Set<Status> status;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id")
+    private Status status;
 
     private String adress;
 
     public Order() {
     }
 
-    public Order(User user, Set<Status> status, String adress) {
+    public Order(User user, Status status, String adress) {
         this.user = user;
         this.status = status;
         this.adress = adress;
@@ -46,11 +45,11 @@ public class Order {
         this.user = user;
     }
 
-    public Set<Status> getStatus() {
+    public Status getStatus() {
         return status;
     }
 
-    public void setStatus(Set<Status> status) {
+    public void setStatus(Status status) {
         this.status = status;
     }
 

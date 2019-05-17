@@ -4,8 +4,6 @@ import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import java.util.Set;
 
-//TODO Разобраться со связями в аннотациях
-
 @Entity
 @Table(name = "product")
 public class Product {
@@ -19,10 +17,15 @@ public class Product {
     @NotBlank(message = "Description product cannot be empty")
     private String description;
 
-    @ElementCollection(targetClass = Category.class, fetch = FetchType.EAGER)
-    @CollectionTable(name = "category_product", joinColumns = @JoinColumn(name = "category_id"))
-    @Enumerated(EnumType.STRING)
-    private Set<Category> category;
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Set<UserProdCom> userProdComs;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Set<ProdOrder> prodOrders;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(table = "category", name = "id")
+    private Category category;
 
     private Double price;
 
@@ -39,9 +42,11 @@ public class Product {
     public Product() {
     }
 
-    public Product(@NotBlank(message = "Name product cannot be empty") String name, @NotBlank(message = "Description product cannot be empty") String description, Set<Category> category, Double price, Integer discount, Integer like, Integer dislike, Integer count, String filename) {
+    public Product(@NotBlank(message = "Name product cannot be empty") String name, @NotBlank(message = "Description product cannot be empty") String description, Set<UserProdCom> userProdComs, Set<ProdOrder> prodOrders, Category category, Double price, Integer discount, Integer like, Integer dislike, Integer count, String filename) {
         this.name = name;
         this.description = description;
+        this.userProdComs = userProdComs;
+        this.prodOrders = prodOrders;
         this.category = category;
         this.price = price;
         this.discount = discount;
@@ -75,11 +80,27 @@ public class Product {
         this.description = description;
     }
 
-    public Set<Category> getCategory() {
+    public Set<UserProdCom> getUserProdComs() {
+        return userProdComs;
+    }
+
+    public void setUserProdComs(Set<UserProdCom> userProdComs) {
+        this.userProdComs = userProdComs;
+    }
+
+    public Set<ProdOrder> getProdOrders() {
+        return prodOrders;
+    }
+
+    public void setProdOrders(Set<ProdOrder> prodOrders) {
+        this.prodOrders = prodOrders;
+    }
+
+    public Category getCategory() {
         return category;
     }
 
-    public void setCategory(Set<Category> category) {
+    public void setCategory(Category category) {
         this.category = category;
     }
 
