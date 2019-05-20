@@ -10,12 +10,18 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @ManyToMany
+    @JoinTable (name="prod_order",
+            joinColumns=@JoinColumn (name="order_id"),
+            inverseJoinColumns=@JoinColumn(name="prod_id"))
+    private Set<Product> products;
+
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "id")
+    @JoinColumn(referencedColumnName = "id")
     private User user;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "id")
+    @JoinColumn(referencedColumnName = "id")
     private Status status;
 
     private String adress;
@@ -23,7 +29,8 @@ public class Order {
     public Order() {
     }
 
-    public Order(User user, Status status, String adress) {
+    public Order(Set<Product> products, User user, Status status, String adress) {
+        this.products = products;
         this.user = user;
         this.status = status;
         this.adress = adress;
@@ -35,6 +42,14 @@ public class Order {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Set<Product> getProducts() {
+        return products;
+    }
+
+    public void setProducts(Set<Product> products) {
+        this.products = products;
     }
 
     public User getUser() {

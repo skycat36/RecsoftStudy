@@ -19,14 +19,23 @@ public class Product {
     @NotBlank(message = "Description product cannot be empty")
     private String description;
 
-    @ManyToMany (mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private Set<UserProdCom> userProdComs;
+    @ManyToMany
+    @JoinTable (name="user_prod_com",
+                joinColumns=@JoinColumn (name="prod_id"),
+                inverseJoinColumns=@JoinColumn(name="user_id"))
+    private Set<User> users;
 
-    @ManyToMany (mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private Set<ProdOrder> prodOrders;
+    @ManyToMany
+    @JoinTable (name="prod_order",
+            joinColumns=@JoinColumn (name="prod_id"),
+            inverseJoinColumns=@JoinColumn(name="order_id"))
+    private Set<Order> orders;
+
+    //@ManyToMany (mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    //private Set<ProdOrder> prodOrders;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "id")
+    @JoinColumn(referencedColumnName = "id")
     private Category category;
 
     private Double price;
@@ -44,11 +53,11 @@ public class Product {
     public Product() {
     }
 
-    public Product(@NotBlank(message = "Name product cannot be empty") String name, @NotBlank(message = "Description product cannot be empty") String description, Set<UserProdCom> userProdComs, Set<ProdOrder> prodOrders, Category category, Double price, Integer discount, Integer like, Integer dislike, Integer count, String filename) {
+    public Product(@NotBlank(message = "Name product cannot be empty") String name, @NotBlank(message = "Description product cannot be empty") String description, Set<User> users, Set<Order> orders, Category category, Double price, Integer discount, Integer like, Integer dislike, Integer count, String filename) {
         this.name = name;
         this.description = description;
-        this.userProdComs = userProdComs;
-        this.prodOrders = prodOrders;
+        this.users = users;
+        this.orders = orders;
         this.category = category;
         this.price = price;
         this.discount = discount;
@@ -82,20 +91,20 @@ public class Product {
         this.description = description;
     }
 
-    public Set<UserProdCom> getUserProdComs() {
-        return userProdComs;
+    public Set<User> getUsers() {
+        return users;
     }
 
-    public void setUserProdComs(Set<UserProdCom> userProdComs) {
-        this.userProdComs = userProdComs;
+    public void setUsers(Set<User> users) {
+        this.users = users;
     }
 
-    public Set<ProdOrder> getProdOrders() {
-        return prodOrders;
+    public Set<Order> getOrders() {
+        return orders;
     }
 
-    public void setProdOrders(Set<ProdOrder> prodOrders) {
-        this.prodOrders = prodOrders;
+    public void setOrders(Set<Order> orders) {
+        this.orders = orders;
     }
 
     public Category getCategory() {

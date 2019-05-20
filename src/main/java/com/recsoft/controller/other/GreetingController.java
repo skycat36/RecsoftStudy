@@ -17,7 +17,7 @@ public class GreetingController {
 
     @GetMapping("/")
     public String greeting(Map<String, Object> model){
-        return "/page/for_other/greeting";
+        return "/pages/for_menu/greeting";
     }
 
     @RequestMapping(value="/logout", method= RequestMethod.GET)
