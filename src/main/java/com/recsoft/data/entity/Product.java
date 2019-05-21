@@ -42,9 +42,9 @@ public class Product {
 
     private Integer discount;
 
-    private Integer like;
+    private Integer like_p;
 
-    private Integer dislike;
+    private Integer dislike_p;
 
     private Integer count;
 
@@ -53,7 +53,7 @@ public class Product {
     public Product() {
     }
 
-    public Product(@NotBlank(message = "Name product cannot be empty") String name, @NotBlank(message = "Description product cannot be empty") String description, Set<User> users, Set<Order> orders, Category category, Double price, Integer discount, Integer like, Integer dislike, Integer count, String filename) {
+    public Product(@NotBlank(message = "Name product cannot be empty") String name, @NotBlank(message = "Description product cannot be empty") String description, Set<User> users, Set<Order> orders, Category category, Double price, Integer discount, Integer like_p, Integer dislike_p, Integer count, String filename) {
         this.name = name;
         this.description = description;
         this.users = users;
@@ -61,8 +61,8 @@ public class Product {
         this.category = category;
         this.price = price;
         this.discount = discount;
-        this.like = like;
-        this.dislike = dislike;
+        this.like_p = like_p;
+        this.dislike_p = dislike_p;
         this.count = count;
         this.filename = filename;
     }
@@ -132,19 +132,19 @@ public class Product {
     }
 
     public Integer getLike() {
-        return like;
+        return like_p;
     }
 
-    public void setLike(Integer like) {
-        this.like = like;
+    public void setLike(Integer like_p) {
+        this.like_p = like_p;
     }
 
     public Integer getDislike() {
-        return dislike;
+        return dislike_p;
     }
 
-    public void setDislike(Integer dislike) {
-        this.dislike = dislike;
+    public void setDislike(Integer dislike_p) {
+        this.dislike_p = dislike_p;
     }
 
     public Integer getCount() {
