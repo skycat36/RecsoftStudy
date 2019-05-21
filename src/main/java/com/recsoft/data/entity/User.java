@@ -50,21 +50,21 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<Order> orders;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable (name="user_prod_com",
             joinColumns=@JoinColumn (name="user_id"),
             inverseJoinColumns=@JoinColumn(name="prod_id"))
     private Set<Product> products;
 
 
-    private Boolean block;
+    private Boolean activity;
 
     private String filename;
 
     public User() {
     }
 
-    public User(@NotBlank(message = "Name cannot be empty") String name, @NotBlank(message = "Family cannot be empty") String fam, @NotBlank(message = "Second name cannot be empty") String sec_name, @NotBlank(message = "Поле Логин не может быть пустым") @Length(max = 50, message = "Login too long") String login, @NotBlank(message = "Поле Пароль не может быть пустым") @Length(max = 50, message = "Password too long") String password, Double cash, Integer rating, @Email(message = "Email is not correct") @NotBlank(message = "Email cannot be empty") String email, Role role, Set<Order> orders, Set<Product> products, Boolean block, String filename) {
+    public User(@NotBlank(message = "Name cannot be empty") String name, @NotBlank(message = "Family cannot be empty") String fam, @NotBlank(message = "Second name cannot be empty") String sec_name, @NotBlank(message = "Поле Логин не может быть пустым") @Length(max = 50, message = "Login too long") String login, @NotBlank(message = "Поле Пароль не может быть пустым") @Length(max = 50, message = "Password too long") String password, Double cash, Integer rating, @Email(message = "Email is not correct") @NotBlank(message = "Email cannot be empty") String email, Role role, Set<Order> orders, Set<Product> products, Boolean activity, String filename) {
         this.name = name;
         this.fam = fam;
         this.sec_name = sec_name;
@@ -76,7 +76,7 @@ public class User implements UserDetails {
         this.role = role;
         this.orders = orders;
         this.products = products;
-        this.block = block;
+        this.activity = activity;
         this.filename = filename;
     }
 
@@ -145,11 +145,11 @@ public class User implements UserDetails {
     }
 
     public Boolean getBlock() {
-        return block;
+        return activity;
     }
 
-    public void setBlock(Boolean block) {
-        this.block = block;
+    public void setBlock(Boolean activity) {
+        this.activity = activity;
     }
 
     public String getFilename() {
@@ -195,12 +195,12 @@ public class User implements UserDetails {
 
     @Override
     public String getPassword() {
-        return password;
+        return this.password;
     }
 
     @Override
     public String getUsername() {
-        return getLogin();
+        return this.getLogin();
     }
 
     @Override

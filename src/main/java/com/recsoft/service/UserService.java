@@ -21,7 +21,7 @@ public class UserService implements UserDetailsService {
         if (user == null){
             throw new UsernameNotFoundException("Worker not found");
         }
-
+        user.setProducts(null);
         return user;
     }
 }
