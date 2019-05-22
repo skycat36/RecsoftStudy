@@ -69,7 +69,7 @@
 </#macro>
 
 <#macro log_in>
-<form action="/client_list" method="get">
+<form action="/main_menu" method="get">
     <button type="submit" class="btn btn-primary">Войти</button>
 </form>
 </#macro>

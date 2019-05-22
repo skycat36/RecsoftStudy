@@ -25,6 +25,10 @@ public class Status  {
         this.orders = orders;
     }
 
+    public Status(@NotBlank(message = "Name cannot be empty") String name) {
+        this.name = name;
+    }
+
     public Long getId() {
         return id;
     }
