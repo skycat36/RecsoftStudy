@@ -1,30 +1,29 @@
 package com.recsoft.controller.other;
 
-import com.recsoft.data.entity.Order;
 import com.recsoft.data.entity.Status;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/")
-@Api(value = "HelloWorld Resource", description = "shows hello world")
+@Api(value = "Start Resource", description = "shows start view")
 public class GreetingController {
 
     @GetMapping
-    public String greeting(Map<String, Object> model){
-        return "/pages/for_menu/greeting";
+    public ModelAndView greeting(Map<String, Object> model){
+        ModelAndView mav = new ModelAndView("/pages/for_menu/greeting");
+        return mav;
     }
 
     @RequestMapping(value="/logout", method= RequestMethod.GET)
@@ -39,8 +38,10 @@ public class GreetingController {
     @ResponseBody
     @GetMapping("main_menu")
     @ApiOperation(value = "Returns Hello World")
-    public Status hello() {
-        return new Status("htani");
+    public Map<String, Object> hello() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("st", new Status("htani"));
+        return map;
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/api/javainuse")

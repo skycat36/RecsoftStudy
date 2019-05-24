@@ -1,6 +1,9 @@
 package com.recsoft.data.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import javax.persistence.*;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import java.util.Set;
 
@@ -13,10 +16,10 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @NotBlank(message = "Name product cannot be empty")
+    @NotBlank(message = "Имя продукта не может быть пустым")
     private String name;
 
-    @NotBlank(message = "Description product cannot be empty")
+    @NotBlank(message = "Описание продукта не может быть пустым")
     private String description;
 
     @ManyToMany
@@ -38,14 +41,26 @@ public class Product {
     @JoinColumn(referencedColumnName = "id")
     private Category category;
 
+
+    @ManyToMany
+    @JoinTable (name="prod_size",
+            joinColumns=@JoinColumn (name="id_prod"),
+            inverseJoinColumns=@JoinColumn(name="id_size"))
+    private Set<SizeUser> sizeUsers;
+
+    @Min(value = 0, message = "Цена за товар не может быть отрицательной")
     private Double price;
 
+    @Min(value = 0, message = "Скидка на товар не может быть отрицательной")
     private Integer discount;
 
+    @Min(value = 0, message = "Количество лайковна товар не может быть отрицательным")
     private Integer like_p;
 
+    @Min(value = 0, message = "Количество дизлайковна товар не может быть отрицательным")
     private Integer dislike_p;
 
+    @Min(value = 0, message = "Количество товаров не может быть отрицательной")
     private Integer count;
 
     private String filename;
@@ -53,18 +68,43 @@ public class Product {
     public Product() {
     }
 
-    public Product(@NotBlank(message = "Name product cannot be empty") String name, @NotBlank(message = "Description product cannot be empty") String description, Set<User> users, Set<Order> orders, Category category, Double price, Integer discount, Integer like_p, Integer dislike_p, Integer count, String filename) {
+    public Product(@NotBlank(message = "Имя продукта не может быть пустым") String name, @NotBlank(message = "Описание продукта не может быть пустым") String description, Set<User> users, Set<Order> orders, Category category, Set<SizeUser> sizeUsers, @Min(value = 0, message = "Цена за товар не может быть отрицательной") Double price, @Min(value = 0, message = "Скидка на товар не может быть отрицательной") Integer discount, @Min(value = 0, message = "Количество лайковна товар не может быть отрицательным") Integer like_p, @Min(value = 0, message = "Количество дизлайковна товар не может быть отрицательным") Integer dislike_p, @Min(value = 0, message = "Количество товаров не может быть отрицательной") Integer count, String filename) {
         this.name = name;
         this.description = description;
         this.users = users;
         this.orders = orders;
         this.category = category;
+        this.sizeUsers = sizeUsers;
         this.price = price;
         this.discount = discount;
         this.like_p = like_p;
         this.dislike_p = dislike_p;
         this.count = count;
         this.filename = filename;
+    }
+
+    public Set<SizeUser> getSizeUsers() {
+        return sizeUsers;
+    }
+
+    public void setSizeUsers(Set<SizeUser> sizeUsers) {
+        this.sizeUsers = sizeUsers;
+    }
+
+    public Integer getLike_p() {
+        return like_p;
+    }
+
+    public void setLike_p(Integer like_p) {
+        this.like_p = like_p;
+    }
+
+    public Integer getDislike_p() {
+        return dislike_p;
+    }
+
+    public void setDislike_p(Integer dislike_p) {
+        this.dislike_p = dislike_p;
     }
 
     public Long getId() {

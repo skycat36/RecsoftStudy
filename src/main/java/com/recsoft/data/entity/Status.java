@@ -1,5 +1,8 @@
 package com.recsoft.data.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import java.util.Set;
@@ -14,6 +17,7 @@ public class Status  {
     @NotBlank(message = "Name cannot be empty")
     private String name;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "status", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<Order> orders;
 

@@ -1,5 +1,6 @@
 package com.recsoft.data.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;
 
 import javax.persistence.*;
@@ -17,6 +18,7 @@ public class Role implements GrantedAuthority {
     @NotBlank(message = "Name cannot be empty")
     private String name;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<User> users;
 

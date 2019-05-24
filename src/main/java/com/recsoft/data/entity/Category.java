@@ -1,6 +1,8 @@
 package com.recsoft.data.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import java.util.Set;
@@ -16,6 +18,7 @@ public class Category {
     @NotBlank(message = "Name category cannot be empty")
     private String name;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<Product> products;
 
