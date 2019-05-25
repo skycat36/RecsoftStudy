@@ -1,7 +1,9 @@
 package com.recsoft.controller.product;
 
 import com.recsoft.controller.other.ControllerUtils;
+import com.recsoft.data.entity.Category;
 import com.recsoft.data.entity.Product;
+import com.recsoft.data.entity.SizeUser;
 import com.recsoft.service.ProductService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -11,9 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.validation.Valid;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/product")
@@ -34,13 +34,18 @@ public class ProductController {
     @GetMapping("/add_product")
     @ApiOperation(value = "add product in database")
     public ModelAndView showAddProduct(){
-        return new ModelAndView("/pages/for_product/addProduct");
+        ModelAndView mav = new ModelAndView("/pages/for_product/addProduct");
+        mav.addObject("listSizeUser", productService.getAllSizeUser());
+        mav.addObject("listCategory", productService.getAllCategory());
+        return mav;
     }
 
     @PostMapping("/add_product")
     @ApiOperation(value = "add product in database")
     public ModelAndView addProduct(
             @ModelAttribute @Valid Product product,
+            @RequestParam Long categoryProd,
+            @RequestParam ArrayList<Long> sizeUsersProd,
             BindingResult bindingResult
     ){
         Map<String, String> errors = new HashMap<>();
@@ -55,10 +60,12 @@ public class ProductController {
         }
 
         if (errors.isEmpty()) {
-            productService.addProduct(product);
+            productService.addProduct(product, categoryProd, sizeUsersProd);
 
         }else{
             mav.setViewName("/pages/for_product/addProduct");
+            mav.addObject("listSizeUser", productService.getAllSizeUser());
+            mav.addObject("listCategory", productService.getAllCategory());
             mav.addAllObjects(errors);
             mav.addObject("product",product);
         }

@@ -54,10 +54,10 @@ public class Product {
     @Min(value = 0, message = "Скидка на товар не может быть отрицательной")
     private Integer discount;
 
-    @Min(value = 0, message = "Количество лайковна товар не может быть отрицательным")
+    @Min(value = 0, message = "Количество лайков на товар не может быть отрицательным")
     private Integer like_p;
 
-    @Min(value = 0, message = "Количество дизлайковна товар не может быть отрицательным")
+    @Min(value = 0, message = "Количество дизлайков на товар не может быть отрицательным")
     private Integer dislike_p;
 
     @Min(value = 0, message = "Количество товаров не может быть отрицательной")
