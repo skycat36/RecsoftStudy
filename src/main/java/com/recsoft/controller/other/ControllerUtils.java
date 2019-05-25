@@ -11,13 +11,13 @@ public class ControllerUtils {
 
 
         for (int i = 0; i < bindingResult.getAllErrors().size(); i++){
-            errorMap.put(bindingResult.getFieldErrors().get(i).getField() + "error",
+            errorMap.put(bindingResult.getFieldErrors().get(i).getField() + "Error",
                     bindingResult.getFieldErrors().get(i).getDefaultMessage());
         }
         return errorMap;
     }
 
     public static String constructError(String str){
-        return "error" + str;
+        return str + "Error";
     }
 }

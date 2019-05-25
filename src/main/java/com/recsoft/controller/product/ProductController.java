@@ -26,8 +26,8 @@ public class ProductController {
     @GetMapping("/product_list")
     @ApiOperation(value = "List products")
     public ModelAndView getAllProduct() {
-        ModelAndView mnv = new ModelAndView("/pages/for_product/productList.ftl");
-        mnv.addAllObjects(productService.getAllProduct());
+        ModelAndView mnv = new ModelAndView("/pages/for_product/productList");
+        mnv.addObject("productList", productService.getAllProduct());
         return mnv;
     }
 

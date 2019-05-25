@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,11 +29,8 @@ public class ProductService {
     public ProductService() {
     }
 
-    public Map<String, List<Product>> getAllProduct(){
-        Map<String, List<Product>> map = new HashMap<>();
-        map.put("listProduct", productRepository.findAll());
-        log.info("Get all product");
-        return map;
+    public List<Product> getAllProduct(){
+        return productRepository.findAll();
     }
 
     public boolean existProduct(Product product){
