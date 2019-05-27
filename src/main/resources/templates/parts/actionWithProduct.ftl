@@ -2,7 +2,20 @@
 <div class="form-group row">
     <h1><label class="col-ml-2 col-form-label">${nameAction}</label></h1>
 </div>
-<form action="${path}" method="post">
+<form action="${path}" method="post" enctype="multipart/form-data">
+
+    <div class="form-group">
+        <div class="custom-file">
+            <input type="file" name="file" id="customFile">
+            <label class="custom-file-label" for="customFile">Выберите файл</label>
+            <#if fileError??>
+                <div class="invalid-feedback">
+                    ${fileError}
+                </div>
+            </#if>
+        </div>
+    </div>
+
     <div class="form-group row">
         <label class="col-sm-2 col-form-label">Название :</label>
         <div class="col-sm-3">

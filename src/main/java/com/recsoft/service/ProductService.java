@@ -1,24 +1,35 @@
 package com.recsoft.service;
 
 import com.recsoft.data.entity.Category;
+import com.recsoft.data.entity.Photo;
 import com.recsoft.data.entity.Product;
 import com.recsoft.data.entity.SizeUser;
 import com.recsoft.data.repository.CategoryRepository;
+import com.recsoft.data.repository.PhotoRepository;
 import com.recsoft.data.repository.ProductRepository;
 import com.recsoft.data.repository.SizeUserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.validation.Valid;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 public class ProductService {
 
     private Logger log = LoggerFactory.getLogger(ProductService.class.getName());
+
+    @Value("${upload.path}")
+    private String uploadPath;
 
     @Autowired
     private ProductRepository productRepository;
@@ -28,6 +39,9 @@ public class ProductService {
 
     @Autowired
     private CategoryRepository categoryRepository;
+
+    @Autowired
+    private PhotoRepository photoRepository;
 
     public ProductService() {
     }
@@ -52,7 +66,7 @@ public class ProductService {
         return categoryRepository.findAll();
     }
 
-    public void addProduct(Product product, Long idCategory, List<Long> idSizeUser) {
+    public void addProduct(@Valid Product product, Long idCategory, List<Long> idSizeUser, MultipartFile file) throws IOException {
         if (product != null){
             product.setCategory(categoryRepository.findById(idCategory).get());
 
@@ -63,10 +77,48 @@ public class ProductService {
                 }
             }
             product.setSizeUsers(sizeUserSet);
+
+            if (file != null && !file.getOriginalFilename().isEmpty()) {
+                File uploadDir = new File(uploadPath);
+
+                if (!uploadDir.exists()) {
+                    uploadDir.mkdir();
+                }
+
+                String uuidFile = UUID.randomUUID().toString();
+                String resultFilename = uuidFile + "." + file.getOriginalFilename();
+
+                file.transferTo(new File(uploadPath + "/" + resultFilename));
+
+                Set<Photo> photoSet = new HashSet<>();
+                //photoSet.add(photoRepository.save(new Photo(resultFilename, product)));
+                photoSet.add(new Photo(resultFilename, product));
+                product.setPhotos(photoSet);
+            }
+
             productRepository.save(product);
             log.info("Product with name " + product.getName() + " was added.");
         }else {
             log.error("Product with name " + product.getName() + " don't added.");
         }
     }
+
+//    private void saveFile(Product product, MultipartFile file) throws IOException {
+//        if (file != null && !file.getOriginalFilename().isEmpty()) {
+//            File uploadDir = new File(uploadPath);
+//
+//            if (!uploadDir.exists()) {
+//                uploadDir.mkdir();
+//            }
+//
+//            String uuidFile = UUID.randomUUID().toString();
+//            String resultFilename = uuidFile + "." + file.getOriginalFilename();
+//
+//            file.transferTo(new File(uploadPath + "/" + resultFilename));
+//
+//            Photo photo = photoRepository.save(new Photo(resultFilename, null, product));
+//            product.getPhotos().add(photo);
+//            productRepository.save(product);
+//        }
+//    }
 }

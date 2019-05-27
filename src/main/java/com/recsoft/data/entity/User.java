@@ -62,12 +62,10 @@ public class User implements UserDetails {
 
     private Boolean activity;
 
-    private String filename;
-
     public User() {
     }
 
-    public User(@NotBlank(message = "Name cannot be empty") String name, @NotBlank(message = "Family cannot be empty") String fam, @NotBlank(message = "Second name cannot be empty") String sec_name, @NotBlank(message = "Поле Логин не может быть пустым") @Length(max = 50, message = "Login too long") String login, @NotBlank(message = "Поле Пароль не может быть пустым") @Length(max = 50, message = "Password too long") String password, Double cash, Integer rating, @Email(message = "Email is not correct") @NotBlank(message = "Email cannot be empty") String email, Role role, Set<Order> orders, Set<Product> products, Boolean activity, String filename) {
+    public User(@NotBlank(message = "Name cannot be empty") String name, @NotBlank(message = "Family cannot be empty") String fam, @NotBlank(message = "Second name cannot be empty") String sec_name, @NotBlank(message = "Поле Логин не может быть пустым") @Length(max = 50, message = "Login too long") String login, @NotBlank(message = "Поле Пароль не может быть пустым") @Length(max = 50, message = "Password too long") String password, Double cash, Integer rating, @Email(message = "Email is not correct") @NotBlank(message = "Email cannot be empty") String email, Role role, Set<Order> orders, Set<Product> products, Boolean activity) {
         this.name = name;
         this.fam = fam;
         this.sec_name = sec_name;
@@ -80,7 +78,6 @@ public class User implements UserDetails {
         this.orders = orders;
         this.products = products;
         this.activity = activity;
-        this.filename = filename;
     }
 
     public Long getId() {
@@ -155,12 +152,12 @@ public class User implements UserDetails {
         this.activity = activity;
     }
 
-    public String getFilename() {
-        return filename;
+    public Boolean getActivity() {
+        return activity;
     }
 
-    public void setFilename(String filename) {
-        this.filename = filename;
+    public void setActivity(Boolean activity) {
+        this.activity = activity;
     }
 
     public String getLogin() {

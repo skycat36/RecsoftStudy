@@ -34,9 +34,6 @@ public class Product {
             inverseJoinColumns=@JoinColumn(name="order_id"))
     private Set<Order> orders;
 
-    //@ManyToMany (mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    //private Set<ProdOrder> prodOrders;
-
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(referencedColumnName = "id")
     private Category category;
@@ -63,12 +60,13 @@ public class Product {
     @Min(value = 0, message = "Количество товаров не может быть отрицательной")
     private Integer count;
 
-    private String filename;
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Set<Photo> photos;
 
     public Product() {
     }
 
-    public Product(@NotBlank(message = "Имя продукта не может быть пустым") String name, @NotBlank(message = "Описание продукта не может быть пустым") String description, Set<User> users, Set<Order> orders, Category category, Set<SizeUser> sizeUsers, @Min(value = 0, message = "Цена за товар не может быть отрицательной") Double price, @Min(value = 0, message = "Скидка на товар не может быть отрицательной") Integer discount, @Min(value = 0, message = "Количество лайковна товар не может быть отрицательным") Integer like_p, @Min(value = 0, message = "Количество дизлайковна товар не может быть отрицательным") Integer dislike_p, @Min(value = 0, message = "Количество товаров не может быть отрицательной") Integer count, String filename) {
+    public Product(@NotBlank(message = "Имя продукта не может быть пустым") String name, @NotBlank(message = "Описание продукта не может быть пустым") String description, Set<User> users, Set<Order> orders, Category category, Set<SizeUser> sizeUsers, @Min(value = 0, message = "Цена за товар не может быть отрицательной") Double price, @Min(value = 0, message = "Скидка на товар не может быть отрицательной") Integer discount, @Min(value = 0, message = "Количество лайков на товар не может быть отрицательным") Integer like_p, @Min(value = 0, message = "Количество дизлайков на товар не может быть отрицательным") Integer dislike_p, @Min(value = 0, message = "Количество товаров не может быть отрицательной") Integer count, Set<Photo> photos) {
         this.name = name;
         this.description = description;
         this.users = users;
@@ -80,7 +78,7 @@ public class Product {
         this.like_p = like_p;
         this.dislike_p = dislike_p;
         this.count = count;
-        this.filename = filename;
+        this.photos = photos;
     }
 
     public Set<SizeUser> getSizeUsers() {
@@ -195,11 +193,11 @@ public class Product {
         this.count = count;
     }
 
-    public String getFilename() {
-        return filename;
+    public Set<Photo> getPhotos() {
+        return photos;
     }
 
-    public void setFilename(String filename) {
-        this.filename = filename;
+    public void setPhotos(Set<Photo> photos) {
+        this.photos = photos;
     }
 }

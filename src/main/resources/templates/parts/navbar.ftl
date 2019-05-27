@@ -11,11 +11,11 @@
         <ul class="navbar-nav mr-auto">
         <#if user??>
             <li class="nav-item">
-                <a class="nav-link" href="/client_list">База пациентов</a>
+                <a class="nav-link" href="/product/product_list">Список товаров</a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" href="/worker_list">База сотрудников</a>
+                <a class="nav-link" href="/product/add_product">Добавить товар</a>
             </li>
         </#if>
         </ul>
