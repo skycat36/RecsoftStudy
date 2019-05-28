@@ -18,6 +18,7 @@ import javax.validation.Valid;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /* Предоставляет отображение работы с продуктами.
@@ -68,7 +69,7 @@ public class ProductController {
             @ModelAttribute @Valid Product product,
             @RequestParam Long categoryProd,
             @RequestParam ArrayList<Long> sizeUsersProd,
-            @RequestParam("file") MultipartFile file,
+            @RequestParam("file") List<MultipartFile> file,
             BindingResult bindingResult
     ){
         Map<String, String> errors = new HashMap<>();
@@ -76,6 +77,10 @@ public class ProductController {
 
         if (productService.existProduct(product)){
             errors.put(ControllerUtils.constructError("name"), "Продукт с таким именем уже есть");
+        }
+
+        if (file.size() > 4){
+            errors.put(ControllerUtils.constructError("file"), "Превышено максимальное количество загруженых фотографий.");
         }
 
         if (bindingResult.hasErrors()){

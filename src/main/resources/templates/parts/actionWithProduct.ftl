@@ -1,12 +1,49 @@
 <#macro action path nameAction isSave>
+<script>
+    var loadFile = function(event) {
+        for (i=0; i < event.target.files.length; i++) {
+            var output = document.getElementById('img_' + i.toString());
+            output.src = URL.createObjectURL(event.target.files[i]);
+        }
+        //output.src = URL.createObjectURL(event.target.files[0]);
+    };
+</script>
+
 <div class="form-group row">
     <h1><label class="col-ml-2 col-form-label">${nameAction}</label></h1>
 </div>
 <form action="${path}" method="post" enctype="multipart/form-data">
 
+    <img id="output" style="height: 25%; width: 25%"/>
+
+    <div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <img class="d-block w-100" id="img_0" alt="First slide">
+            </div>
+            <div class="carousel-item">
+                <img class="d-block w-100" id="img_1" alt="Second slide">
+            </div>
+            <div class="carousel-item">
+                <img class="d-block w-100" id="img_2" alt="Third slide">
+            </div>
+            <div class="carousel-item">
+                <img class="d-block w-100" id="img_3" alt="Forth slide">
+            </div>
+        </div>
+        <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+        </a>
+        <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+        </a>
+    </div>
+
     <div class="form-group">
-        <div class="custom-file">
-            <input type="file" name="file" id="customFile">
+        <div class="custom-file col-4 col-mb-4 col-mt-4">
+            <input type="file" accept="image/jpeg,image/png" name="file" id="customFile" onchange="loadFile(event)" multiple >
             <label class="custom-file-label" for="customFile">Выберите файл</label>
             <#if fileError??>
                 <div class="invalid-feedback">
@@ -85,8 +122,8 @@
 
 
     <div class="form-group row">
-        <label for="exampleFormControlSelect2">Выберите имеющиеся размеры</label>
-        <select multiple class="form-control" name="sizeUsersProd" id="exampleFormControlSelect2" required>
+        <label for="exampleFormControlSelect2">Выберите имеющиеся размеры : </label>
+        <select multiple class="form-control col-4" name="sizeUsersProd" id="exampleFormControlSelect2" required>
             <#list listSizeUser as sizeUser>
                 <option value="${sizeUser.id}" <#if product??><#if product.sizeUsers.nameSize == sizeUser.nameSize>selected</#if></#if>>${sizeUser.nameSize}</option>
             </#list>
