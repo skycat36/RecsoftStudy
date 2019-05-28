@@ -8,12 +8,17 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+/* Осуществляет функции для работы с пользователем
+* @author Evgeny Popov */
 @Service
 public class UserService implements UserDetailsService {
     @Autowired
     private UserRepository userRepository;
 
-
+    /*Поиск пользователя в базе
+    * @param - login пользователя
+    * @return UserDetails - информация о пользователе для security.
+    * */
     @Override
     public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
         User user = userRepository.findByLogin(s);

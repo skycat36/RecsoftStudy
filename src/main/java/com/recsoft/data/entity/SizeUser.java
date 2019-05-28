@@ -1,23 +1,28 @@
 package com.recsoft.data.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import java.util.Set;
 
+/* Размеры продукта.
+ * @author Евгений Попов */
 @Entity
 @Table(name = "size_usr")
 public class SizeUser {
+
+    /*Идентификатор обьекта*/
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    /* Название размера*/
     @NotBlank(message = "Name size cannot be empty")
     @Column(name = "name_size")
     private String nameSize;
 
+    /* Ссылка на продукты с таким размером. */
     @JsonIgnore
     @ManyToMany
     @JoinTable (name="prod_size",

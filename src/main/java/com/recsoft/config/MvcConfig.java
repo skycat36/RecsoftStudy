@@ -6,6 +6,9 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/*
+* Конфигурация раздачи файлов и страницы login
+* @author Evgeny Popov */
 @Configuration
 public class MvcConfig implements WebMvcConfigurer {
     @Value("${upload.path}")

@@ -5,19 +5,24 @@ import org.springframework.security.core.GrantedAuthority;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
-import java.util.Collection;
 import java.util.Set;
 
+/* Роль пользователя.
+ * @author Евгений Попов */
 @Entity
 @Table(name = "role")
 public class Role implements GrantedAuthority {
+
+    /*Идентификатор обьекта*/
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    /* Название роли. */
     @NotBlank(message = "Name cannot be empty")
     private String name;
 
+    /* Список пользователей имеющих эту роль*/
     @JsonIgnore
     @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<User> users;

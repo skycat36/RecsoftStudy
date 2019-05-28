@@ -2,10 +2,13 @@ package com.recsoft.data.entity;
 
 import javax.persistence.*;
 
+/* Коментарии к товару.
+ * @author Евгений Попов */
 @Embeddable
 @Table(name = "user_prod_com")
 public class UserProdCom {
 
+    /* Комментарий на товар. */
     private String comment;
 
     public UserProdCom() {

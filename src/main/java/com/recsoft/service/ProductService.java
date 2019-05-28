@@ -23,11 +23,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+/* Представляет функционал для работы с продуктами
+* @author Evgeny Popov
+* */
 @Service
 public class ProductService {
 
     private Logger log = LoggerFactory.getLogger(ProductService.class.getName());
 
+    /*Путь к папке хранения данных*/
     @Value("${upload.path}")
     private String uploadPath;
 
@@ -46,10 +50,15 @@ public class ProductService {
     public ProductService() {
     }
 
+    /*
+     * @return - возвращает список всех продуктов в базе данных*/
     public List<Product> getAllProduct(){
         return productRepository.findAll();
     }
 
+    /*
+     * @param product - продукт созданный пользователем
+     * @return boolean - если продукт есть в базе возвращает true*/
     public boolean existProduct(Product product){
         if (productRepository.findProductByName(product.getName()) != null) {
             return true;
@@ -58,14 +67,25 @@ public class ProductService {
         }
     }
 
+    /*
+     * @return List<SizeUser>- возвращает список всех размеров для продукта*/
     public List<SizeUser> getAllSizeUser(){
         return sizeUserRepository.findAll();
     }
 
+    /*
+     * @param -
+     * @return List<Category> - возвращает список всех категорий для продукта*/
     public List<Category> getAllCategory(){
         return categoryRepository.findAll();
     }
 
+    /* Добавление продукта в базу данных.
+     * @param product - продукт созданный пользователем
+     * @param idCategory - id выбранной категории товара
+     * @param idSizeUser - список id выбранных размеров товара
+     * @param file - загруженные пользователем фотографии
+     * */
     public void addProduct(@Valid Product product, Long idCategory, List<Long> idSizeUser, MultipartFile file) throws IOException {
         if (product != null){
             product.setCategory(categoryRepository.findById(idCategory).get());

@@ -7,59 +7,73 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import java.util.Set;
 
-//TODO доделать связи
-
+/* Информация о товаре
+ * @author Евгений Попов */
 @Entity
 @Table(name = "product")
 public class Product {
+
+    /*Идентификатор обьекта*/
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    /* Название продукта. */
     @NotBlank(message = "Имя продукта не может быть пустым")
     private String name;
 
+    /* Описание продукта. */
     @NotBlank(message = "Описание продукта не может быть пустым")
     private String description;
 
+    /* Список пользователей оставивших коментарии. */
     @ManyToMany
     @JoinTable (name="user_prod_com",
                 joinColumns=@JoinColumn (name="prod_id"),
                 inverseJoinColumns=@JoinColumn(name="user_id"))
     private Set<User> users;
 
+    /* Список сделанных заказов на товар. */
     @ManyToMany
     @JoinTable (name="prod_order",
             joinColumns=@JoinColumn (name="prod_id"),
             inverseJoinColumns=@JoinColumn(name="order_id"))
     private Set<Order> orders;
 
+    /* Ссылка на категорию товара. */
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(referencedColumnName = "id")
     private Category category;
 
 
+    /* Список ссылок на имеющиеся размеры товара. */
     @ManyToMany
     @JoinTable (name="prod_size",
             joinColumns=@JoinColumn (name="id_prod"),
             inverseJoinColumns=@JoinColumn(name="id_size"))
     private Set<SizeUser> sizeUsers;
 
+    /* Цена за товар. */
     @Min(value = 0, message = "Цена за товар не может быть отрицательной")
     private Double price;
 
+    /* Скидка на товар. */
     @Min(value = 0, message = "Скидка на товар не может быть отрицательной")
     private Integer discount;
 
+    /* Лайки. */
     @Min(value = 0, message = "Количество лайков на товар не может быть отрицательным")
     private Integer like_p;
 
+    /* Дизлайки. */
     @Min(value = 0, message = "Количество дизлайков на товар не может быть отрицательным")
     private Integer dislike_p;
 
+    /* Количество имеюихся товаров. */
     @Min(value = 0, message = "Количество товаров не может быть отрицательной")
     private Integer count;
 
+    /* Фотографии товара. */
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<Photo> photos;
 

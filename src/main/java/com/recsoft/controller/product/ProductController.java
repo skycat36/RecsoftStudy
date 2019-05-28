@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+/* Предоставляет отображение работы с продуктами.
+ * @author Евгений Попов */
 @RestController
 @RequestMapping("/product")
 @Api(value = "Product Resource", description = "action with product")
@@ -29,6 +31,7 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
+    /* @return ModelAndView - Отображает список имеющихся продуктов. */
     @GetMapping("/product_list")
     @ApiOperation(value = "List products")
     public ModelAndView getAllProduct() {
@@ -37,6 +40,7 @@ public class ProductController {
         return mnv;
     }
 
+    /* @return ModelAndView - отображает интерфейс для добавления продуктов в базу. */
     @GetMapping("/add_product")
     @ApiOperation(value = "add product in database")
     public ModelAndView showAddProduct(){
@@ -46,6 +50,12 @@ public class ProductController {
         return mav;
     }
 
+    /* @param product - продукт созданный пользователем.
+     * @param categoryProd - выбранная категория товара.
+     * @param sizeUsersProd - список выбранных размеров.
+     * @param file - загруженный пользователем.
+     * @param bindingResult - проверка данных на ошибки.
+     * @return ModelAndView - добавляет продукт в базу и если нет ошибок возвращает на список товаров.*/
     @PostMapping("/add_product")
     @ApiOperation(value = "add product in database")
     public ModelAndView addProduct(

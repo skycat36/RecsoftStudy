@@ -3,27 +3,35 @@ package com.recsoft.data.entity;
 import javax.persistence.*;
 import java.util.Set;
 
+/* Заказ на товар.
+ * @author Евгений Попов */
 @Entity
 @Table(name = "order_m")
 public class Order {
+
+    /*Идентификатор обьекта*/
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    /* Ссылка на продукты с таким заказом. */
     @ManyToMany
     @JoinTable (name="prod_order",
             joinColumns=@JoinColumn (name="order_id"),
             inverseJoinColumns=@JoinColumn(name="prod_id"))
     private Set<Product> products;
 
+    /* Ссылка на пользователя сделавшего заказ. */
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(referencedColumnName = "id")
     private User user;
 
+    /* Ссылка на статус заказа. */
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(referencedColumnName = "id")
     private Status status;
 
+    /* Адресс доставки товара*/
     private String adress;
 
     public Order() {

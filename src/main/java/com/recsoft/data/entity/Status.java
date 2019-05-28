@@ -7,16 +7,22 @@ import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import java.util.Set;
 
+/* Статус заказа.
+ * @author Евгений Попов */
 @Entity
 @Table(name = "status")
 public class Status  {
+
+    /*Идентификатор обьекта*/
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    /* Название статуса заказа.*/
     @NotBlank(message = "Name cannot be empty")
     private String name;
 
+    /* Список заказов имеющих этот статус.*/
     @JsonIgnore
     @OneToMany(mappedBy = "status", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<Order> orders;

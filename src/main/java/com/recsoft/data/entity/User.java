@@ -1,6 +1,5 @@
 package com.recsoft.data.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.security.core.GrantedAuthority;
@@ -12,46 +11,61 @@ import javax.validation.constraints.NotBlank;
 import java.util.Collection;
 import java.util.Set;
 
+/* Информация о пользователе.
+ * @author Евгений Попов */
 @Entity
 @Table(name = "usr")
 public class User implements UserDetails {
+
+    /*Идентификатор обьекта*/
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    /* Имя. */
     @NotBlank(message = "Name cannot be empty")
     private String name;
 
+    /* Фамилия. */
     @NotBlank(message = "Family cannot be empty")
     private String fam;
 
+    /* Отчество. */
     @NotBlank(message = "Second name cannot be empty")
     private String sec_name;
 
+    /* Логин пользователя. */
     @NotBlank(message = "Поле Логин не может быть пустым")
     @Column(nullable = false, unique = true)
     @Length(max = 50, message = "Login too long")
-    private String login;       //Логин
+    private String login;
 
+    /* Пароль пользователя. */
     @NotBlank(message = "Поле Пароль не может быть пустым")
     @Length(max = 50, message = "Password too long")
-    private String password;    //Пароль
+    private String password;
 
+    /* Имеющаяся деньги на кошельке. */
     private Double cash;
 
+    /* Рейтинг пользователя. */
     private Integer rating;
 
+    /* email пользователя. */
     @Email(message = "Email is not correct")
     @NotBlank(message = "Email cannot be empty")
     private String email;
 
+    /* Ссылка на роль. */
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(referencedColumnName = "id")
     private Role role;
 
+    /* Список сделанных заказов. */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<Order> orders;
 
+    /* Ссылка на продукты к которым пользователь оставил коментарии. */
     @JsonIgnore
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable (name="user_prod_com",
@@ -59,7 +73,7 @@ public class User implements UserDetails {
             inverseJoinColumns=@JoinColumn(name="prod_id"))
     private Set<Product> products;
 
-
+    /* Активирован ли аккаунт пользователя. */
     private Boolean activity;
 
     public User() {

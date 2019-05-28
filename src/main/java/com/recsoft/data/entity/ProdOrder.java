@@ -2,19 +2,13 @@ package com.recsoft.data.entity;
 
 import javax.persistence.*;
 
-
+/* Выбранные пользователем товары и их количество.
+ * @author Евгений Попов */
 @Embeddable
 @Table(name = "prod_order")
 public class ProdOrder {
 
-//    @ManyToOne(fetch = FetchType.EAGER, optional = false)
-//    @JoinColumn(name = "order", referencedColumnName = "id")
-//    private Order order;
-//
-//    @ManyToOne(fetch = FetchType.EAGER, optional = false)
-//    @JoinColumn(name = "product", referencedColumnName = "id")
-//    private Product product;
-
+    /* Количество выбранных товаров. */
     private Integer count;
 
 

@@ -15,17 +15,22 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.Map;
 
+/* Отображение стартовой страницы и страниц входа и выхода.
+ * @author Евгений Попов */
 @RestController
 @RequestMapping("/")
 @Api(value = "Start Resource", description = "shows start view")
 public class GreetingController {
 
+    /*
+     * @return ModelAndView - отображение стартовой страницы приложения.*/
     @GetMapping
-    public ModelAndView greeting(Map<String, Object> model){
+    public ModelAndView greeting(){
         ModelAndView mav = new ModelAndView("/pages/for_menu/greeting");
         return mav;
     }
 
+    /* Изьятие ключей пользователя и выход из приложения.*/
     @RequestMapping(value="/logout", method= RequestMethod.GET)
     public String logoutPage(HttpServletRequest request, HttpServletResponse response) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -35,6 +40,7 @@ public class GreetingController {
         return "redirect:/login";
     }
 
+    /* Главное меню приложения. */
     @ResponseBody
     @GetMapping("main_menu")
     @ApiOperation(value = "Returns Hello World")

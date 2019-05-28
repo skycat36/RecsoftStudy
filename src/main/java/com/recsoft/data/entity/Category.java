@@ -7,17 +7,22 @@ import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import java.util.Set;
 
+/*Категория товара.
+ * @author Евгений Попов */
 @Entity
 @Table(name = "category")
 public class Category {
-//    JACKET, JEANS, SHIRTS, SHELL, GLOVES, HEMLET, ACCESSORIES;
+
+    /* Идентификатор обьекта. */
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    /*Название категории*/
     @NotBlank(message = "Name category cannot be empty")
     private String name;
 
+    /* Ссылка на продукты с такой категорией. */
     @JsonIgnore
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<Product> products;

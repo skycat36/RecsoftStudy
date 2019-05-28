@@ -4,16 +4,21 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
 
+/* Хранимые фотографии
+ * @author Евгений Попов */
 @Entity
 @Table(name = "photo_m")
 public class Photo {
 
+    /*Идентификатор обьекта*/
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    /* Путь хранимой фотографии. */
     private String name;
 
+    /* Ссылка на продукт с хранимой фотографией. */
     @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(referencedColumnName = "id")
