@@ -8,6 +8,7 @@ import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,6 +29,10 @@ public class ProductController {
 
     private Logger log = LoggerFactory.getLogger(ProductController.class.getName());
 
+    /*Путь к папке хранения данных*/
+    @Value("${upload.path}")
+    private String uploadPath;
+
     @Autowired
     private ProductService productService;
 
@@ -37,6 +42,7 @@ public class ProductController {
     public ModelAndView getAllProduct() {
         ModelAndView mnv = new ModelAndView("/pages/for_product/productList");
         mnv.addObject("productList", productService.getAllProduct());
+        mnv.addObject("pathFile", this.uploadPath);
         return mnv;
     }
 

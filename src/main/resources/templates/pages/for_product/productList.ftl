@@ -8,9 +8,9 @@
             <ol class="carousel-indicators">
                 <#list product.photos as photo>
                     <#if photo_index == 0>
-                        <li data-target="/static/data/${photo.name}" data-slide-to="${photo_index}" class="active"></li>
+                        <li data-target="/img/${photo.name}" data-slide-to="${photo_index}" class="active"></li>
                     <#else>
-                        <li data-target="/static/data/${photo.name}" data-slide-to="${photo_index}"></li>
+                        <li data-target="/img/${photo.name}" data-slide-to="${photo_index}"></li>
                     </#if>
                 </#list>
             </ol>
@@ -19,11 +19,11 @@
                 <#list product.photos as photo>
                     <#if photo_index == 0>
                         <div class="carousel-item active">
-                            <img class="d-block w-100" src="/static/data/${photo.name}" alt="${photo_index} slide">
+                            <img class="d-block w-100" src="/img/${photo.name}" alt="${photo_index} slide">
                         </div>
                     <#else>
                         <div class="carousel-item">
-                            <img class="d-block w-100" src="/static/data/${photo.name}" alt="${photo_index} slide">
+                            <img class="d-block w-100" src="/img/${photo.name}" alt="${photo_index} slide">
                         </div>
                     </#if>
                 </#list>
