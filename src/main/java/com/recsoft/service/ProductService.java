@@ -86,41 +86,45 @@ public class ProductService {
      * @param idSizeUser - список id выбранных размеров товара
      * @param file - загруженные пользователем фотографии
      * */
-    public void addProduct(@Valid Product product, Long idCategory, List<Long> idSizeUser, List<MultipartFile> file) throws IOException {
-//        if (product != null){
-//            product.setCategory(categoryRepository.findById(idCategory).get());
-//
-//            Set<SizeUser> sizeUserSet = new HashSet<>();
-//            for (SizeUser sizeUser: sizeUserRepository.findAll()){
-//                if (idSizeUser.contains(sizeUser.getId())){
-//                    sizeUserSet.add(sizeUser);
-//                }
-//            }
-//            product.setSizeUsers(sizeUserSet);
-//
-//            if (file != null && !file.getOriginalFilename().isEmpty()) {
-//                File uploadDir = new File(uploadPath);
-//
-//                if (!uploadDir.exists()) {
-//                    uploadDir.mkdir();
-//                }
-//
-//                String uuidFile = UUID.randomUUID().toString();
-//                String resultFilename = uuidFile + "." + file.getOriginalFilename();
-//
-//                file.transferTo(new File(uploadPath + "/" + resultFilename));
-//
-//                Set<Photo> photoSet = new HashSet<>();
-//                //photoSet.add(photoRepository.save(new Photo(resultFilename, product)));
-//                photoSet.add(new Photo(resultFilename, product));
-//                product.setPhotos(photoSet);
-//            }
-//
-//            productRepository.save(product);
-//            log.info("Product with name " + product.getName() + " was added.");
-//        }else {
-//            log.error("Product with name " + product.getName() + " don't added.");
-//        }
+    public void addProduct(@Valid Product product, Long idCategory, List<Long> idSizeUser, List<MultipartFile> files) throws IOException {
+        if (product != null){
+            product.setCategory(categoryRepository.findById(idCategory).get());
+
+            Set<SizeUser> sizeUserSet = new HashSet<>();
+            for (SizeUser sizeUser: sizeUserRepository.findAll()){
+                if (idSizeUser.contains(sizeUser.getId())){
+                    sizeUserSet.add(sizeUser);
+                }
+            }
+            product.setSizeUsers(sizeUserSet);
+
+            Set<Photo> photoSet = new HashSet<>();
+
+            for (MultipartFile multipartFile: files){
+            if (multipartFile != null && !multipartFile.getOriginalFilename().isEmpty()) {
+                File uploadDir = new File(uploadPath);
+
+                if (!uploadDir.exists()) {
+                    uploadDir.mkdir();
+                }
+
+                String uuidFile = UUID.randomUUID().toString();
+                String resultFilename = uuidFile + "." + multipartFile.getOriginalFilename();
+
+                multipartFile.transferTo(new File(uploadPath + "/" + resultFilename));
+
+
+                //photoSet.add(photoRepository.save(new Photo(resultFilename, product)));
+                photoSet.add(new Photo(resultFilename, product));
+            }
+                product.setPhotos(photoSet);
+            }
+
+            productRepository.save(product);
+            log.info("Product with name " + product.getName() + " was added.");
+        }else {
+            log.error("Product with name " + product.getName() + " don't added.");
+        }
     }
 
 //    private void saveFile(Product product, MultipartFile file) throws IOException {

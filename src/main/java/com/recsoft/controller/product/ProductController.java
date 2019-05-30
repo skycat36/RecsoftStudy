@@ -9,13 +9,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -108,6 +112,42 @@ public class ProductController {
             mav.addObject("product",product);
         }
         return mav;
+    }
+
+    @Autowired
+    private ServletContext servletContext;
+
+    // http://localhost:8080/download3?fileName=abc.zip
+    // Using HttpServletResponse
+    @GetMapping("/download_photo")
+    public void downloadFile(HttpServletResponse resonse,
+                              List<String>  fileNames) throws IOException {
+
+        MediaType mediaType = ControllerUtils.getMediaTypeForFileName(this.servletContext, fileNames.get(0));
+        //System.out.println("fileName: " + fileNames);
+        //System.out.println("mediaType: " + mediaType);
+
+        File file = new File(uploadPath + "/" + fileNames);
+
+        // Content-Type
+        resonse.setContentType(mediaType.getType());
+
+        // Content-Disposition
+        resonse.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + file.getName());
+
+        // Content-Length
+        resonse.setContentLength((int) file.length());
+
+        BufferedInputStream inStream = new BufferedInputStream(new FileInputStream(file));
+        BufferedOutputStream outStream = new BufferedOutputStream(resonse.getOutputStream());
+
+        byte[] buffer = new byte[1024];
+        int bytesRead = 0;
+        while ((bytesRead = inStream.read(buffer)) != -1) {
+            outStream.write(buffer, 0, bytesRead);
+        }
+        outStream.flush();
+        inStream.close();
     }
 
 }

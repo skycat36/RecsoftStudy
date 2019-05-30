@@ -4,13 +4,13 @@
     <#list productList as product>
         <div class="card my-3" style="width: 18rem;">
         <#if (product.photos?size > 0)>
-        <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
+        <div id="carouselExampleIndicators" class="carousel slide d-inline-block" data-ride="carousel">
             <ol class="carousel-indicators">
                 <#list product.photos as photo>
                     <#if photo_index == 0>
-                        <li data-target="/img/${photo.name}" data-slide-to="${photo_index}" class="active"></li>
+                        <li data-target="#carouselExampleIndicators" data-slide-to="${photo_index}" class="active"></li>
                     <#else>
-                        <li data-target="/img/${photo.name}" data-slide-to="${photo_index}"></li>
+                        <li data-target="#carouselExampleIndicators" data-slide-to="${photo_index}"></li>
                     </#if>
                 </#list>
             </ol>
@@ -19,11 +19,11 @@
                 <#list product.photos as photo>
                     <#if photo_index == 0>
                         <div class="carousel-item active">
-                            <img class="d-block w-100" src="/img/${photo.name}" alt="${photo_index} slide">
+                            <img class="d-block w-100 img-fluid" src="/img/${photo.name}" alt="${photo_index} slide">
                         </div>
                     <#else>
                         <div class="carousel-item">
-                            <img class="d-block w-100" src="/img/${photo.name}" alt="${photo_index} slide">
+                            <img class="d-block w-100 img-fluid" src="/img/${photo.name}" alt="${photo_index} slide">
                         </div>
                     </#if>
                 </#list>
@@ -48,8 +48,8 @@
                 <#--<li class="list-group-item">Vestibulum at eros</li>-->
             </ul>
             <div class="card-body">
-                <a href="#" class="card-link">Посмотреть</a>
-                <a href="#" class="card-link">Оформить заказ</a>
+                <a href="/product/show_product/${product.id}" class="card-link">Посмотреть</a>
+                <a href="/product/set_order/${product.id}" class="card-link">Оформить заказ</a>
             </div>
         </div>
     <#else>

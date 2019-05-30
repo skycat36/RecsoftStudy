@@ -17,6 +17,12 @@
             <li class="nav-item">
                 <a class="nav-link" href="/product/add_product">Добавить товар</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/user/${user.id}/show_shopping_cart">Корзина товаров</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/user/${user.id}/edit_profile_user">Корзина товаров</a>
+            </li>
         </#if>
         </ul>
         <div class="navbar-text mr-3">${name}</div>

@@ -1,21 +1,18 @@
-<#macro action path nameAction isSave>
-<style>
-    img {
-        object-fit: cover;
-    }
-</style>
+<#import "../../parts/common.ftl" as c>
+<#import "../../parts/actionWithProduct.ftl" as aww>
 
-<div class="form-group row">
-    <h1><label class="col-ml-2 col-form-label">${nameAction}</label></h1>
-</div>
+<@c.page>
+    <div class="form-group row">
+        <h1><label class="col-ml-2 col-form-label"><#if product??>${product.name}</#if></label></h1>
+    </div>
 
-<div class="row justify-content-center">
-    <#if fileError??>
-        <div class="alert alert-danger" role="alert">
-            ${fileError}
-        </div>
-    </#if>
-</div>
+<#--<div class="row justify-content-center">-->
+    <#--<#if fileError??>-->
+        <#--<div class="alert alert-danger" role="alert">-->
+            <#--${fileError}-->
+        <#--</div>-->
+    <#--</#if>-->
+<#--</div>-->
 
     <div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
         <div class="carousel-inner" >
@@ -155,23 +152,4 @@
         <input type="hidden" value="${_csrf.token}" name="_csrf">
     </div>
 </form>
-<script>
-    var container = document.querySelector('.carousel-inner');
-    console.log(container, 'container1')
-
-    var loadFile = function(event) {
-        for (i = 0; i < event.target.files.length; i++) {
-            var item = document.createElement('div');
-            item.classList.add('carousel-item', 'w-100');
-            var img = document.createElement('img');
-            img.classList.add('d-block');
-            img.src = URL.createObjectURL(event.target.files[i]);
-            item.appendChild(img);
-            container.appendChild(item);
-        }
-        var imgActive = document.querySelectorAll('.carousel-item')[0];
-        imgActive.classList.add('active');
-        console.log(imgActive, 'imgActive')
-    };
-</script>
-</#macro>
+</@c.page>

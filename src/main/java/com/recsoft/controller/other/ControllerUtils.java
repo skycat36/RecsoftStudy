@@ -1,7 +1,9 @@
 package com.recsoft.controller.other;
 
+import org.springframework.http.MediaType;
 import org.springframework.validation.BindingResult;
 
+import javax.servlet.ServletContext;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,8 +30,20 @@ public class ControllerUtils {
      * Корректно отображает имя ошибки.
      * @param str - имя поля.
      * @return - поле с пометкой об ошибки для передачи на view*/
-
     public static String constructError(String str){
         return str + "Error";
+    }
+
+    public static MediaType getMediaTypeForFileName(ServletContext servletContext, String fileName) {
+        // application/pdf
+        // application/xml
+        // image/gif, ...
+        String mineType = servletContext.getMimeType(fileName);
+        try {
+            MediaType mediaType = MediaType.parseMediaType(mineType);
+            return mediaType;
+        } catch (Exception e) {
+            return MediaType.APPLICATION_OCTET_STREAM;
+        }
     }
 }
