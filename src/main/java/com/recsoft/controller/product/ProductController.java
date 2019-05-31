@@ -1,6 +1,7 @@
 package com.recsoft.controller.product;
 
 import com.recsoft.controller.other.ControllerUtils;
+import com.recsoft.data.entity.Photo;
 import com.recsoft.data.entity.Product;
 import com.recsoft.service.ProductService;
 import io.swagger.annotations.Api;
@@ -17,13 +18,13 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
 
 /* Предоставляет отображение работы с продуктами.
  * @author Евгений Попов */
@@ -69,12 +70,12 @@ public class ProductController {
      * @return ModelAndView - добавляет продукт в базу и если нет ошибок возвращает на список товаров.*/
     @PostMapping("/add_product")
     @ApiOperation(value = "add product in database")
-    public ModelAndView addProduct(
-            @ModelAttribute @Valid Product product,
-            @RequestParam Long categoryProd,
-            @RequestParam ArrayList<Long> sizeUsersProd,
-            @RequestParam("file") List<MultipartFile> file,
-            BindingResult bindingResult
+    public ModelAndView addProduct(HttpServletRequest request,
+                                   @ModelAttribute @Valid Product product,
+                                   @RequestParam Long categoryProd,
+                                   @RequestParam ArrayList<Long> sizeUsersProd,
+                                   @RequestParam("file") List<MultipartFile> file,
+                                   BindingResult bindingResult
     ){
         Map<String, String> errors = new HashMap<>();
         ModelAndView mav = new ModelAndView("redirect:/product/product_list");
@@ -114,40 +115,98 @@ public class ProductController {
         return mav;
     }
 
+
     @Autowired
     private ServletContext servletContext;
 
-    // http://localhost:8080/download3?fileName=abc.zip
-    // Using HttpServletResponse
-    @GetMapping("/download_photo")
-    public void downloadFile(HttpServletResponse resonse,
-                              List<String>  fileNames) throws IOException {
+            @GetMapping("/download3/{idProduct}")
+        public void downloadFile3(HttpServletResponse resonse,
+                @PathVariable String idProduct) throws IOException {
 
-        MediaType mediaType = ControllerUtils.getMediaTypeForFileName(this.servletContext, fileNames.get(0));
-        //System.out.println("fileName: " + fileNames);
-        //System.out.println("mediaType: " + mediaType);
+            Product product = productService.getProductById(Long.parseLong(idProduct));
+//        BufferedInputStream inStream = new BufferedInputStream(null);
+//        BufferedOutputStream outStream = new BufferedOutputStream(resonse.getOutputStream());
+            MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
+            resonse.setContentType(mediaType.getType());
+            for (Photo photo : product.getPhotos()) {
+                //MediaType mediaType = ControllerUtils.getMediaTypeForFileName(this.servletContext, photo.getName());
+                System.out.println("fileName: " + photo.getName());
+                System.out.println("mediaType: " + mediaType);
 
-        File file = new File(uploadPath + "/" + fileNames);
+                File file = new File(uploadPath + "/" + photo.getName());
 
-        // Content-Type
-        resonse.setContentType(mediaType.getType());
 
-        // Content-Disposition
-        resonse.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + file.getName());
+                // Content-Type
+                // application/pdf
 
-        // Content-Length
-        resonse.setContentLength((int) file.length());
 
-        BufferedInputStream inStream = new BufferedInputStream(new FileInputStream(file));
-        BufferedOutputStream outStream = new BufferedOutputStream(resonse.getOutputStream());
+                // Content-Disposition
+                resonse.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + file.getName());
 
-        byte[] buffer = new byte[1024];
-        int bytesRead = 0;
-        while ((bytesRead = inStream.read(buffer)) != -1) {
-            outStream.write(buffer, 0, bytesRead);
+                // Content-Length
+                resonse.setContentLength((int) file.length());
+
+                BufferedInputStream inStream = new BufferedInputStream(new FileInputStream(file));
+                BufferedOutputStream outStream = new BufferedOutputStream(resonse.getOutputStream());
+
+
+                byte[] buffer = new byte[1024];
+                int bytesRead = 0;
+
+                while ((bytesRead = inStream.read(buffer)) != -1) {
+                    outStream.write(buffer, 0, bytesRead);
+                }
+
+
+                inStream.close();
+                outStream.flush();
+            }
         }
-        outStream.flush();
-        inStream.close();
-    }
+
+//        @GetMapping("/download3/{idProduct}")
+//        public void downloadFile3(HttpServletResponse resonse,
+//                @PathVariable String idProduct) throws IOException {
+//
+//            Product product = productService.getProductById(Long.parseLong(idProduct));
+////        BufferedInputStream inStream = new BufferedInputStream(null);
+////        BufferedOutputStream outStream = new BufferedOutputStream(resonse.getOutputStream());
+//            MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
+//            resonse.setContentType(mediaType.getType());
+//            for (Photo photo : product.getPhotos()) {
+//                //MediaType mediaType = ControllerUtils.getMediaTypeForFileName(this.servletContext, photo.getName());
+//                System.out.println("fileName: " + photo.getName());
+//                System.out.println("mediaType: " + mediaType);
+//
+//                File file = new File(uploadPath + "/" + photo.getName());
+//
+//
+//                // Content-Type
+//                // application/pdf
+//
+//
+//                // Content-Disposition
+//                resonse.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + file.getName());
+//
+//                // Content-Length
+//                resonse.setContentLength((int) file.length());
+//
+//                BufferedInputStream inStream = new BufferedInputStream(new FileInputStream(file));
+//                BufferedOutputStream outStream = new BufferedOutputStream(resonse.getOutputStream());
+//
+//
+//                byte[] buffer = new byte[1024];
+//                int bytesRead = 0;
+//
+//                while ((bytesRead = inStream.read(buffer)) != -1) {
+//                    outStream.write(buffer, 0, bytesRead);
+//                }
+//
+//
+//                inStream.close();
+//                outStream.flush();
+//            }
+//        }
+
+
 
 }

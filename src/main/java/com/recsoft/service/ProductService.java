@@ -50,6 +50,10 @@ public class ProductService {
     public ProductService() {
     }
 
+    public Product getProductById(Long idProd){
+        return productRepository.findById(idProd).get();
+    }
+
     /*
      * @return - возвращает список всех продуктов в базе данных*/
     public List<Product> getAllProduct(){
@@ -113,8 +117,6 @@ public class ProductService {
 
                 multipartFile.transferTo(new File(uploadPath + "/" + resultFilename));
 
-
-                //photoSet.add(photoRepository.save(new Photo(resultFilename, product)));
                 photoSet.add(new Photo(resultFilename, product));
             }
                 product.setPhotos(photoSet);
