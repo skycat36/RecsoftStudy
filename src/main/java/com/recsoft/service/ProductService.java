@@ -15,19 +15,23 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
 import javax.validation.Valid;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 /* Представляет функционал для работы с продуктами
-* @author Evgeny Popov
-* */
+ * @author Evgeny Popov
+ * */
 @Service
 public class ProductService {
+
+    private final Integer HEIGHT_IMAGE = 400, WEIGHT_IMAGE = 400;
 
     private Logger log = LoggerFactory.getLogger(ProductService.class.getName());
 
@@ -79,7 +83,8 @@ public class ProductService {
 
     /*
      * @param -
-     * @return List<Category> - возвращает список всех категорий для продукта*/
+     * @return List<Category> - возвращает список всех категорий для продукта
+     * */
     public List<Category> getAllCategory(){
         return categoryRepository.findAll();
     }
@@ -105,20 +110,21 @@ public class ProductService {
             Set<Photo> photoSet = new HashSet<>();
 
             for (MultipartFile multipartFile: files){
-            if (multipartFile != null && !multipartFile.getOriginalFilename().isEmpty()) {
-                File uploadDir = new File(uploadPath);
+                ImageIO.read(multipartFile.getInputStream());
+                if (multipartFile != null && !multipartFile.getOriginalFilename().isEmpty()) {
+                    File uploadDir = new File(uploadPath);
 
-                if (!uploadDir.exists()) {
-                    uploadDir.mkdir();
+                    if (!uploadDir.exists()) {
+                        uploadDir.mkdir();
+                    }
+
+                    String resultFilename = ServiceUtils.getUnicalUUID() + "." + multipartFile.getOriginalFilename();
+
+                    ImageIO.write(ServiceUtils.changeImage(multipartFile, WEIGHT_IMAGE, HEIGHT_IMAGE), "JPEG", new File(uploadPath + "/" + resultFilename));
+
+                    //multipartFile.transferTo(new File(uploadPath + "/" + resultFilename));
+                    photoSet.add(new Photo(resultFilename, product));
                 }
-
-                String uuidFile = UUID.randomUUID().toString();
-                String resultFilename = uuidFile + "." + multipartFile.getOriginalFilename();
-
-                multipartFile.transferTo(new File(uploadPath + "/" + resultFilename));
-
-                photoSet.add(new Photo(resultFilename, product));
-            }
                 product.setPhotos(photoSet);
             }
 
@@ -128,6 +134,7 @@ public class ProductService {
             log.error("Product with name " + product.getName() + " don't added.");
         }
     }
+
 
 //    private void saveFile(Product product, MultipartFile file) throws IOException {
 //        if (file != null && !file.getOriginalFilename().isEmpty()) {
