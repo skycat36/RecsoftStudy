@@ -18,19 +18,18 @@
 </div>
 
     <div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
-        <div class="carousel-inner" >
-        <#--<div class="carousel-item active">-->
-        <#--<img class="d-block w-100" id="img_0" alt="First slide">-->
-        <#--</div>-->
-        <#--<div class="carousel-item">-->
-        <#--<img class="d-block w-100" id="img_1" alt="Second slide">-->
-        <#--</div>-->
-        <#--<div class="carousel-item">-->
-        <#--<img class="d-block w-100" id="img_2" alt="Third slide">-->
-        <#--</div>-->
-        <#--<div class="carousel-item">-->
-        <#--<img class="d-block w-100" id="img_3" alt="Forth slide">-->
-        <#--</div>-->
+        <div class="carousel-inner">
+            <#--<#list product.photos as photo>-->
+                <#--<#if photo_index == 0>-->
+                        <#--<div class="carousel-item active">-->
+                            <#--<img class="d-block w-100 img-fluid" src="/img/${photo.name}" alt="${photo_index} slide">-->
+                        <#--</div>-->
+                <#--<#else>-->
+                        <#--<div class="carousel-item">-->
+                            <#--<img class="d-block w-100 img-fluid" src="/img/${photo.name}" alt="${photo_index} slide">-->
+                        <#--</div>-->
+                <#--</#if>-->
+            <#--</#list>-->
         </div>
         <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-slide="prev">
             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
@@ -157,9 +156,12 @@
 </form>
 <script>
     var container = document.querySelector('.carousel-inner');
-    console.log(container, 'container1')
+    console.log(container, 'containger');
 
     var loadFile = function(event) {
+
+        container.innerHTML = '';
+
         for (i = 0; i < event.target.files.length; i++) {
             var item = document.createElement('div');
             item.classList.add('carousel-item', 'w-100');
@@ -169,9 +171,11 @@
             item.appendChild(img);
             container.appendChild(item);
         }
+
         var imgActive = document.querySelectorAll('.carousel-item')[0];
         imgActive.classList.add('active');
         console.log(imgActive, 'imgActive')
     };
 </script>
 </#macro>
+

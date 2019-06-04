@@ -135,6 +135,18 @@ public class ProductService {
         }
     }
 
+    public void deletePhotoProduct(Long idProduct){
+        Product product = productRepository.findById(idProduct).get();
+
+        for (Photo photo: product.getPhotos()){
+            File file = new File(uploadPath + "/" + photo.getName());
+            file.delete();
+        }
+        photoRepository.deleteByProduct(idProduct.toString());
+        product.setPhotos(new HashSet<>());
+        productRepository.save(product);
+    }
+
 
 //    private void saveFile(Product product, MultipartFile file) throws IOException {
 //        if (file != null && !file.getOriginalFilename().isEmpty()) {

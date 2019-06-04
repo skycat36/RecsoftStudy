@@ -125,8 +125,83 @@ public class ProductController {
         if (product != null) {
             mav.addObject("product", product);
         }else {
+            mav.addObject("prodError", "Такого продукта не существует");
             mav.setViewName("redirect:/product/product_list");
         }
+        return mav;
+    }
+
+    @GetMapping("/edit_product/{idProduct}")
+    public ModelAndView showEditProduct(
+            @PathVariable String idProduct){
+        ModelAndView mav = new ModelAndView("/pages/for_product/editProduct");
+
+        mav.addObject("listSizeUser", productService.getAllSizeUser());
+        mav.addObject("listCategory", productService.getAllCategory());
+
+        Product product = productService.getProductById(Long.parseLong(idProduct));
+
+        if (product != null) {
+            mav.addObject("product", product);
+        }else {
+            mav.addObject("prodError", "Такого продукта не существует");
+            mav.setViewName("redirect:/product/product_list");
+        }
+        return mav;
+    }
+
+    @PostMapping("/edit_product/{idProduct}")
+    public ModelAndView editProduct(
+            @PathVariable String idProduct,
+            @ModelAttribute @Valid Product product,
+            @RequestParam Long categoryProd,
+            @RequestParam ArrayList<Long> sizeUsersProd,
+            @RequestParam("file") List<MultipartFile> file,
+            BindingResult bindingResult){
+
+        ModelAndView mav = new ModelAndView("redirect:/product/show_product/" + idProduct);
+
+        if (productService.getProductById(Long.parseLong(idProduct)) == null) {
+            mav.addObject("prodError", "Такого продукта не существует");
+            mav.setViewName("redirect:/product/product_list");
+
+            return mav;
+        }else {
+            product.setId(Long.parseLong(idProduct));
+        }
+
+        Map<String, String> errors = new HashMap<>();
+
+        if (file.size() > 4){
+            errors.put(ControllerUtils.constructError("file"), "Превышено максимальное количество загруженых фотографий.");
+        }
+
+        if (bindingResult.hasErrors()){
+            errors.putAll(ControllerUtils.getErrors(bindingResult));
+        }
+
+        if (errors.isEmpty()) {
+            try {
+                productService.deletePhotoProduct(product.getId());
+                productService.addProduct(product, categoryProd, sizeUsersProd, file);
+            } catch (IOException e) {
+                log.error("Ошибка загрузки файла.");
+
+                mav.setViewName("/pages/for_product/editProduct");
+                mav.addObject("listSizeUser", productService.getAllSizeUser());
+                mav.addObject("listCategory", productService.getAllCategory());
+                mav.addObject(ControllerUtils.constructError("file"), "Ошибка загрузки файла.");
+                mav.addObject("product",product);
+            }
+        }else{
+            mav.setViewName("/pages/for_product/editProduct");
+            mav.addObject("listSizeUser", productService.getAllSizeUser());
+            mav.addObject("listCategory", productService.getAllCategory());
+            mav.addAllObjects(errors);
+            mav.addObject("product",product);
+        }
+
+        //Product product = productService.getProductById(Long.parseLong(idProduct));
         return mav;
     }
 

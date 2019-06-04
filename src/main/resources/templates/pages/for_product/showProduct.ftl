@@ -41,7 +41,7 @@
             </a>
         </div>
     </#if>
-<#--<form action="${path}" method="post" enctype="multipart/form-data">-->
+<form action="/product/add_product" method="post" enctype="multipart/form-data">
 
     <div class="form-group row">
         <label class="col-sm-2 col-form-label">Цена : <#if product??>${product.price}</#if></label>
@@ -83,14 +83,10 @@
         </div>
     </div>
 
-    <#--<div class="form-group row">-->
-        <#--<#if isSave>-->
-            <#--<div class="col-sm-1 mr-4"><button type="submit" class="btn btn-primary ml-0">Сохранить</button></div>-->
-        <#--<#else>-->
-            <#--<div class="col-sm-1"><button type="submit" class="btn btn-primary ml-0">Создать продукт</button></div>-->
-        <#--</#if>-->
-        <#---->
-    <#--</div>-->
+    <div class="form-group row">
+            <a type="button" class="btn btn-primary ml-4" <#if product??>href="/product/edit_product/${product.id}"</#if>>Изменить данные продукта</a>
+            <div class="col-sm-1"><button type="submit" class="btn btn-primary ml-0">Создать продукт</button></div>
+    </div>
     <input type="hidden" value="${_csrf.token}" name="_csrf">
-<#--</form>-->
+</form>
 </@c.page>
