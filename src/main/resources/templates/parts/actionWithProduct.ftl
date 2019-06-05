@@ -19,17 +19,17 @@
 
     <div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
         <div class="carousel-inner">
-            <#--<#list product.photos as photo>-->
-                <#--<#if photo_index == 0>-->
-                        <#--<div class="carousel-item active">-->
-                            <#--<img class="d-block w-100 img-fluid" src="/img/${photo.name}" alt="${photo_index} slide">-->
-                        <#--</div>-->
-                <#--<#else>-->
-                        <#--<div class="carousel-item">-->
-                            <#--<img class="d-block w-100 img-fluid" src="/img/${photo.name}" alt="${photo_index} slide">-->
-                        <#--</div>-->
-                <#--</#if>-->
-            <#--</#list>-->
+            <#list product.photos as photo>
+                <#if photo_index == 0>
+                        <div class="carousel-item active">
+                            <img class="d-block w-100 img-fluid" src="/img/${photo.name}" alt="${photo_index} slide">
+                        </div>
+                <#else>
+                        <div class="carousel-item">
+                            <img class="d-block w-100 img-fluid" src="/img/${photo.name}" alt="${photo_index} slide">
+                        </div>
+                </#if>
+            </#list>
         </div>
         <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-slide="prev">
             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
@@ -115,7 +115,7 @@
         <div class="col-sm-3">
             <select class="custom-select" name="categoryProd" id="inputGroupSelect01" required>
                 <#list listCategory as category>
-                    <option value="${category.id}">${category.name}</option>
+                    <option value="${category.id}" <#if (category.name == product.category.name)>selected</#if>>${category.name}</option>
                 </#list>
             </select>
         </div>

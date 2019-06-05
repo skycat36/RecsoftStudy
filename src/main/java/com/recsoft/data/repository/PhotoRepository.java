@@ -16,6 +16,6 @@ import javax.transaction.Transactional;
 public interface PhotoRepository extends JpaRepository<Photo, Long> {
 
     @Modifying
-    @Query(value = "DELETE from photo_m p where p.product_id =:idProd")
-    int deleteByProduct(@Param("idProd") String idProd);
+    @Query(value = "DELETE from photo_m p where p.product_id = :idProd", nativeQuery = true)
+    int deleteByProduct(@Param("idProd") Long idProd);
 }

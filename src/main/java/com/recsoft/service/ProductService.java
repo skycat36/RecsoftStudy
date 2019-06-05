@@ -142,7 +142,7 @@ public class ProductService {
             File file = new File(uploadPath + "/" + photo.getName());
             file.delete();
         }
-        photoRepository.deleteByProduct(idProduct.toString());
+        photoRepository.deleteByProduct(idProduct);
         product.setPhotos(new HashSet<>());
         productRepository.save(product);
     }

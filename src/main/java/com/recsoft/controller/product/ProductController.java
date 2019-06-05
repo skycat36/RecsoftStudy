@@ -219,11 +219,6 @@ public class ProductController {
 
         File file = new File(uploadPath + "/" + photo.getName());
 
-
-        // Content-Type
-        // application/pdf
-
-
         // Content-Disposition
         resonse.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + file.getName());
 
@@ -232,7 +227,6 @@ public class ProductController {
 
         BufferedInputStream inStream = new BufferedInputStream(new FileInputStream(file));
         BufferedOutputStream outStream = new BufferedOutputStream(resonse.getOutputStream());
-
 
         byte[] buffer = new byte[1024];
         int bytesRead = 0;
@@ -244,51 +238,5 @@ public class ProductController {
         inStream.close();
         outStream.flush();
     }
-
-//        @GetMapping("/download3/{idProduct}")
-//        public void downloadFile3(HttpServletResponse resonse,
-//                @PathVariable String idProduct) throws IOException {
-//
-//            Product product = productService.getProductById(Long.parseLong(idProduct));
-////        BufferedInputStream inStream = new BufferedInputStream(null);
-////        BufferedOutputStream outStream = new BufferedOutputStream(resonse.getOutputStream());
-//            MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
-//            resonse.setContentType(mediaType.getType());
-//            for (Photo photo : product.getPhotos()) {
-//                //MediaType mediaType = ControllerUtils.getMediaTypeForFileName(this.servletContext, photo.getName());
-//                System.out.println("fileName: " + photo.getName());
-//                System.out.println("mediaType: " + mediaType);
-//
-//                File file = new File(uploadPath + "/" + photo.getName());
-//
-//
-//                // Content-Type
-//                // application/pdf
-//
-//
-//                // Content-Disposition
-//                resonse.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + file.getName());
-//
-//                // Content-Length
-//                resonse.setContentLength((int) file.length());
-//
-//                BufferedInputStream inStream = new BufferedInputStream(new FileInputStream(file));
-//                BufferedOutputStream outStream = new BufferedOutputStream(resonse.getOutputStream());
-//
-//
-//                byte[] buffer = new byte[1024];
-//                int bytesRead = 0;
-//
-//                while ((bytesRead = inStream.read(buffer)) != -1) {
-//                    outStream.write(buffer, 0, bytesRead);
-//                }
-//
-//
-//                inStream.close();
-//                outStream.flush();
-//            }
-//        }
-
-
 
 }
