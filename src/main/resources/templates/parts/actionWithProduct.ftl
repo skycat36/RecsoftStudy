@@ -71,7 +71,7 @@
     <div class="form-group row">
         <label class="col-sm-2 col-form-label">Цена :</label>
         <div class="col-sm-3">
-            <input type="number" step="any" min="0" name="price" value="<#if product??>${product.price}</#if>"
+            <input type="number" step="any" min="0"  name="price" value="<#if price??>${price}<#else>0</#if>"
                    class="form-control small ${(priceError??)?string('is-invalid', '')}"
                    placeholder="Цена"/>
             <#if priceError??>

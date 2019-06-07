@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository;
 * @author Evgeny Popov */
 @Repository
 public interface RoleRepository extends JpaRepository<Role, Long> {
+
+    Role findFirstByName(String name);
 }

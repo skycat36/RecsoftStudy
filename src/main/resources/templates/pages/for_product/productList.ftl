@@ -49,7 +49,7 @@
             </ul>
             <div class="card-body">
                 <a href="/product/show_product/${product.id}" class="card-link">Посмотреть</a>
-                <a href="/product/set_order/${product.id}" class="card-link">Оформить заказ</a>
+                <a href="/order/create_order/${product.id}" class="card-link">Оформить заказ</a>
             </div>
         </div>
     <#else>

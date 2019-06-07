@@ -1,6 +1,6 @@
 package com.recsoft.controller.product;
 
-import com.recsoft.controller.other.ControllerUtils;
+import com.recsoft.utils.ControllerUtils;
 import com.recsoft.data.entity.Photo;
 import com.recsoft.data.entity.Product;
 import com.recsoft.service.ProductService;
@@ -48,7 +48,6 @@ public class ProductController {
     public ModelAndView getAllProduct() {
         ModelAndView mnv = new ModelAndView("/pages/for_product/productList");
         mnv.addObject("productList", productService.getAllProduct());
-        mnv.addObject("pathFile", this.uploadPath);
         return mnv;
     }
 
@@ -140,6 +139,7 @@ public class ProductController {
         mav.addObject("listCategory", productService.getAllCategory());
 
         Product product = productService.getProductById(Long.parseLong(idProduct));
+        mav.addObject("price", product.getPrice().toString());
 
         if (product != null) {
             mav.addObject("product", product);
@@ -162,7 +162,7 @@ public class ProductController {
         ModelAndView mav = new ModelAndView("redirect:/product/show_product/" + idProduct);
 
         if (productService.getProductById(Long.parseLong(idProduct)) == null) {
-            mav.addObject("prodError", "Такого продукта не существует");
+            mav.addObject(ControllerUtils.constructError("prod"), "Такого продукта не существует");
             mav.setViewName("redirect:/product/product_list");
 
             return mav;

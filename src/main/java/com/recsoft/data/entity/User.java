@@ -2,6 +2,7 @@ package com.recsoft.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.validator.constraints.Length;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -46,7 +47,7 @@ public class User implements UserDetails {
     private String password;
 
     /* Имеющаяся деньги на кошельке. */
-    private Double cash;
+    private Integer cash;
 
     /* Рейтинг пользователя. */
     private Integer rating;
@@ -79,7 +80,7 @@ public class User implements UserDetails {
     public User() {
     }
 
-    public User(@NotBlank(message = "Name cannot be empty") String name, @NotBlank(message = "Family cannot be empty") String fam, @NotBlank(message = "Second name cannot be empty") String sec_name, @NotBlank(message = "Поле Логин не может быть пустым") @Length(max = 50, message = "Login too long") String login, @NotBlank(message = "Поле Пароль не может быть пустым") @Length(max = 50, message = "Password too long") String password, Double cash, Integer rating, @Email(message = "Email is not correct") @NotBlank(message = "Email cannot be empty") String email, Role role, Set<Order> orders, Set<Product> products, Boolean activity) {
+    public User(@NotBlank(message = "Name cannot be empty") String name, @NotBlank(message = "Family cannot be empty") String fam, @NotBlank(message = "Second name cannot be empty") String sec_name, @NotBlank(message = "Поле Логин не может быть пустым") @Length(max = 50, message = "Login too long") String login, @NotBlank(message = "Поле Пароль не может быть пустым") @Length(max = 50, message = "Password too long") String password, Integer cash, Integer rating, @Email(message = "Email is not correct") @NotBlank(message = "Email cannot be empty") String email, Role role, Set<Order> orders, Set<Product> products, Boolean activity) {
         this.name = name;
         this.fam = fam;
         this.sec_name = sec_name;
@@ -134,11 +135,11 @@ public class User implements UserDetails {
         this.sec_name = sec_name;
     }
 
-    public Double getCash() {
+    public Integer getCash() {
         return cash;
     }
 
-    public void setCash(Double cash) {
+    public void setCash(Integer cash) {
         this.cash = cash;
     }
 

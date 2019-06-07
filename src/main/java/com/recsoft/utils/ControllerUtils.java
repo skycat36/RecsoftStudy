@@ -1,4 +1,4 @@
-package com.recsoft.controller.other;
+package com.recsoft.utils;
 
 import org.springframework.http.MediaType;
 import org.springframework.validation.BindingResult;

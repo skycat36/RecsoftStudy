@@ -1,5 +1,7 @@
 package com.recsoft.data.entity;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import javax.persistence.*;
 import java.util.Set;
 
@@ -15,11 +17,9 @@ public class Order {
     private Long id;
 
     /* Ссылка на продукты с таким заказом. */
-    @ManyToMany
-    @JoinTable (name="prod_order",
-            joinColumns=@JoinColumn (name="order_id"),
-            inverseJoinColumns=@JoinColumn(name="prod_id"))
-    private Set<Product> products;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(referencedColumnName = "id")
+    private Product product;
 
     /* Ссылка на пользователя сделавшего заказ. */
     @ManyToOne(fetch = FetchType.EAGER)
@@ -34,14 +34,27 @@ public class Order {
     /* Адресс доставки товара*/
     private String adress;
 
+    /* Количество выбранных заказов */
+    @Column(name = "count_p")
+    private Integer count;
+
     public Order() {
     }
 
-    public Order(Set<Product> products, User user, Status status, String adress) {
-        this.products = products;
+    public Order(Product product, User user, Status status, String adress, Integer count) {
+        this.product = product;
         this.user = user;
         this.status = status;
         this.adress = adress;
+        this.count = count;
+    }
+
+    public Product getProduct() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
     }
 
     public Long getId() {
@@ -52,12 +65,12 @@ public class Order {
         this.id = id;
     }
 
-    public Set<Product> getProducts() {
-        return products;
+    public Integer getCount() {
+        return count;
     }
 
-    public void setProducts(Set<Product> products) {
-        this.products = products;
+    public void setCount(Integer count) {
+        this.count = count;
     }
 
     public User getUser() {

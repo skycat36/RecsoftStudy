@@ -2,6 +2,8 @@ package com.recsoft.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.recsoft.utils.ReadbleUtils;
+import jdk.nashorn.internal.ir.annotations.Ignore;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -62,4 +64,5 @@ public class Status  {
     public void setOrders(Set<Order> orders) {
         this.orders = orders;
     }
+
 }
