@@ -1,6 +1,7 @@
 package com.recsoft.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.annotations.ApiModel;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -10,6 +11,7 @@ import java.util.Set;
  * @author Евгений Попов */
 @Entity
 @Table(name = "size_usr")
+@ApiModel(description = "Размер продукта.")
 public class SizeUser {
 
     /*Идентификатор обьекта*/

@@ -6,6 +6,14 @@
         <h1 class="mb-3">Оформить заказ</h1>
     </div>
 
+    <div class="row justify-content-center">
+        <#if priceError??>
+            <div class="alert alert-danger" role="alert">
+                ${priceError}
+            </div>
+        </#if>
+    </div>
+
     <div class="form-group row">
         <label class="col-form-label">Название : <#if product??>${product.name}</#if></label>
     </div>

@@ -1,5 +1,6 @@
 package com.recsoft.data.entity;
 
+import io.swagger.annotations.ApiModel;
 import org.springframework.beans.factory.annotation.Value;
 
 import javax.persistence.*;
@@ -9,6 +10,7 @@ import java.util.Set;
  * @author Евгений Попов */
 @Entity
 @Table(name = "order_m")
+@ApiModel(description = "Заказ на товар.")
 public class Order {
 
     /*Идентификатор обьекта*/

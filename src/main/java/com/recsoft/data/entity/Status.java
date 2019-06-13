@@ -3,6 +3,7 @@ package com.recsoft.data.entity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.recsoft.utils.ReadbleUtils;
+import io.swagger.annotations.ApiModel;
 import jdk.nashorn.internal.ir.annotations.Ignore;
 
 import javax.persistence.*;
@@ -13,6 +14,7 @@ import java.util.Set;
  * @author Евгений Попов */
 @Entity
 @Table(name = "status")
+@ApiModel(description = "Статус заказа.")
 public class Status  {
 
     /*Идентификатор обьекта*/

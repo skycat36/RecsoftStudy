@@ -19,17 +19,19 @@
 
     <div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
         <div class="carousel-inner">
-            <#list product.photos as photo>
-                <#if photo_index == 0>
-                        <div class="carousel-item active">
-                            <img class="d-block w-100 img-fluid" src="/img/${photo.name}" alt="${photo_index} slide">
-                        </div>
-                <#else>
-                        <div class="carousel-item">
-                            <img class="d-block w-100 img-fluid" src="/img/${photo.name}" alt="${photo_index} slide">
-                        </div>
-                </#if>
-            </#list>
+            <#if product??>
+                <#list product.photos as photo>
+                    <#if photo_index == 0>
+                            <div class="carousel-item active">
+                                <img class="d-block w-100 img-fluid" src="/img/${photo.name}" alt="${photo_index} slide">
+                            </div>
+                    <#else>
+                            <div class="carousel-item">
+                                <img class="d-block w-100 img-fluid" src="/img/${photo.name}" alt="${photo_index} slide">
+                            </div>
+                    </#if>
+                </#list>
+            </#if>
         </div>
         <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-slide="prev">
             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
@@ -40,6 +42,7 @@
             <span class="sr-only">Next</span>
         </a>
     </div>
+
 <form action="${path}" method="post" enctype="multipart/form-data">
     <img id="output" style="height: 25%; width: 25%"/>
     <div class="form-group">
@@ -115,7 +118,7 @@
         <div class="col-sm-3">
             <select class="custom-select" name="categoryProd" id="inputGroupSelect01" required>
                 <#list listCategory as category>
-                    <option value="${category.id}" <#if (category.name == product.category.name)>selected</#if>>${category.name}</option>
+                    <option value="${category.id}" <#if product??><#if (category.name == product.category.name)>selected</#if></#if>>${category.name}</option>
                 </#list>
             </select>
         </div>

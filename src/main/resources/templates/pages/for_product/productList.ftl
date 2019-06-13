@@ -39,13 +39,10 @@
         </div>
         </#if>
             <div class="card-body">
-                <#--<h5 class="card-title">Card title</h5>-->
                 <p class="card-text">${product.name}</p>
             </div>
             <ul class="list-group list-group-flush">
                 <li class="list-group-item">Цена: ${product.price} руб</li>
-                <#--<li class="list-group-item">Dapibus ac facilisis in</li>-->
-                <#--<li class="list-group-item">Vestibulum at eros</li>-->
             </ul>
             <div class="card-body">
                 <a href="/product/show_product/${product.id}" class="card-link">Посмотреть</a>

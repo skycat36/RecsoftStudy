@@ -63,7 +63,7 @@ public class User implements UserDetails {
     private Role role;
 
     /* Список сделанных заказов. */
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Order> orders;
 
     /* Ссылка на продукты к которым пользователь оставил коментарии. */

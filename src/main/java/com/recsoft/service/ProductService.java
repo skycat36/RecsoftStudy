@@ -8,19 +8,24 @@ import com.recsoft.data.repository.CategoryRepository;
 import com.recsoft.data.repository.PhotoRepository;
 import com.recsoft.data.repository.ProductRepository;
 import com.recsoft.data.repository.SizeUserRepository;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,6 +34,9 @@ import java.util.Set;
  * @author Evgeny Popov
  * */
 @Service
+@Api(value = "Сервис продуктов",
+        description = "Класс-сервис выполняет операции связанные с продуктами, " +
+                "отвечающий за целостность базы данных продуктов")
 public class ProductService {
 
     private final Integer HEIGHT_IMAGE = 400, WEIGHT_IMAGE = 400;
@@ -54,12 +62,14 @@ public class ProductService {
     public ProductService() {
     }
 
-    public Product getProductById(Long idProd){
+    public Product getProductById(
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Long idProd){
         return productRepository.findById(idProd).get();
     }
 
     /*
      * @return - возвращает список всех продуктов в базе данных*/
+    @ApiOperation(value = "Отобразить страницу создания заказа")
     public List<Product> getAllProduct(){
         return productRepository.findAll();
     }
@@ -67,7 +77,9 @@ public class ProductService {
     /*
      * @param product - продукт созданный пользователем
      * @return boolean - если продукт есть в базе возвращает true*/
-    public boolean existProduct(Product product){
+    @ApiOperation(value = "Отобразить страницу создания заказа")
+    public boolean existProduct(
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Product product){
         if (productRepository.findProductByName(product.getName()) != null) {
             return true;
         }else {
@@ -77,6 +89,7 @@ public class ProductService {
 
     /*
      * @return List<SizeUser>- возвращает список всех размеров для продукта*/
+    @ApiOperation(value = "Отобразить страницу создания заказа")
     public List<SizeUser> getAllSizeUser(){
         return sizeUserRepository.findAll();
     }
@@ -85,6 +98,7 @@ public class ProductService {
      * @param -
      * @return List<Category> - возвращает список всех категорий для продукта
      * */
+    @ApiOperation(value = "Отобразить страницу создания заказа")
     public List<Category> getAllCategory(){
         return categoryRepository.findAll();
     }
@@ -95,7 +109,12 @@ public class ProductService {
      * @param idSizeUser - список id выбранных размеров товара
      * @param file - загруженные пользователем фотографии
      * */
-    public void addProduct(@Valid Product product, Long idCategory, List<Long> idSizeUser, List<MultipartFile> files) throws IOException {
+    @ApiOperation(value = "Отобразить страницу создания заказа")
+    public void addProduct(
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) @Valid Product product,
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Long idCategory,
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<Long> idSizeUser,
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<MultipartFile> files) throws IOException {
         if (product != null){
             product.setCategory(categoryRepository.findById(idCategory).get());
 
@@ -135,7 +154,9 @@ public class ProductService {
         }
     }
 
-    public void deletePhotoProduct(Long idProduct){
+    @ApiOperation(value = "Отобразить страницу создания заказа")
+    public void deletePhotoProduct(
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Long idProduct){
         Product product = productRepository.findById(idProduct).get();
 
         for (Photo photo: product.getPhotos()){
@@ -147,23 +168,4 @@ public class ProductService {
         productRepository.save(product);
     }
 
-
-//    private void saveFile(Product product, MultipartFile file) throws IOException {
-//        if (file != null && !file.getOriginalFilename().isEmpty()) {
-//            File uploadDir = new File(uploadPath);
-//
-//            if (!uploadDir.exists()) {
-//                uploadDir.mkdir();
-//            }
-//
-//            String uuidFile = UUID.randomUUID().toString();
-//            String resultFilename = uuidFile + "." + file.getOriginalFilename();
-//
-//            file.transferTo(new File(uploadPath + "/" + resultFilename));
-//
-//            Photo photo = photoRepository.save(new Photo(resultFilename, null, product));
-//            product.getPhotos().add(photo);
-//            productRepository.save(product);
-//        }
-//    }
 }

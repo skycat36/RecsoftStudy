@@ -1,6 +1,7 @@
 package com.recsoft.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.annotations.ApiModel;
 import org.springframework.security.core.GrantedAuthority;
 
 import javax.persistence.*;
@@ -11,6 +12,7 @@ import java.util.Set;
  * @author Евгений Попов */
 @Entity
 @Table(name = "role")
+@ApiModel(description = "Определяет роль пользователя.")
 public class Role implements GrantedAuthority {
 
     /*Идентификатор обьекта*/

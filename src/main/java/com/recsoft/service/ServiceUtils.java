@@ -1,5 +1,7 @@
 package com.recsoft.service;
 
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -18,11 +20,16 @@ public class ServiceUtils {
     @Value("${upload.path}")
     private String uploadPath;
 
+    @ApiOperation(value = "Генерация уникального идентификатора.")
     public static String getUnicalUUID(){
         return UUID.randomUUID().toString();
     }
 
-    public static BufferedImage changeImage(MultipartFile file, int weight, int height) throws IOException {
+    @ApiOperation(value = "Обработка изображения.")
+    public static BufferedImage changeImage(
+            @ApiParam(value = "Файл изображения.", required = true) MultipartFile file,
+            @ApiParam(value = "Ширина.", required = true) int weight,
+            @ApiParam(value = "Высота.", required = true) int height) throws IOException {
         BufferedImage bufferedImage = ImageIO.read(file.getInputStream());
 
         BufferedImage changeImage = new BufferedImage(weight,height, BufferedImage.TYPE_INT_RGB);
@@ -34,30 +41,15 @@ public class ServiceUtils {
         return changeImage;
     }
 
-    public static void readFile(File file, HttpServletResponse response) throws IOException {
-        try (FileInputStream fileInputStream = new FileInputStream(file);
-             BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
-             OutputStream outputStream = response.getOutputStream()) {
-            int bytesRead;
-            while ((bytesRead = bufferedInputStream.read()) != -1) {
-                outputStream.write(bytesRead);
-            }
-        }
-    }
-
-    public void downloadFile(HttpServletResponse resonse, String fileName) throws IOException {
+    @ApiOperation(value = "Загрузка файла с сервера.")
+    public static void downloadFile(
+            @ApiParam(value = "Для передачи файла на сторону клиента и информации о нем.", required = true) HttpServletResponse resonse,
+            @ApiParam(value = "Путь откуда будет браться файл.", required = true) String path
+    ) throws IOException {
         MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
         resonse.setContentType(mediaType.getType());
 
-        System.out.println("fileName: " + fileName);
-        System.out.println("mediaType: " + mediaType);
-
-        File file = new File(uploadPath + "/" + fileName);
-
-
-        // Content-Type
-        // application/pdf
-
+        File file = new File(path);
 
         // Content-Disposition
         resonse.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + file.getName());
@@ -67,7 +59,6 @@ public class ServiceUtils {
 
         BufferedInputStream inStream = new BufferedInputStream(new FileInputStream(file));
         BufferedOutputStream outStream = new BufferedOutputStream(resonse.getOutputStream());
-
 
         byte[] buffer = new byte[1024];
         int bytesRead = 0;

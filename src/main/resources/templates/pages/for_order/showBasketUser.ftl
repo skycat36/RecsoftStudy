@@ -3,7 +3,7 @@
 <@c.page>
 
     <div class="form-group row">
-        <label class="col-form-label">Кошелек : <#if cash??>${cash}<#else>0</#if> руб</label>
+        <label class="col-form-label">Кошелек : <#if user??>${user.cash}</#if> руб</label>
     </div>
 
     <table class="table">

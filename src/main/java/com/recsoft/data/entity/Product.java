@@ -2,6 +2,7 @@ package com.recsoft.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import io.swagger.annotations.ApiModel;
 
 import javax.persistence.*;
 import javax.validation.constraints.Min;
@@ -13,6 +14,7 @@ import java.util.Set;
  * @author Евгений Попов */
 @Entity
 @Table(name = "product")
+@ApiModel(description = "Данные о продукте.")
 public class Product {
 
     /*Идентификатор обьекта*/

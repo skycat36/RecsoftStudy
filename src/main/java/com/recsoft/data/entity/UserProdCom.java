@@ -1,11 +1,14 @@
 package com.recsoft.data.entity;
 
+import io.swagger.annotations.ApiModel;
+
 import javax.persistence.*;
 
 /* Коментарии к товару.
  * @author Евгений Попов */
 @Embeddable
 @Table(name = "user_prod_com")
+@ApiModel(description = "Комментарий пользователя для продукта.")
 public class UserProdCom {
 
     /* Комментарий на товар. */

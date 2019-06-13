@@ -1,6 +1,7 @@
 package com.recsoft.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.annotations.ApiModel;
 
 import javax.persistence.*;
 
@@ -8,6 +9,7 @@ import javax.persistence.*;
  * @author Евгений Попов */
 @Entity
 @Table(name = "photo_m")
+@ApiModel(description = "Фотографии товаров.")
 public class Photo {
 
     /*Идентификатор обьекта*/
