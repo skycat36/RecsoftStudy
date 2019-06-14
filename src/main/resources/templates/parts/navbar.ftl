@@ -14,11 +14,15 @@
                 <a class="nav-link" href="/product/product_list">Список товаров</a>
             </li>
 
+            <#if (user.role.name != 'user')>
+                <li class="nav-item">
+                    <a class="nav-link" href="/product/add_product">Добавить товар</a>
+                </li>
+            </#if>
             <li class="nav-item">
-                <a class="nav-link" href="/product/add_product">Добавить товар</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/order/basket">Корзина товаров</a>
+                <a class="nav-link" href="/order/basket"><#if (user.role.name == 'user')>Корзина товаров</#if>
+                                                         <#if (user.role.name == 'seller')>Корзины покупателей</#if>
+                </a>
             </li>
         </#if>
         </ul>

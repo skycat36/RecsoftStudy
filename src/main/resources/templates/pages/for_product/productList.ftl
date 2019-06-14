@@ -1,5 +1,21 @@
 <#import "../../parts/common.ftl" as c>
 <@c.page>
+<form action="/product/product_list/filter" method="get">
+    <div class="form-row align-items-center">
+        <div class="col-auto my-1">
+            <label class="mr-sm-2" for="inlineFormCustomSelect">Выбрать категорию</label>
+            <select class="custom-select mr-sm-2" name="selectCategory" id="inlineFormCustomSelect">
+                <option value="" <#if selectCategory??>selected</#if>>Все товары</option>
+                <#list listCategory as category>
+                    <option value="${category.id}" <#if selectCategory??><#if (category.id == selectCategory)>selected</#if></#if>>${category.name}</option>
+                </#list>
+            </select>
+        </div>
+        <div class="col-auto my-1">
+            <button type="submit" name="filterCategory" class="btn btn-primary">Выбрать категорию</button>
+        </div>
+    </div>
+</form>
 <div class="card-columns">
     <#list productList as product>
         <div class="card my-3" style="width: 18rem;">
@@ -46,7 +62,9 @@
             </ul>
             <div class="card-body">
                 <a href="/product/show_product/${product.id}" class="card-link">Посмотреть</a>
-                <a href="/order/create_order/${product.id}" class="card-link">Оформить заказ</a>
+                <#if (user.role.name == 'user')>
+                    <a href="/order/create_order/${product.id}" class="card-link">Оформить заказ</a>
+                </#if>
             </div>
         </div>
     <#else>

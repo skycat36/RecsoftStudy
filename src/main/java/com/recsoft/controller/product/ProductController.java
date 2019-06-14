@@ -2,8 +2,9 @@ package com.recsoft.controller.product;
 
 import com.recsoft.data.entity.Photo;
 import com.recsoft.data.entity.Product;
+import com.recsoft.data.entity.User;
 import com.recsoft.service.ProductService;
-import com.recsoft.service.ServiceUtils;
+import com.recsoft.utils.ServiceUtils;
 import com.recsoft.utils.ControllerUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -12,14 +13,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.*;
@@ -47,9 +46,29 @@ public class ProductController {
     /* @return ModelAndView - Отображает список имеющихся продуктов. */
     @GetMapping("/product_list")
     @ApiOperation(value = "Отображает все имеющиеся продукты на страницу")
-    public ModelAndView getAllProduct() {
+    public ModelAndView getAllProduct(
+            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
+    ) {
         ModelAndView mnv = new ModelAndView("/pages/for_product/productList");
+        mnv.addObject("user", user);
+        //mnv.addObject("categoryProd", "");
+        mnv.addObject("listCategory", productService.getAllCategory());
         mnv.addObject("productList", productService.getAllProduct());
+        return mnv;
+    }
+
+    /* @return ModelAndView - Отображает список имеющихся продуктов. */
+    @GetMapping("/product_list/filter")
+    @ApiOperation(value = "Отображает все имеющиеся продукты на страницу")
+    public ModelAndView getProductFilter(
+            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user,
+            @ApiParam(value = "Категория выбранного продукта.", required = true) @RequestParam Long selectCategory
+    ) {
+        ModelAndView mnv = new ModelAndView("/pages/for_product/productList");
+        mnv.addObject("user", user);
+        mnv.addObject("productList", productService.getProductListByCategory(selectCategory));
+        mnv.addObject("categoryProd", selectCategory);
+        mnv.addObject("listCategory", productService.getAllCategory());
         return mnv;
     }
 
@@ -119,11 +138,13 @@ public class ProductController {
     @GetMapping("/show_product/{idProduct}")
     @ApiOperation(value = "Отобразить страницу с информацией о продукте.")
     public ModelAndView showProduct(
-            @ApiParam(value = "Id выбранного продукта.", required = true) @PathVariable String idProduct){
+            @ApiParam(value = "Id выбранного продукта.", required = true) @PathVariable String idProduct,
+            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user){
         ModelAndView mav = new ModelAndView("/pages/for_product/showProduct");
 
         Product product = productService.getProductById(Long.parseLong(idProduct));
 
+        mav.addObject("user", user);
         if (product != null) {
             mav.addObject("product", product);
         }else {

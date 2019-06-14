@@ -8,6 +8,7 @@ import com.recsoft.data.repository.CategoryRepository;
 import com.recsoft.data.repository.PhotoRepository;
 import com.recsoft.data.repository.ProductRepository;
 import com.recsoft.data.repository.SizeUserRepository;
+import com.recsoft.utils.ServiceUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -15,16 +16,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
-import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.HashSet;
 import java.util.List;
@@ -156,7 +152,7 @@ public class ProductService {
 
     @ApiOperation(value = "Отобразить страницу создания заказа")
     public void deletePhotoProduct(
-            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Long idProduct){
+            @ApiParam(value = "Удалить фотографию продукта", required = true) Long idProduct){
         Product product = productRepository.findById(idProduct).get();
 
         for (Photo photo: product.getPhotos()){
@@ -166,6 +162,16 @@ public class ProductService {
         photoRepository.deleteByProduct(idProduct);
         product.setPhotos(new HashSet<>());
         productRepository.save(product);
+    }
+
+    @ApiOperation(value = "Отобразить страницу создания заказа")
+    public List<Product> getProductListByCategory(
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Long idCategory){
+        if (idCategory != null) {
+            Category category = categoryRepository.findById(idCategory).get();
+            return productRepository.findAllByCategory(category);
+        }
+        return productRepository.findAll();
     }
 
 }

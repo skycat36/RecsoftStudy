@@ -84,8 +84,13 @@
     </div>
 
     <div class="form-group row">
-        <a type="button" class="btn btn-primary ml-4" <#if product??>href="/product/edit_product/${product.id}"</#if>>Изменить данные продукта</a>
-        <a type="button" class="btn btn-primary ml-2" <#if product??>href="/order/create_order/${product.id}"</#if>>Оформить заказ</a>
+        <#if (user.role.name != 'user')>
+            <a type="button" class="btn btn-primary ml-4" <#if product??>href="/product/edit_product/${product.id}"</#if>>Изменить данные продукта</a>
+        </#if>
+
+        <#if (user.role.name == 'user')>
+            <a type="button" class="btn btn-primary ml-2" <#if product??>href="/order/create_order/${product.id}"</#if>>Оформить заказ</a>
+        </#if>
         <#--<div class="col-sm-1"><button type="submit" class="btn btn-primary ml-0">Оформить заказ</button></div>-->
     </div>
     <input type="hidden" value="${_csrf.token}" name="_csrf">

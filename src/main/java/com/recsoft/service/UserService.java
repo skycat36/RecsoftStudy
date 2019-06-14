@@ -64,5 +64,15 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
     }
 
+    @ApiOperation(value = "Обновляет информацию о кошельке пользователя")
+    public void addCashUser(
+            @ApiParam(value = "ID пользователя.", required = true) Long idUser,
+            @ApiParam(value = "Прибавляемая сумма.", required = true) Integer number){
+        User user = userRepository.findById(idUser).get();
+
+        user.setCash(user.getCash() + number);
+        userRepository.save(user);
+    }
+
 
 }

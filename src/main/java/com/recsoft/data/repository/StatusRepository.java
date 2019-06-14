@@ -8,4 +8,7 @@ import org.springframework.stereotype.Repository;
 * @author Evgeny Popov */
 @Repository
 public interface StatusRepository extends JpaRepository<Status, Long> {
+
+    Status findFirstByName(String name);
+
 }

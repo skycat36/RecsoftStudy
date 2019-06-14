@@ -1,9 +1,6 @@
 package com.recsoft.controller.product;
 
-import com.recsoft.data.entity.Order;
-import com.recsoft.data.entity.Product;
-import com.recsoft.data.entity.Role;
-import com.recsoft.data.entity.User;
+import com.recsoft.data.entity.*;
 import com.recsoft.service.OrderService;
 import com.recsoft.service.ProductService;
 import com.recsoft.service.UserService;
@@ -176,9 +173,10 @@ public class OrderController {
     @PostMapping("/basket/delete/{idOrder}")
     @ApiOperation(value = "Удалить заказ пользователя")
     public ModelAndView deleteOrderUser(
-            @ApiParam(value = "Id продукта который заказывают.", required = true)  @PathVariable String idOrder
+            @ApiParam(value = "Id продукта который заказывают.", required = true)  @PathVariable String idOrder,
+            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
     ){
-        orderService.deleteOrder(Long.parseLong(idOrder));
+        orderService.deleteOrder(Long.parseLong(idOrder), user.getId());
         return new ModelAndView("redirect:/order/basket");
     }
 
@@ -190,8 +188,9 @@ public class OrderController {
         ModelAndView mav = new ModelAndView("/pages/for_order/selectUserBasket");
 
         List<Order> ordersUser = orderService.getOrderUser(userService.getUserById(Long.parseLong(idUser)));
-
-        mav.addObject("user", userService.getUserById(Long.parseLong(idUser)));
+        User user = userService.getUserById(Long.parseLong(idUser));
+        mav.addObject("cash", user.getCash().toString());
+        mav.addObject("user", user);
         mav.addObject("listStatus", ReadbleUtils.createListReadbleStatuses());
         mav.addObject("orderList", ordersUser);
         mav.addObject("listReadbleStatus", createListReadbleStatusOrders(ordersUser));
@@ -227,13 +226,29 @@ public class OrderController {
         if (errors.isEmpty()) {
             List<Order> ordersUser = orderService.getOrderUser(userService.getUserById(Long.parseLong(idUser)));
             List<Order> orderWhoNeedUpdate = new ArrayList<>();
+
             for (int i = 0; i < ordersUser.size(); i++) {
-                String statusRealOrder = ordersUser.get(i).getStatus().getName();
-                if (!statusRealOrder.equals(ReadbleUtils.createStatusOrderFromReadable(statusOrd[i]))) {
+                Status statusRealOrder = new Status();
+                statusRealOrder = ordersUser.get(i).getStatus();
+                String newStatusName = ReadbleUtils.createStatusOrderFromReadable(statusOrd[i]);
+                if (!statusRealOrder.getName().equals(newStatusName)) {
+                    ordersUser.get(i).setStatus(orderService.getStatusByName(newStatusName));
                     orderWhoNeedUpdate.add(ordersUser.get(i));
                 }
             }
             orderService.updateOrderList(orderWhoNeedUpdate);
+        }else {
+
+            mnv = new ModelAndView("/pages/for_order/selectUserBasket");
+
+            List<Order> ordersUser = orderService.getOrderUser(userService.getUserById(Long.parseLong(idUser)));
+
+            mnv.addObject("user", userService.getUserById(Long.parseLong(idUser)));
+            mnv.addObject("listStatus", ReadbleUtils.createListReadbleStatuses());
+            mnv.addObject("orderList", ordersUser);
+            mnv.addObject("listReadbleStatus", createListReadbleStatusOrders(ordersUser));
+            mnv.addObject("priceUser", calculetePriseForUser(ordersUser));
+            mnv.addAllObjects(errors);
         }
 
         return mnv;
@@ -245,7 +260,7 @@ public class OrderController {
             @ApiParam(value = "Id удаляемого заказа.", required = true) @PathVariable String idOrder,
             @ApiParam(value = "Id пользователя у которого удаляют заказ.", required = true) @PathVariable String idUser
     ){
-        orderService.deleteOrder(Long.parseLong(idOrder));
+        orderService.deleteOrder(Long.parseLong(idOrder), Long.parseLong(idUser));
         return new ModelAndView("redirect:/order/basket/select_user/" + idUser);
     }
 

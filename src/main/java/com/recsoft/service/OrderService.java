@@ -23,6 +23,9 @@ public class OrderService {
     private Logger log = LoggerFactory.getLogger(ProductService.class.getName());
 
     @Autowired
+    private UserService userService;
+
+    @Autowired
     private ProductRepository productRepository;
 
     @Autowired
@@ -58,7 +61,21 @@ public class OrderService {
 
     @ApiOperation(value = "Удалить заказ.")
     public void deleteOrder(
-            @ApiParam(value = "Id продукта который надо удалить", required = true) Long idOrder){
+            @ApiParam(value = "Id продукта который надо удалить", required = true) Long idOrder,
+            @ApiParam(value = "Id продукта который надо удалить", required = true) Long idUser){
+
+        Order order = orderRepository.findById(idOrder).get();
+
+        Product product = order.getProduct();
+
+        Integer addCash = Integer.parseInt(String.valueOf(Math.round(product.getPrice() * order.getCount())));
+
+        product.setCount(product.getCount() + order.getCount());
+
+        productRepository.save(product);
+
+        userService.addCashUser(idUser, addCash);
+
         orderRepository.deleteOrderById(idOrder);
         log.info("Заказ с id = " + idOrder + " удален.");
     }
@@ -67,6 +84,12 @@ public class OrderService {
     public Role getRoleByName(
             @ApiParam(value = "Имя роли.", required = true) String nameRole){
         return roleRepository.findFirstByName(nameRole);
+    }
+
+    @ApiOperation(value = "Возвращает статус по названию.")
+    public Status getStatusByName(
+            @ApiParam(value = "Имя статуса.", required = true) String nameStatus){
+        return statusRepository.findFirstByName(nameStatus);
     }
 
     @ApiOperation(value = "Заказы сделанные пользователем.")

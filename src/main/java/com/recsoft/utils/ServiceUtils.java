@@ -1,4 +1,4 @@
-package com.recsoft.service;
+package com.recsoft.utils;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
