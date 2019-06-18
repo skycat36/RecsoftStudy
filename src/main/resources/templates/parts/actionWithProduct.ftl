@@ -124,7 +124,6 @@
         </div>
     </div>
 
-
     <div class="form-group row">
         <label for="exampleFormControlSelect2">Выберите имеющиеся размеры : </label>
         <select multiple class="form-control col-4" name="sizeUsersProd" id="exampleFormControlSelect2" required>

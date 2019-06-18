@@ -48,6 +48,9 @@ public class Product {
     @JoinColumn(referencedColumnName = "id")
     private Category category;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<UserProdCom> coments;
 
     /* Список ссылок на имеющиеся размеры товара. */
     @ManyToMany
@@ -216,5 +219,13 @@ public class Product {
 
     public void setPhotos(Set<Photo> photos) {
         this.photos = photos;
+    }
+
+    public Set<UserProdCom> getComents() {
+        return coments;
+    }
+
+    public void setComents(Set<UserProdCom> coments) {
+        this.coments = coments;
     }
 }

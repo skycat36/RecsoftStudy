@@ -66,6 +66,9 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Order> orders;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<UserProdCom> coments;
+
     /* Ссылка на продукты к которым пользователь оставил коментарии. */
     @JsonIgnore
     @ManyToMany(fetch = FetchType.LAZY)
@@ -202,6 +205,16 @@ public class User implements UserDetails {
     public void setOrders(Set<Order> orders) {
         this.orders = orders;
     }
+
+    public Set<UserProdCom> getComents() {
+        return coments;
+    }
+
+    public void setComents(Set<UserProdCom> coments) {
+        this.coments = coments;
+    }
+
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

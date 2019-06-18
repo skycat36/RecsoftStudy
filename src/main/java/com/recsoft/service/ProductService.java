@@ -1,13 +1,7 @@
 package com.recsoft.service;
 
-import com.recsoft.data.entity.Category;
-import com.recsoft.data.entity.Photo;
-import com.recsoft.data.entity.Product;
-import com.recsoft.data.entity.SizeUser;
-import com.recsoft.data.repository.CategoryRepository;
-import com.recsoft.data.repository.PhotoRepository;
-import com.recsoft.data.repository.ProductRepository;
-import com.recsoft.data.repository.SizeUserRepository;
+import com.recsoft.data.entity.*;
+import com.recsoft.data.repository.*;
 import com.recsoft.utils.ServiceUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -22,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.imageio.ImageIO;
 import javax.validation.Valid;
 import java.io.*;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -54,6 +49,12 @@ public class ProductService {
 
     @Autowired
     private PhotoRepository photoRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private UserProdComRepository userProdComRepository;
 
     public ProductService() {
     }
@@ -173,5 +174,19 @@ public class ProductService {
         }
         return productRepository.findAll();
     }
+
+    @ApiOperation(value = "Добавить комментарий к продукту")
+    public void addComment(String comment, Long idUser, Long idProduct){
+        Product product = productRepository.findById(idProduct).get();
+        User user = userRepository.findById(idUser).get();
+
+        UserProdCom userProdCom = new UserProdCom(comment, user, product);
+
+        userProdCom = userProdComRepository.save(userProdCom);
+        log.info("Comment with Id " + userProdCom.getId() + " was added.");
+
+    }
+
+
 
 }

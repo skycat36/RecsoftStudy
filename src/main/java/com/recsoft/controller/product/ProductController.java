@@ -3,7 +3,9 @@ package com.recsoft.controller.product;
 import com.recsoft.data.entity.Photo;
 import com.recsoft.data.entity.Product;
 import com.recsoft.data.entity.User;
+import com.recsoft.data.entity.UserProdCom;
 import com.recsoft.service.ProductService;
+import com.recsoft.service.UserService;
 import com.recsoft.utils.ServiceUtils;
 import com.recsoft.utils.ControllerUtils;
 import io.swagger.annotations.Api;
@@ -22,10 +24,7 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /* Предоставляет отображение работы с продуктами.
  * @author Евгений Попов */
@@ -42,6 +41,9 @@ public class ProductController {
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private UserService userService;
 
     /* @return ModelAndView - Отображает список имеющихся продуктов. */
     @GetMapping("/product_list")
@@ -147,10 +149,26 @@ public class ProductController {
         mav.addObject("user", user);
         if (product != null) {
             mav.addObject("product", product);
+            List<UserProdCom> coments = new ArrayList<>(product.getComents());
+            Collections.sort(coments);
+            mav.addObject("orederedComment", coments);
         }else {
             mav.addObject("prodError", "Такого продукта не существует");
             mav.setViewName("redirect:/product/product_list");
         }
+        return mav;
+    }
+
+    @PostMapping("/show_product/{idProduct}/add_comment")
+    public ModelAndView addComment(
+            @ApiParam(value = "Id выбранного продукта.", required = true) @PathVariable String idProduct,
+            @ApiParam(value = "Комментарий для продукта.", required = true) @RequestParam String comment,
+            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
+    ){
+        ModelAndView mav = new ModelAndView("redirect:/product/show_product/" + idProduct);
+
+        productService.addComment(comment, user.getId(), Long.parseLong(idProduct));
+
         return mav;
     }
 
