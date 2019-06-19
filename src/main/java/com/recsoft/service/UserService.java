@@ -2,6 +2,7 @@ package com.recsoft.service;
 
 import com.recsoft.data.entity.Role;
 import com.recsoft.data.entity.User;
+import com.recsoft.data.exeption.UserExeption;
 import com.recsoft.data.repository.UserRepository;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -57,8 +58,12 @@ public class UserService implements UserDetailsService {
     @ApiOperation(value = "Обновляет информацию о кошельке пользователя")
     public void subtractCashUser(
             @ApiParam(value = "ID пользователя.", required = true) Long idUser,
-            @ApiParam(value = "Вычитаемая сумма.", required = true) Integer number){
+            @ApiParam(value = "Вычитаемая сумма.", required = true) Integer number) throws UserExeption {
         User user = userRepository.findById(idUser).get();
+
+        if (user.getCash() - number < 0){
+            throw new UserExeption("Недостаточно средств");
+        }
 
         user.setCash(user.getCash() - number);
         userRepository.save(user);

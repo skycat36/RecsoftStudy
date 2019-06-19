@@ -1,6 +1,7 @@
 package com.recsoft.controller.product;
 
 import com.recsoft.data.entity.*;
+import com.recsoft.data.exeption.UserExeption;
 import com.recsoft.service.OrderService;
 import com.recsoft.service.ProductService;
 import com.recsoft.service.UserService;
@@ -71,18 +72,21 @@ public class OrderController {
             errors.put(ControllerUtils.constructError("count"), "Поле количества товаров не может быть пустым.");
         }
 
-        if (Integer.parseInt(count) > product.getCount()){
-            errors.put(ControllerUtils.constructError("count"), "Поле количества товаров не может больше имеющихся.");
-        }
+        if (errors.isEmpty()){
 
-        if (product.getPrice() * Integer.parseInt(count) > user.getCash()){
-            errors.put(ControllerUtils.constructError("price"), "Недостаточно средств для покупки товара.");
+            if (Integer.parseInt(count) > product.getCount()){
+                errors.put(ControllerUtils.constructError("count"), "Поле количества товаров не может больше имеющихся.");
+            }
+
+            try {
+                userService.subtractCashUser(user.getId(), roundPriseForUser(product.getPrice() * Integer.parseInt(count)));
+            } catch (UserExeption userExeption) {
+                errors.put(ControllerUtils.constructError("price"), userExeption.getMessage());
+            }
         }
 
         if (errors.isEmpty()) {
             orderService.createOrder(Long.parseLong(idProduct), adress, Integer.parseInt(count), user);
-
-            userService.subtractCashUser(user.getId(), Integer.parseInt(String.valueOf(Math.round(product.getPrice() * Integer.parseInt(count)))));
         }else{
             mnv.addAllObjects(errors);
             mnv.addObject("product", productService.getProductById(Long.parseLong(idProduct)));
@@ -169,6 +173,12 @@ public class OrderController {
         return prise;
     }
 
+    @ApiOperation(value = "Сумма округленная.")
+    private Integer roundPriseForUser(
+            @ApiParam(value = "Сумма пользователя.", required = true) Double prise){
+
+        return Integer.parseInt(String.valueOf(Math.round(prise)));
+    }
 
     @PostMapping("/basket/delete/{idOrder}")
     @ApiOperation(value = "Удалить заказ пользователя")
@@ -178,6 +188,57 @@ public class OrderController {
     ){
         orderService.deleteOrder(Long.parseLong(idOrder), user.getId());
         return new ModelAndView("redirect:/order/basket");
+    }
+
+    @PostMapping("/basket/update")
+    @ApiOperation(value = "Удалить заказ пользователя")
+    public ModelAndView updateOrderUser(
+            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user,
+            @ApiParam(value = "Список количества обновленных товаров .", required = true)  @RequestParam(value = "count_p[]", required = true) String[] countProducts
+    ){
+        Map<String, String> errors = new HashMap<>();
+        List<Order> ordersUser = orderService.getOrderUser(userService.getUserById(user.getId()));
+        List<Order> orderWhoNeedUpdate = new ArrayList<>();
+        List<Product> productListWhoNeedUpdate = new ArrayList<>();
+        Double realPriceUser = calculetePriseForUser(ordersUser);
+        ModelAndView mnv = new ModelAndView("redirect:/order/basket");
+
+        for (int i = 0; i < ordersUser.size(); i++) {
+            Integer realSelectProd = Integer.parseInt(countProducts[i]);
+            if (!ordersUser.get(i).getCount().equals(realSelectProd)) {
+                Product productOrd = new Product();
+                productOrd = ordersUser.get(i).getProduct();
+                productOrd.setCount(productOrd.getCount() + ordersUser.get(i).getCount());
+                productOrd.setCount(productOrd.getCount() - realSelectProd);
+                ordersUser.get(i).setCount(realSelectProd);
+                orderWhoNeedUpdate.add(ordersUser.get(i));
+                productListWhoNeedUpdate.add(productOrd);
+            }
+        }
+
+        Double newPriceUser = calculetePriseForUser(ordersUser);
+        realPriceUser -= newPriceUser;
+
+        if (realPriceUser < 0){
+            try {
+                userService.subtractCashUser(user.getId(), Math.abs(roundPriseForUser(realPriceUser)));
+            } catch (UserExeption userExeption) {
+                errors.put(ControllerUtils.constructError("price"), userExeption.getMessage());
+            }
+        }else {
+            userService.addCashUser(user.getId(), roundPriseForUser(realPriceUser));
+        }
+
+        if (errors.isEmpty()){
+            productService.updateProductList(productListWhoNeedUpdate);
+            orderService.updateOrderList(orderWhoNeedUpdate);
+        }else{
+            mnv.setViewName("/pages/for_order/showBasketUser");
+            constructPageBasketUser(mnv, user);
+            mnv.addAllObjects(errors);
+        }
+
+        return mnv;
     }
 
     @GetMapping("/basket/select_user/{idUser}")

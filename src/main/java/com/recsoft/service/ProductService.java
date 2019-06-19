@@ -187,6 +187,18 @@ public class ProductService {
 
     }
 
+    @ApiOperation(value = "Обновить информацию о продукте")
+    public void updateProduct(Product product){
+        productRepository.save(product);
+        log.info("Product with Id " + product.getId() + " was update.");
+    }
+
+    @ApiOperation(value = "Обновить заказы пользователя")
+    public void updateProductList(
+            @ApiParam(value = "Обновляемые заказы", required = true) List<Product> productList){
+        productRepository.saveAll(productList);
+    }
+
 
 
 }

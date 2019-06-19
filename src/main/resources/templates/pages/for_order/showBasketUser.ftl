@@ -2,10 +2,18 @@
 
 <@c.page>
 
+    <div class="row justify-content-center">
+            <#if priceError??>
+                <div class="alert alert-danger" role="alert">
+                    ${priceError}
+                </div>
+            </#if>
+    </div>
+
     <div class="form-group row">
         <label class="col-form-label">Кошелек : <#if user??>${user.cash}</#if> руб</label>
     </div>
-
+<form>
     <table class="table">
         <thead>
         <tr>
@@ -21,16 +29,15 @@
 
         <#list orderList as order>
             <tr>
-                <td>${order.product.name}</td>
+                <td>
+                    <a href="/product/show_product/${order.product.id}">${order.product.name}</a></td>
                 <td>${order.adress}</td>
                 <td>${order.product.price}</td>
-                <td>${order.count}</td>
+                <td><div class="col-sm-4"><input type="number" step="0" min="0"  max="${order.product.count + order.count}" name="count_p[]" value="${order.count}"></div></td>
                 <td>${listReadbleStatus[order_index]}</td>
                 <td>
-                    <form action="/order/basket/delete/${order.id}" method="post">
-                        <div class="col-sm-4"><button type="submit" class="btn btn-outline-primary">Отменить заказ</div>
-                        <input type="hidden" name="_csrf" value="${_csrf.token}" />
-                    </form>
+                    <div class="col-sm-4"><button type="submit" formmethod="post" formaction="/order/basket/delete/${order.id}" class="btn btn-outline-primary">Отменить заказ</div>
+
                 </td>
             </tr>
         </#list>
@@ -38,6 +45,9 @@
         </tbody>
     </table>
 
+    <div class="col-sm-4"><button type="submit" formmethod="post" formaction="/order/basket/update" class="btn btn-outline-primary">Обновить данные</div>
+    <input type="hidden" name="_csrf" value="${_csrf.token}" />
+</form>
     <div class="form-group row">
         <label class="col-form-label"><#if priceUser != 0>Общая сумма заказа : ${priceUser}<#else>Заказов в корзине нет</#if></label>
     </div>
