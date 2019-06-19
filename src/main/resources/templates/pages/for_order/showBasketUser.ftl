@@ -45,7 +45,13 @@
         </tbody>
     </table>
 
-    <div class="col-sm-4"><button type="submit" formmethod="post" formaction="/order/basket/update" class="btn btn-outline-primary">Обновить данные</div>
+    <#if priceUser != 0 >
+        <div class="row justify-content-center">
+            <button type="submit" formmethod="post" formaction="/order/basket/update" class=" col-sm-4 btn btn-outline-primary">Обновить данные</button>
+            <button type="submit" formmethod="post" formaction="/order/basket/delete_all" class="col-sm-4 ml-4 btn btn-outline-danger">Очистить корзину</button>
+        </div>
+    </#if>
+
     <input type="hidden" name="_csrf" value="${_csrf.token}" />
 </form>
     <div class="form-group row">

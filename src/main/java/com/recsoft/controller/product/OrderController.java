@@ -190,6 +190,15 @@ public class OrderController {
         return new ModelAndView("redirect:/order/basket");
     }
 
+    @PostMapping("/basket/delete_all")
+    @ApiOperation(value = "Удалить все заказы пользователя")
+    public ModelAndView deleteOrderUser(
+            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
+    ){
+        orderService.deleteAllOrdersUser(user.getId());
+        return new ModelAndView("redirect:/order/basket");
+    }
+
     @PostMapping("/basket/update")
     @ApiOperation(value = "Удалить заказ пользователя")
     public ModelAndView updateOrderUser(

@@ -23,4 +23,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query(value = "DELETE from order_m ord_m where ord_m.id = :idOrder", nativeQuery = true)
     void deleteOrderById(@Param("idOrder") Long idOrder);
 
+
+    @Modifying
+    @Query(value = "DELETE from order_m ord_m where ord_m.user_id = :idUser", nativeQuery = true)
+    void deleteAllByIdUser(@Param("idUser") Long idUser);
+
 }

@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -80,6 +81,35 @@ public class OrderService {
         log.info("Заказ с id = " + idOrder + " удален.");
     }
 
+    @ApiOperation(value = "Удалить заказы пользователя.")
+    public void deleteAllOrdersUser(
+            @ApiParam(value = "Id продукта который надо удалить", required = true) Long idUser){
+
+        User user = userService.getUserById(idUser);
+
+        List<Order> ordersUser = new ArrayList<>(user.getOrders());
+        List<Product> productWhoNeedUpdete = new ArrayList<>();
+
+        Double addCash = 0.0;
+
+        for (Order order: ordersUser){
+            Product product= new Product();
+            product = order.getProduct();
+            product.setCount(product.getCount() + order.getCount());
+            productWhoNeedUpdete.add(product);
+            addCash += order.getCount() * order.getProduct().getPrice();
+        }
+
+
+
+        productRepository.saveAll(productWhoNeedUpdete);
+
+        userService.addCashUser(idUser, Integer.parseInt(String.valueOf(Math.round(addCash))));
+
+        orderRepository.deleteAllByIdUser(user.getId());
+        log.info("Заказ пользователя с id = " + user.getUsername() + " удалены.");
+    }
+
     @ApiOperation(value = "Возвращает роль по названию.")
     public Role getRoleByName(
             @ApiParam(value = "Имя роли.", required = true) String nameRole){
@@ -103,6 +133,7 @@ public class OrderService {
             @ApiParam(value = "Обновляемые заказы", required = true) List<Order> orderList){
         orderRepository.saveAll(orderList);
     }
+
 
 
 }
