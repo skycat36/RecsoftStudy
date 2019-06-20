@@ -23,8 +23,12 @@ import java.util.List;
                         "отвечающий за целостность базы данных пользователей")
 public class UserService implements UserDetailsService {
 
+    private final UserRepository userRepository;
+
     @Autowired
-    private UserRepository userRepository;
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     /*Поиск пользователя в базе
     * @param - login пользователя

@@ -19,27 +19,31 @@ import java.util.List;
                 "отвечающий за целостность базы данных заказов")
 public class OrderService {
 
-    private final Long DEFAULT_STATUS_ORDER = new Long(1);
+    private final long DEFAULT_STATUS_ORDER = 1;
 
     private Logger log = LoggerFactory.getLogger(ProductService.class.getName());
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+
+    private final ProductRepository productRepository;
+
+    private final OrderRepository orderRepository;
+
+    private final UserRepository userRepository;
+
+    private final StatusRepository statusRepository;
+
+    private final RoleRepository roleRepository;
 
     @Autowired
-    private ProductRepository productRepository;
-
-    @Autowired
-    private OrderRepository orderRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private StatusRepository statusRepository;
-
-    @Autowired
-    private RoleRepository roleRepository;
+    public OrderService(UserService userService, ProductRepository productRepository, OrderRepository orderRepository, UserRepository userRepository, StatusRepository statusRepository, RoleRepository roleRepository) {
+        this.userService = userService;
+        this.productRepository = productRepository;
+        this.orderRepository = orderRepository;
+        this.userRepository = userRepository;
+        this.statusRepository = statusRepository;
+        this.roleRepository = roleRepository;
+    }
 
     @ApiOperation(value = "Создать заказ")
     public void createOrder(
@@ -93,8 +97,7 @@ public class OrderService {
         Double addCash = 0.0;
 
         for (Order order: ordersUser){
-            Product product= new Product();
-            product = order.getProduct();
+            Product product = order.getProduct();
             product.setCount(product.getCount() + order.getCount());
             productWhoNeedUpdete.add(product);
             addCash += order.getCount() * order.getProduct().getPrice();

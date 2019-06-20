@@ -30,14 +30,18 @@ public class OrderController {
 
     private final String ADMIN = "admin", SELLER = "seller", USER = "user";
 
-    @Autowired
-    private OrderService orderService;
+    private final OrderService orderService;
+
+    private final ProductService productService;
+
+    private final UserService userService;
 
     @Autowired
-    private ProductService productService;
-
-    @Autowired
-    private UserService userService;
+    public OrderController(OrderService orderService, ProductService productService, UserService userService) {
+        this.orderService = orderService;
+        this.productService = productService;
+        this.userService = userService;
+    }
 
     @GetMapping("/create_order/{idProduct}")
     @ApiOperation(value = "Отобразить страницу создания заказа")
@@ -164,7 +168,7 @@ public class OrderController {
     @ApiOperation(value = "Сумма цен сделаных пользователем заказов.")
     private Double calculetePriseForUser(
             @ApiParam(value = "Список заказов пользователя.", required = true) List<Order> ordersUser){
-        Double prise = 0.0;
+        double prise = 0.0;
 
         for (Order order: ordersUser){
             prise += order.getCount() * order.getProduct().getPrice();
@@ -298,8 +302,7 @@ public class OrderController {
             List<Order> orderWhoNeedUpdate = new ArrayList<>();
 
             for (int i = 0; i < ordersUser.size(); i++) {
-                Status statusRealOrder = new Status();
-                statusRealOrder = ordersUser.get(i).getStatus();
+                Status statusRealOrder = ordersUser.get(i).getStatus();
                 String newStatusName = ReadbleUtils.createStatusOrderFromReadable(statusOrd[i]);
                 if (!statusRealOrder.getName().equals(newStatusName)) {
                     ordersUser.get(i).setStatus(orderService.getStatusByName(newStatusName));

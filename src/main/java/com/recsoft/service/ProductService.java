@@ -38,25 +38,26 @@ public class ProductService {
     @Value("${upload.path}")
     private String uploadPath;
 
-    @Autowired
-    private ProductRepository productRepository;
+    private final ProductRepository productRepository;
+
+    private final SizeUserRepository sizeUserRepository;
+
+    private final CategoryRepository categoryRepository;
+
+    private final PhotoRepository photoRepository;
+
+    private final UserRepository userRepository;
+
+    private final UserProdComRepository userProdComRepository;
 
     @Autowired
-    private SizeUserRepository sizeUserRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
-    private PhotoRepository photoRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private UserProdComRepository userProdComRepository;
-
-    public ProductService() {
+    public ProductService(ProductRepository productRepository, SizeUserRepository sizeUserRepository, CategoryRepository categoryRepository, PhotoRepository photoRepository, UserRepository userRepository, UserProdComRepository userProdComRepository) {
+        this.productRepository = productRepository;
+        this.sizeUserRepository = sizeUserRepository;
+        this.categoryRepository = categoryRepository;
+        this.photoRepository = photoRepository;
+        this.userRepository = userRepository;
+        this.userProdComRepository = userProdComRepository;
     }
 
     public Product getProductById(

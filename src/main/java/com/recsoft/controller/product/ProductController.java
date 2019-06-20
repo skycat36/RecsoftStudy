@@ -39,11 +39,15 @@ public class ProductController {
     @Value("${upload.path}")
     private String uploadPath;
 
-    @Autowired
-    private ProductService productService;
+    private final ProductService productService;
+
+    private final UserService userService;
 
     @Autowired
-    private UserService userService;
+    public ProductController(ProductService productService, UserService userService) {
+        this.productService = productService;
+        this.userService = userService;
+    }
 
     /* @return ModelAndView - Отображает список имеющихся продуктов. */
     @GetMapping("/product_list")
