@@ -18,10 +18,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/order")
@@ -83,7 +80,7 @@ public class OrderController {
             }
 
             try {
-                userService.subtractCashUser(user.getId(), roundPriseForUser(product.getPrice() * Integer.parseInt(count)));
+                userService.subtractCashUser(user.getId(), orderService.roundPriseForUser(product.getPrice() * Integer.parseInt(count)));
             } catch (UserExeption userExeption) {
                 errors.put(ControllerUtils.constructError("price"), userExeption.getMessage());
             }
@@ -143,8 +140,8 @@ public class OrderController {
             @ApiParam(value = "Данные пользователя.", required = true) User user){
         List<Order> ordersUser = orderService.getOrderUser(user);
         mnv.addObject("orderList", ordersUser);
-        mnv.addObject("listReadbleStatus", createListReadbleStatusOrders(ordersUser));
-        mnv.addObject("priceUser", calculetePriseForUser(ordersUser));
+        mnv.addObject("listReadbleStatus", orderService.createListReadbleStatusOrders(ordersUser));
+        mnv.addObject("priceUser", orderService.calculetePriseForUser(ordersUser));
     }
 
     @ApiOperation(value = "Добавляет параметры для отображения корзины продавца.")
@@ -152,36 +149,6 @@ public class OrderController {
             @ApiParam(value = "Модель хранящая параметры для передачи на экран.", required = true) ModelAndView mnv){
         Role buyer = orderService.getRoleByName(USER);
         mnv.addObject("userList", userService.getAllUserWithRoleUser(buyer));
-    }
-
-    @ApiOperation(value = "Создание читаемых статусов заказа.")
-    private List<String> createListReadbleStatusOrders(
-            @ApiParam(value = "Список заказов пользователя.", required = true) List<Order> orders){
-        List<String> listReadbleStatus = new ArrayList<>();
-
-        for (Order order: orders){
-            listReadbleStatus.add(ReadbleUtils.createReadableStatusOrder(order.getStatus().getName()));
-        }
-        return listReadbleStatus;
-    }
-
-    @ApiOperation(value = "Сумма цен сделаных пользователем заказов.")
-    private Double calculetePriseForUser(
-            @ApiParam(value = "Список заказов пользователя.", required = true) List<Order> ordersUser){
-        double prise = 0.0;
-
-        for (Order order: ordersUser){
-            prise += order.getCount() * order.getProduct().getPrice();
-        }
-
-        return prise;
-    }
-
-    @ApiOperation(value = "Сумма округленная.")
-    private Integer roundPriseForUser(
-            @ApiParam(value = "Сумма пользователя.", required = true) Double prise){
-
-        return Integer.parseInt(String.valueOf(Math.round(prise)));
     }
 
     @PostMapping("/basket/delete/{idOrder}")
@@ -210,42 +177,11 @@ public class OrderController {
             @ApiParam(value = "Список количества обновленных товаров .", required = true)  @RequestParam(value = "count_p[]", required = true) String[] countProducts
     ){
         Map<String, String> errors = new HashMap<>();
-        List<Order> ordersUser = orderService.getOrderUser(userService.getUserById(user.getId()));
-        List<Order> orderWhoNeedUpdate = new ArrayList<>();
-        List<Product> productListWhoNeedUpdate = new ArrayList<>();
-        Double realPriceUser = calculetePriseForUser(ordersUser);
         ModelAndView mnv = new ModelAndView("redirect:/order/basket");
 
-        for (int i = 0; i < ordersUser.size(); i++) {
-            Integer realSelectProd = Integer.parseInt(countProducts[i]);
-            if (!ordersUser.get(i).getCount().equals(realSelectProd)) {
-                Product productOrd = new Product();
-                productOrd = ordersUser.get(i).getProduct();
-                productOrd.setCount(productOrd.getCount() + ordersUser.get(i).getCount());
-                productOrd.setCount(productOrd.getCount() - realSelectProd);
-                ordersUser.get(i).setCount(realSelectProd);
-                orderWhoNeedUpdate.add(ordersUser.get(i));
-                productListWhoNeedUpdate.add(productOrd);
-            }
-        }
+        orderService.updateOrderList(user, Arrays.asList(countProducts), errors);
 
-        Double newPriceUser = calculetePriseForUser(ordersUser);
-        realPriceUser -= newPriceUser;
-
-        if (realPriceUser < 0){
-            try {
-                userService.subtractCashUser(user.getId(), Math.abs(roundPriseForUser(realPriceUser)));
-            } catch (UserExeption userExeption) {
-                errors.put(ControllerUtils.constructError("price"), userExeption.getMessage());
-            }
-        }else {
-            userService.addCashUser(user.getId(), roundPriseForUser(realPriceUser));
-        }
-
-        if (errors.isEmpty()){
-            productService.updateProductList(productListWhoNeedUpdate);
-            orderService.updateOrderList(orderWhoNeedUpdate);
-        }else{
+        if (!errors.isEmpty()){
             mnv.setViewName("/pages/for_order/showBasketUser");
             constructPageBasketUser(mnv, user);
             mnv.addAllObjects(errors);
@@ -267,8 +203,8 @@ public class OrderController {
         mav.addObject("user", user);
         mav.addObject("listStatus", ReadbleUtils.createListReadbleStatuses());
         mav.addObject("orderList", ordersUser);
-        mav.addObject("listReadbleStatus", createListReadbleStatusOrders(ordersUser));
-        mav.addObject("priceUser", calculetePriseForUser(ordersUser));
+        mav.addObject("listReadbleStatus", orderService.createListReadbleStatusOrders(ordersUser));
+        mav.addObject("priceUser", orderService.calculetePriseForUser(ordersUser));
 
         return mav;
     }
@@ -298,20 +234,8 @@ public class OrderController {
         }
 
         if (errors.isEmpty()) {
-            List<Order> ordersUser = orderService.getOrderUser(userService.getUserById(Long.parseLong(idUser)));
-            List<Order> orderWhoNeedUpdate = new ArrayList<>();
-
-            for (int i = 0; i < ordersUser.size(); i++) {
-                Status statusRealOrder = ordersUser.get(i).getStatus();
-                String newStatusName = ReadbleUtils.createStatusOrderFromReadable(statusOrd[i]);
-                if (!statusRealOrder.getName().equals(newStatusName)) {
-                    ordersUser.get(i).setStatus(orderService.getStatusByName(newStatusName));
-                    orderWhoNeedUpdate.add(ordersUser.get(i));
-                }
-            }
-            orderService.updateOrderList(orderWhoNeedUpdate);
+            orderService.updateStatusOrders(userService.getUserById(Long.parseLong(idUser)), Arrays.asList(statusOrd));
         }else {
-
             mnv = new ModelAndView("/pages/for_order/selectUserBasket");
 
             List<Order> ordersUser = orderService.getOrderUser(userService.getUserById(Long.parseLong(idUser)));
@@ -319,8 +243,8 @@ public class OrderController {
             mnv.addObject("user", userService.getUserById(Long.parseLong(idUser)));
             mnv.addObject("listStatus", ReadbleUtils.createListReadbleStatuses());
             mnv.addObject("orderList", ordersUser);
-            mnv.addObject("listReadbleStatus", createListReadbleStatusOrders(ordersUser));
-            mnv.addObject("priceUser", calculetePriseForUser(ordersUser));
+            mnv.addObject("listReadbleStatus", orderService.createListReadbleStatusOrders(ordersUser));
+            mnv.addObject("priceUser", orderService.calculetePriseForUser(ordersUser));
             mnv.addAllObjects(errors);
         }
 

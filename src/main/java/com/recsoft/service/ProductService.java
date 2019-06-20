@@ -78,11 +78,7 @@ public class ProductService {
     @ApiOperation(value = "Отобразить страницу создания заказа")
     public boolean existProduct(
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Product product){
-        if (productRepository.findProductByName(product.getName()) != null) {
-            return true;
-        }else {
-            return false;
-        }
+        return productRepository.findProductByName(product.getName()) != null;
     }
 
     /*

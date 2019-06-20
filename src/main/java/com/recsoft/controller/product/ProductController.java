@@ -57,7 +57,6 @@ public class ProductController {
     ) {
         ModelAndView mnv = new ModelAndView("/pages/for_product/productList");
         mnv.addObject("user", user);
-        //mnv.addObject("categoryProd", "");
         mnv.addObject("listCategory", productService.getAllCategory());
         mnv.addObject("productList", productService.getAllProduct());
         return mnv;
@@ -88,12 +87,6 @@ public class ProductController {
         return mav;
     }
 
-    /* @param product - продукт созданный пользователем.
-     * @param categoryProd - выбранная категория товара.
-     * @param sizeUsersProd - список выбранных размеров.
-     * @param file - загруженный пользователем.
-     * @param bindingResult - проверка данных на ошибки.
-     * @return ModelAndView - добавляет продукт в базу и если нет ошибок возвращает на список товаров.*/
     @PostMapping("/add_product")
     @ApiOperation(value = "Добавить продукты в базу.")
     public ModelAndView addProduct(

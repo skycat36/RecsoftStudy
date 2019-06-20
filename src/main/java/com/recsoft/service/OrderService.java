@@ -1,7 +1,10 @@
 package com.recsoft.service;
 
 import com.recsoft.data.entity.*;
+import com.recsoft.data.exeption.UserExeption;
 import com.recsoft.data.repository.*;
+import com.recsoft.utils.ControllerUtils;
+import com.recsoft.utils.ReadbleUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -12,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Api(value = "Сервис заказов",
@@ -25,6 +29,8 @@ public class OrderService {
 
     private final UserService userService;
 
+    private final ProductService productService;
+
     private final ProductRepository productRepository;
 
     private final OrderRepository orderRepository;
@@ -36,8 +42,9 @@ public class OrderService {
     private final RoleRepository roleRepository;
 
     @Autowired
-    public OrderService(UserService userService, ProductRepository productRepository, OrderRepository orderRepository, UserRepository userRepository, StatusRepository statusRepository, RoleRepository roleRepository) {
+    public OrderService(UserService userService, ProductService productService, ProductRepository productRepository, OrderRepository orderRepository, UserRepository userRepository, StatusRepository statusRepository, RoleRepository roleRepository) {
         this.userService = userService;
+        this.productService = productService;
         this.productRepository = productRepository;
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
@@ -94,7 +101,7 @@ public class OrderService {
         List<Order> ordersUser = new ArrayList<>(user.getOrders());
         List<Product> productWhoNeedUpdete = new ArrayList<>();
 
-        Double addCash = 0.0;
+        double addCash = 0.0;
 
         for (Order order: ordersUser){
             Product product = order.getProduct();
@@ -131,12 +138,96 @@ public class OrderService {
         return orderRepository.findAllByUser(user);
     }
 
+    @ApiOperation(value = "Создание читаемых статусов заказа.")
+    public List<String> createListReadbleStatusOrders(
+            @ApiParam(value = "Список заказов пользователя.", required = true) List<Order> orders){
+        List<String> listReadbleStatus = new ArrayList<>();
+
+        for (Order order: orders){
+            listReadbleStatus.add(ReadbleUtils.createReadableStatusOrder(order.getStatus().getName()));
+        }
+        return listReadbleStatus;
+    }
     @ApiOperation(value = "Обновить заказы пользователя")
     public void updateOrderList(
-            @ApiParam(value = "Обновляемые заказы", required = true) List<Order> orderList){
-        orderRepository.saveAll(orderList);
+            @ApiParam(value = "Пользователь системы.", required = true) User user,
+            @ApiParam(value = "Информация о количестве товаров.", required = true) List<String> countProducts,
+            @ApiParam(value = "Информация об ошибках.", required = true) Map<String, String> errors){
+
+        List<Order> ordersUser = this.getOrderUser(userService.getUserById(user.getId()));
+        List<Order> orderWhoNeedUpdate = new ArrayList<>();
+        List<Product> productListWhoNeedUpdate = new ArrayList<>();
+        double realPriceUser = this.calculetePriseForUser(ordersUser);
+
+
+        for (int i = 0; i < ordersUser.size(); i++) {
+            Integer realSelectProd = Integer.parseInt(countProducts.get(i));
+            if (!ordersUser.get(i).getCount().equals(realSelectProd)) {
+                Product productOrd = ordersUser.get(i).getProduct();
+                productOrd.setCount(productOrd.getCount() + ordersUser.get(i).getCount());
+                productOrd.setCount(productOrd.getCount() - realSelectProd);
+                ordersUser.get(i).setCount(realSelectProd);
+                orderWhoNeedUpdate.add(ordersUser.get(i));
+                productListWhoNeedUpdate.add(productOrd);
+            }
+        }
+
+        double newPriceUser = this.calculetePriseForUser(ordersUser);
+        realPriceUser -= newPriceUser;
+
+        if (realPriceUser < 0){
+            try {
+                userService.subtractCashUser(user.getId(), Math.abs(this.roundPriseForUser(realPriceUser)));
+            } catch (UserExeption userExeption) {
+                errors.put(ControllerUtils.constructError("price"), userExeption.getMessage());
+            }
+        }else {
+            userService.addCashUser(user.getId(), this.roundPriseForUser(realPriceUser));
+        }
+
+        if (errors.isEmpty()){
+            productService.updateProductList(productListWhoNeedUpdate);
+            orderRepository.saveAll(orderWhoNeedUpdate);
+        }
     }
 
+    @ApiOperation(value = "Сумма цен сделаных пользователем заказов.")
+    public double calculetePriseForUser(
+            @ApiParam(value = "Список заказов пользователя.", required = true) List<Order> ordersUser){
+        double prise = 0.0;
 
+        for (Order order: ordersUser){
+            prise += order.getCount() * order.getProduct().getPrice();
+        }
+
+        return prise;
+    }
+
+    @ApiOperation(value = "Сумма округленная.")
+    public Integer roundPriseForUser(
+            @ApiParam(value = "Сумма пользователя.", required = true) Double prise){
+
+        return Integer.parseInt(String.valueOf(Math.round(prise)));
+    }
+
+    @ApiOperation(value = "Обновить статус списка переданных заказов.")
+    public void updateStatusOrders(
+            @ApiParam(value = "Пользователь системы.", required = true) User user,
+            @ApiParam(value = "Информация о статусе товаров.", required = true) List<String> statusOrd
+            ){
+        List<Order> ordersUser = this.getOrderUser(user);
+        List<Order> orderWhoNeedUpdate = new ArrayList<>();
+
+        for (int i = 0; i < ordersUser.size(); i++) {
+            Status statusRealOrder = ordersUser.get(i).getStatus();
+            String newStatusName = ReadbleUtils.createStatusOrderFromReadable(statusOrd.get(i));
+            if (!statusRealOrder.getName().equals(newStatusName)) {
+                ordersUser.get(i).setStatus(this.getStatusByName(newStatusName));
+                orderWhoNeedUpdate.add(ordersUser.get(i));
+            }
+        }
+        orderRepository.saveAll(orderWhoNeedUpdate);
+
+    }
 
 }
