@@ -141,18 +141,20 @@ public class ProductController {
             @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user){
         ModelAndView mav = new ModelAndView("/pages/for_product/showProduct");
 
+        Map<String, String> errors = new HashMap<>();
+
+        if (idProduct.equals("")){
+            errors.put(ControllerUtils.constructError("prod"), "Такого продукта не существует");
+        }
+
         Product product = productService.getProductById(Long.parseLong(idProduct));
 
-        mav.addObject("user", user);
-        if (product != null) {
-            mav.addObject("product", product);
-            List<UserProdCom> coments = new ArrayList<>(product.getComents());
-            Collections.sort(coments);
-            mav.addObject("orederedComment", coments);
-        }else {
-            mav.addObject("prodError", "Такого продукта не существует");
+        if (product == null){
             mav.setViewName("redirect:/product/product_list");
+        }else {
+            this.showInfoProduct(mav, user, product, errors);
         }
+
         return mav;
     }
 
@@ -162,11 +164,34 @@ public class ProductController {
             @ApiParam(value = "Комментарий для продукта.", required = true) @RequestParam String comment,
             @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
     ){
-        ModelAndView mav = new ModelAndView("redirect:/product/show_product/" + idProduct);
+        ModelAndView mav = new ModelAndView("/pages/for_product/showProduct");
+        Map<String, String> errors = new HashMap<>();
 
-        productService.addComment(comment, user.getId(), Long.parseLong(idProduct));
+
+        if (comment.equals("")){
+            errors.put(ControllerUtils.constructError("comment"), "Нельзя коментировать пустым текстом");
+        }else {
+            productService.addComment(comment, user.getId(), Long.parseLong(idProduct));
+        }
+        Product product = productService.getProductById(Long.parseLong(idProduct));
+
+        this.showInfoProduct(mav, user, product, errors);
 
         return mav;
+    }
+
+    private void showInfoProduct(
+            @ApiParam(value = "Модель хранящая параметры для передачи на экран.", required = true)  ModelAndView mav,
+            @ApiParam(value = "Данные пользователя.", required = true) User user,
+            @ApiParam(value = "Id выбранного продукта.", required = true) Product product,
+            @ApiParam(value = "Информация об ошибках.", required = true) Map<String, String> errors
+    ){
+        mav.addObject("user", user);
+        mav.addObject("product", product);
+        List<UserProdCom> coments = new ArrayList<>(product.getComents());
+        Collections.sort(coments);
+        mav.addObject("orederedComment", coments);
+        mav.addAllObjects(errors);
     }
 
     @GetMapping("/edit_product/{idProduct}")

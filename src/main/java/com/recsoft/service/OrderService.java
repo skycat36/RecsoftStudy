@@ -92,8 +92,24 @@ public class OrderService {
         log.info("Заказ с id = " + idOrder + " удален.");
     }
 
+    @ApiOperation(value = "Удалить заказ.")
+    public void deleteOrderWhoNotPay(
+            @ApiParam(value = "Id продукта который надо удалить", required = true) Long idOrder){
+
+        Order order = orderRepository.findById(idOrder).get();
+
+        Product product = order.getProduct();
+
+        product.setCount(product.getCount() + order.getCount());
+
+        productRepository.save(product);
+
+        orderRepository.deleteOrderById(idOrder);
+        log.info("Заказ с id = " + idOrder + " удален.");
+    }
+
     @ApiOperation(value = "Удалить заказы пользователя.")
-    public void deleteAllOrdersUser(
+    public void deleteAllOrdersNotPayUser(
             @ApiParam(value = "Id продукта который надо удалить", required = true) Long idUser){
 
         User user = userService.getUserById(idUser);
@@ -110,14 +126,12 @@ public class OrderService {
             addCash += order.getCount() * order.getProduct().getPrice();
         }
 
-
-
         productRepository.saveAll(productWhoNeedUpdete);
 
         userService.addCashUser(idUser, Integer.parseInt(String.valueOf(Math.round(addCash))));
 
-        orderRepository.deleteAllByIdUser(user.getId());
-        log.info("Заказ пользователя с id = " + user.getUsername() + " удалены.");
+        orderRepository.deleteAllByIdUserNotPay(user.getId());
+        log.info("Неоплаченные заказы пользователя с id = " + user.getUsername() + " удалены.");
     }
 
     @ApiOperation(value = "Возвращает роль по названию.")
@@ -132,10 +146,16 @@ public class OrderService {
         return statusRepository.findFirstByName(nameStatus);
     }
 
+    @ApiOperation(value = "Заказы сделанные пользователем не оплаченные.")
+    public List<Order> getOrderUserNotPay(
+            @ApiParam(value = "Пользователь у которого необходимо вернуть неоплаченные заказы", required = true) User user){
+        return orderRepository.findAllByUserAndPayFalse(user);
+    }
+
     @ApiOperation(value = "Заказы сделанные пользователем.")
     public List<Order> getOrderUser(
             @ApiParam(value = "Пользователь у которого необходимо вернуть заказы", required = true) User user){
-        return orderRepository.findAllByUser(user);
+        return orderRepository.findAllByUserAndPayTrue(user);
     }
 
     @ApiOperation(value = "Создание читаемых статусов заказа.")
@@ -149,46 +169,36 @@ public class OrderService {
         return listReadbleStatus;
     }
     @ApiOperation(value = "Обновить заказы пользователя")
-    public void updateOrderList(
+    public void updateOrderListWhoNotPay(
             @ApiParam(value = "Пользователь системы.", required = true) User user,
-            @ApiParam(value = "Информация о количестве товаров.", required = true) List<String> countProducts,
+            @ApiParam(value = "Адрес куда отправлять продукт.", required = true) String adress,
             @ApiParam(value = "Информация об ошибках.", required = true) Map<String, String> errors){
 
-        List<Order> ordersUser = this.getOrderUser(userService.getUserById(user.getId()));
-        List<Order> orderWhoNeedUpdate = new ArrayList<>();
-        List<Product> productListWhoNeedUpdate = new ArrayList<>();
-        double realPriceUser = this.calculetePriseForUser(ordersUser);
+        List<Order> ordersUser = this.getOrderUserNotPay(userService.getUserById(user.getId()));
+        double realPriceOrder = this.calculetePriseForUser(ordersUser);
 
-
-        for (int i = 0; i < ordersUser.size(); i++) {
-            Integer realSelectProd = Integer.parseInt(countProducts.get(i));
-            if (!ordersUser.get(i).getCount().equals(realSelectProd)) {
-                Product productOrd = ordersUser.get(i).getProduct();
-                productOrd.setCount(productOrd.getCount() + ordersUser.get(i).getCount());
-                productOrd.setCount(productOrd.getCount() - realSelectProd);
-                ordersUser.get(i).setCount(realSelectProd);
-                orderWhoNeedUpdate.add(ordersUser.get(i));
-                productListWhoNeedUpdate.add(productOrd);
-            }
+        if (user.getCash() < realPriceOrder){
+            errors.put(ControllerUtils.constructError("price"), "Недостаточно средств");
         }
 
-        double newPriceUser = this.calculetePriseForUser(ordersUser);
-        realPriceUser -= newPriceUser;
-
-        if (realPriceUser < 0){
-            try {
-                userService.subtractCashUser(user.getId(), Math.abs(this.roundPriseForUser(realPriceUser)));
-            } catch (UserExeption userExeption) {
-                errors.put(ControllerUtils.constructError("price"), userExeption.getMessage());
-            }
-        }else {
-            userService.addCashUser(user.getId(), this.roundPriseForUser(realPriceUser));
+        if (adress.equals("")){
+            errors.put(ControllerUtils.constructError("adress"), "Поле адреса пустое");
         }
 
         if (errors.isEmpty()){
-            productService.updateProductList(productListWhoNeedUpdate);
-            orderRepository.saveAll(orderWhoNeedUpdate);
+            for (Order order: ordersUser) {
+                order.setAdress(adress);
+                order.setPay(true);
+            }
+
+            try {
+                userService.subtractCashUser(user.getId(), Math.abs(this.roundPriseForUser(realPriceOrder)));
+                orderRepository.saveAll(ordersUser);
+            } catch (UserExeption userExeption) {
+                errors.put(ControllerUtils.constructError("price"), userExeption.getMessage());
+            }
         }
+
     }
 
     @ApiOperation(value = "Сумма цен сделаных пользователем заказов.")

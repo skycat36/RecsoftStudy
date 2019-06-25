@@ -91,7 +91,6 @@
             <#if (user.role.name == 'user')>
                 <a type="button" class="btn btn-primary ml-2" <#if product??>href="/order/create_order/${product.id}"</#if>>Оформить заказ</a>
             </#if>
-            <#--<div class="col-sm-1"><button type="submit" class="btn btn-primary ml-0">Оформить заказ</button></div>-->
         </div>
         <input type="hidden" value="${_csrf.token}" name="_csrf">
     </form>
@@ -104,8 +103,13 @@
         <div class="form-group row">
             <label class="col-sm-2 col-form-label">Оставить свой :</label>
             <div class="col-sm-3">
-                <textarea name="comment" minlength="0" class="form-control small"
+                <textarea name="comment" minlength="0" class="form-control small ${(commentError??)?string('is-invalid', '')}"
                           placeholder="Комментарий"></textarea>
+                <#if commentError??>
+                <div class="invalid-feedback">
+                    ${commentError}
+                </div>
+                </#if>
             </div>
         </div>
         <div class="col-sm-4"><button type="submit" class="btn btn-outline-primary">Отправить</button></div>

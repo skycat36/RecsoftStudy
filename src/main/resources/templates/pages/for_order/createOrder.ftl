@@ -3,7 +3,7 @@
 <@c.page>
 
     <div class="form-group row">
-        <h1 class="mb-3">Оформить заказ</h1>
+        <h1 class="mb-3">Положить в корзину</h1>
     </div>
 
     <div class="row justify-content-center">
@@ -28,17 +28,17 @@
 
 <form action="/order/create_order/${product.id}" method="post">
     <div class="form-group row">
-        <label class="col-form-label">Адресс получателя : </label>
-        <div class="col-sm-3">
-            <input type="text" name="adress" value="<#if order??>${order.adress}</#if>"
-                   class="form-control small ${(adressError??)?string('is-invalid', '')}"
-                   placeholder="Адресс получателя"/>
-            <#if adressError??>
-                <div class="invalid-feedback">
-                    ${adressError}
-                </div>
-            </#if>
-        </div>
+        <#--<label class="col-form-label">Адресс получателя : </label>-->
+        <#--<div class="col-sm-3">-->
+            <#--<input type="text" name="adress" value="<#if order??>${order.adress}</#if>"-->
+                   <#--class="form-control small ${(adressError??)?string('is-invalid', '')}"-->
+                   <#--placeholder="Адресс получателя"/>-->
+            <#--<#if adressError??>-->
+                <#--<div class="invalid-feedback">-->
+                    <#--${adressError}-->
+                <#--</div>-->
+            <#--</#if>-->
+        <#--</div>-->
 
         <label class="col-form-label">Количество выбранных товаров : </label>
         <div class="col-sm-3">
@@ -53,7 +53,7 @@
         </div>
     </div>
 
-    <div class="col-sm-4"><button type="submit" class="btn btn-outline-primary">Оформить заказ</button></div>
+    <div class="col-sm-4"><button type="submit" class="btn btn-outline-primary">Добавить в корзину</button></div>
     <input type="hidden" name="_csrf" value="${_csrf.token}" />
 </form>
 

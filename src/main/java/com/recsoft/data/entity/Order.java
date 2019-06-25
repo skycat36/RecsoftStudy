@@ -1,9 +1,11 @@
 package com.recsoft.data.entity;
 
 import io.swagger.annotations.ApiModel;
+import net.bytebuddy.implementation.bind.annotation.Default;
 import org.springframework.beans.factory.annotation.Value;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.util.Set;
 
 /* Заказ на товар.
@@ -40,7 +42,19 @@ public class Order {
     @Column(name = "count_p")
     private Integer count;
 
+    @Column(name = "pay")
+    private Boolean pay;
+
     public Order() {
+    }
+
+    public Order(Product product, User user, Status status, String adress, Integer count, Boolean pay) {
+        this.product = product;
+        this.user = user;
+        this.status = status;
+        this.adress = adress;
+        this.count = count;
+        this.pay = pay;
     }
 
     public Order(Product product, User user, Status status, String adress, Integer count) {
@@ -49,6 +63,7 @@ public class Order {
         this.status = status;
         this.adress = adress;
         this.count = count;
+        this.pay = false;
     }
 
     public Product getProduct() {
@@ -97,5 +112,13 @@ public class Order {
 
     public void setAdress(String adress) {
         this.adress = adress;
+    }
+
+    public Boolean getPay() {
+        return pay;
+    }
+
+    public void setPay(Boolean pay) {
+        this.pay = pay;
     }
 }

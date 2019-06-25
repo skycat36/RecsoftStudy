@@ -1,7 +1,7 @@
 <#import "../../parts/common.ftl" as c>
 
 <@c.page>
-<form action="/order/basket/select_user/${user.id}" method="post">
+<form action="/order/cart/select_user/${user.id}" method="post">
     <div class="form-group row">
         <label class="col-form-label">Имя клиента : <#if user??>${user.login}</#if></label>
     </div>

@@ -18,12 +18,19 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/product/add_product">Добавить товар</a>
                 </li>
+
             </#if>
             <li class="nav-item">
-                <a class="nav-link" href="/order/basket"><#if (user.role.name == 'user')>Корзина товаров</#if>
-                                                         <#if (user.role.name == 'seller')>Корзины покупателей</#if>
+                <a class="nav-link" href="/order/cart">
+                    <#if (user.role.name == 'user')>Корзина товаров</#if>
+                    <#if (user.role.name == 'seller')>Корзины покупателей</#if>
                 </a>
             </li>
+            <#if (user.role.name = 'user')>
+                <li class="nav-item">
+                    <a class="nav-link" href="/order/orders_user">Список заказов</a>
+                </li>
+            </#if>
         </#if>
         </ul>
         <div class="navbar-text mr-3">${name}</div>

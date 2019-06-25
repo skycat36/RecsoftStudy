@@ -19,7 +19,7 @@
 
         <#list userList as user>
         <tr>
-            <td><a href="/order/basket/select_user/${user.id}" class="card-link">${user.login}</a></td>
+            <td><a href="/order/cart/select_user/${user.id}" class="card-link">${user.login}</a></td>
             <td>${user.rating}</td>
             <td>${user.cash}</td>
         </tr>

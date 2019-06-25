@@ -1,7 +1,9 @@
 package com.recsoft.controller.product;
 
-import com.recsoft.data.entity.*;
-import com.recsoft.data.exeption.UserExeption;
+import com.recsoft.data.entity.Order;
+import com.recsoft.data.entity.Product;
+import com.recsoft.data.entity.Role;
+import com.recsoft.data.entity.User;
 import com.recsoft.service.OrderService;
 import com.recsoft.service.ProductService;
 import com.recsoft.service.UserService;
@@ -18,7 +20,13 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+// TODO при увеличении количества товаров в корзине происходит обновление инфы на сервере
+
 
 @RestController
 @RequestMapping("/order")
@@ -50,13 +58,15 @@ public class OrderController {
         return mnv;
     }
 
+    //TODO Доделать добавление в корзину
+
+
     @PostMapping("/create_order/{idProduct}")
     @ApiOperation(value = "Создать заказ пользователя")
     public ModelAndView createNewOrder(
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) @AuthenticationPrincipal User user,
             @ApiParam(value = "Id продукта который заказывают.", required = true) @PathVariable String idProduct,
-            @ApiParam(value = "Адрес куда отправлять продукт.", required = true) @RequestParam String adress,
-            @ApiParam(value = "Колличество выбранных продуктов.", required = true) @RequestParam String count
+            @ApiParam(value = "Колличество выбранных продуктов.", required = true) @RequestParam Integer count
     ) {
         ModelAndView mnv = new ModelAndView("redirect:/product/product_list");
         Map<String, String> errors = new HashMap<>();
@@ -65,29 +75,18 @@ public class OrderController {
 
         user = userService.getUserById(user.getId());
 
-        if (adress.equals("")){
-            errors.put(ControllerUtils.constructError("adress"), "Поле адреса не может быть пустым.");
-        }
-
-        if (count.equals("")){
+        if (count == null){
             errors.put(ControllerUtils.constructError("count"), "Поле количества товаров не может быть пустым.");
         }
 
         if (errors.isEmpty()){
-
-            if (Integer.parseInt(count) > product.getCount()){
+            if (count > product.getCount()){
                 errors.put(ControllerUtils.constructError("count"), "Поле количества товаров не может больше имеющихся.");
-            }
-
-            try {
-                userService.subtractCashUser(user.getId(), orderService.roundPriseForUser(product.getPrice() * Integer.parseInt(count)));
-            } catch (UserExeption userExeption) {
-                errors.put(ControllerUtils.constructError("price"), userExeption.getMessage());
             }
         }
 
         if (errors.isEmpty()) {
-            orderService.createOrder(Long.parseLong(idProduct), adress, Integer.parseInt(count), user);
+            orderService.createOrder(Long.parseLong(idProduct), "", count, user);
         }else{
             mnv.addAllObjects(errors);
             mnv.addObject("product", productService.getProductById(Long.parseLong(idProduct)));
@@ -96,9 +95,9 @@ public class OrderController {
         return mnv;
     }
 
-    @GetMapping("/basket")
+    @GetMapping("/cart")
     @ApiOperation(value = "Отображает корзину для покупателей или страницу продавца для работы с заказами пользователей.")
-    public ModelAndView showBasket(
+    public ModelAndView showCart(
             @ApiParam(value = "Выдергивает пользователя авторизованного") @AuthenticationPrincipal User user
     ) {
         ModelAndView mnv = new ModelAndView();
@@ -112,14 +111,14 @@ public class OrderController {
             case ADMIN: break;
 
             case SELLER:{
-                mnv.setViewName("/pages/for_order/showBasketSeller");
-                constructPageBasketSeller(mnv);
+                mnv.setViewName("/pages/for_order/showCartSeller");
+                constructPageCartSeller(mnv);
                 break;
             }
 
             case USER:{
-                mnv.setViewName("/pages/for_order/showBasketUser");
-                constructPageBasketUser(mnv, user);
+                mnv.setViewName("/pages/for_order/showCartUser");
+                constructPageCartUser(mnv, user);
 
                 break;
             }
@@ -135,67 +134,108 @@ public class OrderController {
     }
 
     @ApiOperation(value = "Добавляет параметры для отображения корзины покупателя.")
-    private void constructPageBasketUser(
+    private void constructPageCartUser(
             @ApiParam(value = "Модель хранящая параметры для передачи на экран.", required = true)  ModelAndView mnv,
             @ApiParam(value = "Данные пользователя.", required = true) User user){
-        List<Order> ordersUser = orderService.getOrderUser(user);
+        List<Order> ordersUser = orderService.getOrderUserNotPay(user);
         mnv.addObject("orderList", ordersUser);
-        mnv.addObject("listReadbleStatus", orderService.createListReadbleStatusOrders(ordersUser));
         mnv.addObject("priceUser", orderService.calculetePriseForUser(ordersUser));
     }
 
     @ApiOperation(value = "Добавляет параметры для отображения корзины продавца.")
-    private void constructPageBasketSeller(
+    private void constructPageCartSeller(
             @ApiParam(value = "Модель хранящая параметры для передачи на экран.", required = true) ModelAndView mnv){
         Role buyer = orderService.getRoleByName(USER);
         mnv.addObject("userList", userService.getAllUserWithRoleUser(buyer));
     }
 
-    @PostMapping("/basket/delete/{idOrder}")
+    @PostMapping("/cart/delete/{idOrder}")
     @ApiOperation(value = "Удалить заказ пользователя")
     public ModelAndView deleteOrderUser(
             @ApiParam(value = "Id продукта который заказывают.", required = true)  @PathVariable String idOrder,
             @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
     ){
         orderService.deleteOrder(Long.parseLong(idOrder), user.getId());
-        return new ModelAndView("redirect:/order/basket");
+        return new ModelAndView("redirect:/order/orders_user");
     }
 
-    @PostMapping("/basket/delete_all")
+    @PostMapping("/cart/delete_not_pay/{idOrder}")
+    @ApiOperation(value = "Удалить заказ пользователя")
+    public ModelAndView deleteOrderUserWhoNotPay(
+            @ApiParam(value = "Id продукта который заказывают.", required = true)  @PathVariable String idOrder
+    ){
+        orderService.deleteOrderWhoNotPay(Long.parseLong(idOrder));
+        return new ModelAndView("redirect:/order/cart");
+    }
+
+    @PostMapping("/cart/delete_all")
     @ApiOperation(value = "Удалить все заказы пользователя")
-    public ModelAndView deleteOrderUser(
+    public ModelAndView deleteOrderUserWhoNotPay(
             @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
     ){
-        orderService.deleteAllOrdersUser(user.getId());
-        return new ModelAndView("redirect:/order/basket");
+        orderService.deleteAllOrdersNotPayUser(user.getId());
+        return new ModelAndView("redirect:/order/cart");
     }
 
-    @PostMapping("/basket/update")
-    @ApiOperation(value = "Удалить заказ пользователя")
-    public ModelAndView updateOrderUser(
+    @PostMapping("/cart/create_list_order")
+    @ApiOperation(value = "Обновить список сделанных заказов")
+    public ModelAndView createOrderListUser(
             @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user,
-            @ApiParam(value = "Список количества обновленных товаров .", required = true)  @RequestParam(value = "count_p[]", required = true) String[] countProducts
+            @ApiParam(value = "Адрес куда отправлять продукт.", required = true) @RequestParam String adress,
+            @ApiParam(value = "Список количества обновленных товаров .", required = true)  @RequestParam(value = "count_p[]", required = true) Integer[] countProducts
     ){
         Map<String, String> errors = new HashMap<>();
-        ModelAndView mnv = new ModelAndView("redirect:/order/basket");
+        ModelAndView mnv = new ModelAndView("redirect:/order/orders_user");
 
-        orderService.updateOrderList(user, Arrays.asList(countProducts), errors);
+        orderService.updateOrderListWhoNotPay(user, adress, errors);
 
         if (!errors.isEmpty()){
-            mnv.setViewName("/pages/for_order/showBasketUser");
-            constructPageBasketUser(mnv, user);
+            mnv.setViewName("/pages/for_order/showCartUser");
+            constructPageCartUser(mnv, user);
             mnv.addAllObjects(errors);
         }
 
         return mnv;
     }
 
-    @GetMapping("/basket/select_user/{idUser}")
+    @GetMapping("/orders_user")
+    @ApiOperation(value = "Отображает корзину для покупателей или страницу продавца для работы с заказами пользователей.")
+    public ModelAndView showOrdersUser(
+            @ApiParam(value = "Выдергивает пользователя авторизованного") @AuthenticationPrincipal User user
+    ) {
+        ModelAndView mnv = new ModelAndView();
+        Map<String, String> errors = new HashMap<>();
+
+        user = userService.getUserById(user.getId());
+
+        mnv.addObject("user", user);
+
+        switch (user.getRole().getName()){
+            case USER:{
+                mnv.setViewName("/pages/for_order/showOrdersUser");
+                List<Order> ordersUser = orderService.getOrderUser(user);
+                mnv.addObject("orderList", ordersUser);
+                mnv.addObject("listReadbleStatus", orderService.createListReadbleStatusOrders(ordersUser));
+                mnv.addObject("priceUser", orderService.calculetePriseForUser(ordersUser));
+                break;
+            }
+
+            default:{
+                mnv = new ModelAndView("/pages/for_menu/greeting");
+                errors.put("error", "Карзины для такого уровня пользователя нет.");
+                mnv.addAllObjects(errors);
+                break;
+            }
+        }
+        return mnv;
+    }
+
+    @GetMapping("/cart/select_user/{idUser}")
     @ApiOperation(value = "Отобразить данные пользователя выбранного продавцом.")
     public ModelAndView showSelectUser(
             @ApiParam(value = "Id выбранного пользователя.", required = true)  @PathVariable String idUser
     ){
-        ModelAndView mav = new ModelAndView("/pages/for_order/selectUserBasket");
+        ModelAndView mav = new ModelAndView("/pages/for_order/selectUserCart");
 
         List<Order> ordersUser = orderService.getOrderUser(userService.getUserById(Long.parseLong(idUser)));
         User user = userService.getUserById(Long.parseLong(idUser));
@@ -209,7 +249,7 @@ public class OrderController {
         return mav;
     }
 
-    @PostMapping("/basket/select_user/{idUser}")
+    @PostMapping("/cart/select_user/{idUser}")
     @ApiOperation(value = "Обновить данные о заказах выбранного пользователя.")
     public ModelAndView updateOrdersUser(
             @ApiParam(value = "Id выбранного пользователя.", required = true)  @PathVariable String idUser,
@@ -224,10 +264,10 @@ public class OrderController {
         if (bDelete != null){
             request.setAttribute(
                     View.RESPONSE_STATUS_ATTRIBUTE, HttpStatus.TEMPORARY_REDIRECT);
-            return new ModelAndView("redirect:/order/basket/select_user/" + idUser + "/delete/" + bDelete + "");
+            return new ModelAndView("redirect:/order/cart/select_user/" + idUser + "/delete/" + bDelete + "");
         }
 
-        ModelAndView mnv = new ModelAndView("redirect:/order/basket");
+        ModelAndView mnv = new ModelAndView("redirect:/order/cart");
 
         if (cash.equals("")){
             errors.put(ControllerUtils.constructError("cash"), "Поле кошелька не может быть пустым.");
@@ -236,7 +276,7 @@ public class OrderController {
         if (errors.isEmpty()) {
             orderService.updateStatusOrders(userService.getUserById(Long.parseLong(idUser)), Arrays.asList(statusOrd));
         }else {
-            mnv = new ModelAndView("/pages/for_order/selectUserBasket");
+            mnv = new ModelAndView("/pages/for_order/selectUserCart");
 
             List<Order> ordersUser = orderService.getOrderUser(userService.getUserById(Long.parseLong(idUser)));
 
@@ -251,14 +291,14 @@ public class OrderController {
         return mnv;
     }
 
-    @PostMapping("/basket/select_user/{idUser}/delete/{idOrder}")
+    @PostMapping("/cart/select_user/{idUser}/delete/{idOrder}")
     @ApiOperation(value = "Удаление заказа пользователя продавцом.")
     public ModelAndView sellerDeleteOrderUser(
             @ApiParam(value = "Id удаляемого заказа.", required = true) @PathVariable String idOrder,
             @ApiParam(value = "Id пользователя у которого удаляют заказ.", required = true) @PathVariable String idUser
     ){
         orderService.deleteOrder(Long.parseLong(idOrder), Long.parseLong(idUser));
-        return new ModelAndView("redirect:/order/basket/select_user/" + idUser);
+        return new ModelAndView("redirect:/order/cart/select_user/" + idUser);
     }
 
 }
