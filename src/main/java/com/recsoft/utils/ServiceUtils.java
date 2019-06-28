@@ -1,7 +1,6 @@
 package com.recsoft.utils;
 
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -16,10 +15,6 @@ import java.util.UUID;
 
 public class ServiceUtils {
 
-    /*Путь к папке хранения данных*/
-    @Value("${upload.path}")
-    private String uploadPath;
-
     @ApiOperation(value = "Генерация уникального идентификатора.")
     public static String getUnicalUUID(){
         return UUID.randomUUID().toString();
@@ -30,7 +25,12 @@ public class ServiceUtils {
             @ApiParam(value = "Файл изображения.", required = true) MultipartFile file,
             @ApiParam(value = "Ширина.", required = true) int weight,
             @ApiParam(value = "Высота.", required = true) int height) throws IOException {
-        BufferedImage bufferedImage = ImageIO.read(file.getInputStream());
+        BufferedImage bufferedImage = null;
+        try {
+            bufferedImage = ImageIO.read(file.getInputStream());
+        } catch (IOException e) {
+            throw new IOException("Картинка не грузится.");
+        }
 
         BufferedImage changeImage = new BufferedImage(weight,height, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = changeImage.createGraphics();
@@ -69,6 +69,37 @@ public class ServiceUtils {
 
         inStream.close();
         outStream.flush();
+    }
+
+    @ApiOperation(value = "Сохранение файла на сервер.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Имя сохраненного файла")})
+    public static String saveFile(
+            @ApiParam(value = "Файл изображения.", required = true) MultipartFile multipartFile,
+            @ApiParam(value = "Ширина.", required = true) int weight,
+            @ApiParam(value = "Высота.", required = true) int height,
+            @ApiParam(value = "Путь к папке хранения данных.", required = true) String uploadPath
+            ) throws IOException {
+        try {
+            ImageIO.read(multipartFile.getInputStream());
+        } catch (IOException e) {
+            throw new IOException("Картинка не загружается.");
+        }
+        String resultFilename = "";
+        if (multipartFile != null && !multipartFile.getOriginalFilename().isEmpty()) {
+            File uploadDir = new File(uploadPath);
+
+            if (!uploadDir.exists()) {
+                uploadDir.mkdir();
+            }
+
+            resultFilename = ServiceUtils.getUnicalUUID() + "." + multipartFile.getOriginalFilename();
+            ImageIO.write(ServiceUtils.changeImage(multipartFile, weight, height), "JPEG", new File(uploadPath + "/" + resultFilename));
+        }
+        else{
+            throw new IOException("Ошибка создания файла");
+        }
+            return resultFilename;
     }
 
 }

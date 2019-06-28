@@ -19,8 +19,14 @@ import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
-    @Autowired
+
+
     private UserService userSevice;
+
+    @Autowired
+    public void setUserSevice(UserService userSevice) {
+        this.userSevice = userSevice;
+    }
 
     /*
     * Конфигурация для доступа к страницам*/
@@ -28,21 +34,22 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
-                .antMatchers("/", "/static/**").permitAll()
-                .anyRequest().authenticated()
+                    .antMatchers("/", "/registration", "/static/**").permitAll()
+                    .anyRequest().authenticated()
                 .and()
-                .formLogin()
-                .loginPage("/login")
-                .permitAll()
+                    .formLogin()
+                    .loginPage("/login")
+                    .permitAll()
                 .and()
-                .rememberMe()
+                    .rememberMe()
                 .and()
-                .logout()
-                .permitAll();
+                    .logout()
+                    .permitAll();
     }
 
     /*
-    *  Защиты от _csrf атак*/
+    *  Защиты от _csrf атак
+    *  */
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth

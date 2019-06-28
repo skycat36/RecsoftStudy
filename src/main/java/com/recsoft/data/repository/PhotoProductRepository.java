@@ -1,6 +1,6 @@
 package com.recsoft.data.repository;
 
-import com.recsoft.data.entity.Photo;
+import com.recsoft.data.entity.PhotoProduct;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -13,7 +13,7 @@ import javax.transaction.Transactional;
 * @author Evgeny Popov */
 @Repository
 @Transactional
-public interface PhotoRepository extends JpaRepository<Photo, Long> {
+public interface PhotoProductRepository extends JpaRepository<PhotoProduct, Long> {
 
     @Modifying
     @Query(value = "DELETE from photo_m p where p.product_id = :idProd", nativeQuery = true)

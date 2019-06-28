@@ -1,19 +1,29 @@
 package com.recsoft.service;
 
+import com.recsoft.data.entity.PhotoUser;
 import com.recsoft.data.entity.Role;
 import com.recsoft.data.entity.User;
 import com.recsoft.data.exeption.UserExeption;
+import com.recsoft.data.repository.PhotoUserRepository;
+import com.recsoft.data.repository.RoleRepository;
 import com.recsoft.data.repository.UserRepository;
+import com.recsoft.utils.ServiceUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 /* Осуществляет функции для работы с пользователем
 * @author Evgeny Popov */
@@ -23,11 +33,45 @@ import java.util.List;
                         "отвечающий за целостность базы данных пользователей")
 public class UserService implements UserDetailsService {
 
-    private final UserRepository userRepository;
+    @Value("${weight.img}")
+    private Integer HEIGHT_IMAGE;
+
+    @Value("${height.img}")
+    private Integer WEIGHT_IMAGE;
+
+    @Value("${role.admin}")
+    private String ADMIN;
+
+    @Value("${role.seller}")
+    private String SELLER;
+
+    @Value("${role.user}")
+    private String USER;
+
+    @Value("${upload.path}")
+    private String uploadPath;
+
+    private UserRepository userRepository;
+
+    private PhotoUserRepository photoUserRepository;
+
+    private RoleRepository roleRepository;
+
+    private Logger log = LoggerFactory.getLogger(UserService.class.getName());
 
     @Autowired
-    public UserService(UserRepository userRepository) {
+    public void setUserRepository(UserRepository userRepository) {
         this.userRepository = userRepository;
+    }
+
+    @Autowired
+    public void setPhotoUserRepository(PhotoUserRepository photoUserRepository) {
+        this.photoUserRepository = photoUserRepository;
+    }
+
+    @Autowired
+    public void setRoleRepository(RoleRepository roleRepository) {
+        this.roleRepository = roleRepository;
     }
 
     /*Поиск пользователя в базе
@@ -56,6 +100,7 @@ public class UserService implements UserDetailsService {
     @ApiOperation(value = "Поиск пользователя по ID")
     public User getUserById(
             @ApiParam(value = "ID пользователя", required = true) Long idUser){
+        Optional optional = userRepository.findById(idUser);
         return userRepository.findById(idUser).get();
     }
 
@@ -81,6 +126,26 @@ public class UserService implements UserDetailsService {
 
         user.setCash(user.getCash() + number);
         userRepository.save(user);
+    }
+
+    @ApiOperation(value = "Создать пользователя.")
+    public void addUser(
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) User user,
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) MultipartFile file) throws IOException {
+
+            if (file.getSize() > 0) {
+                user.setPhotoUser(new PhotoUser(user, ServiceUtils.saveFile(file, WEIGHT_IMAGE, HEIGHT_IMAGE, uploadPath)));
+                photoUserRepository.save(user.getPhotoUser());
+            }
+
+            user.setRole(roleRepository.findFirstByName(USER));
+            user = userRepository.save(user);
+
+            if (user.getId() != null){
+            log.info("Product with name " + user.getId() + " was added.");
+        }else {
+            log.error("Product with name " + user.getLogin() + " don't added.");
+        }
     }
 
 

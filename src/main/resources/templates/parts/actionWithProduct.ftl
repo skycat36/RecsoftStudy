@@ -20,14 +20,14 @@
     <div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
         <div class="carousel-inner">
             <#if product??>
-                <#list product.photos as photo>
-                    <#if photo_index == 0>
+                <#list product.photoProducts as photoProduct>
+                    <#if photoProduct_index == 0>
                             <div class="carousel-item active">
-                                <img class="d-block w-100 img-fluid" src="/img/${photo.name}" alt="${photo_index} slide">
+                                <img class="d-block w-100 img-fluid" src="/img/${photoProduct.name}" alt="${photoProduct_index} slide">
                             </div>
                     <#else>
                             <div class="carousel-item">
-                                <img class="d-block w-100 img-fluid" src="/img/${photo.name}" alt="${photo_index} slide">
+                                <img class="d-block w-100 img-fluid" src="/img/${photoProduct.name}" alt="${photoProduct_index} slide">
                             </div>
                     </#if>
                 </#list>

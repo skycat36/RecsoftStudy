@@ -27,28 +27,52 @@ public class OrderService {
 
     private Logger log = LoggerFactory.getLogger(ProductService.class.getName());
 
-    private final UserService userService;
+    private UserService userService;
 
-    private final ProductService productService;
+    private ProductService productService;
 
-    private final ProductRepository productRepository;
+    private ProductRepository productRepository;
 
-    private final OrderRepository orderRepository;
+    private OrderRepository orderRepository;
 
-    private final UserRepository userRepository;
+    private UserRepository userRepository;
 
-    private final StatusRepository statusRepository;
+    private StatusRepository statusRepository;
 
-    private final RoleRepository roleRepository;
+    private RoleRepository roleRepository;
 
     @Autowired
-    public OrderService(UserService userService, ProductService productService, ProductRepository productRepository, OrderRepository orderRepository, UserRepository userRepository, StatusRepository statusRepository, RoleRepository roleRepository) {
+    public void setUserService(UserService userService) {
         this.userService = userService;
+    }
+
+    @Autowired
+    public void setProductService(ProductService productService) {
         this.productService = productService;
+    }
+
+    @Autowired
+    public void setProductRepository(ProductRepository productRepository) {
         this.productRepository = productRepository;
+    }
+
+    @Autowired
+    public void setOrderRepository(OrderRepository orderRepository) {
         this.orderRepository = orderRepository;
+    }
+
+    @Autowired
+    public void setUserRepository(UserRepository userRepository) {
         this.userRepository = userRepository;
+    }
+
+    @Autowired
+    public void setStatusRepository(StatusRepository statusRepository) {
         this.statusRepository = statusRepository;
+    }
+
+    @Autowired
+    public void setRoleRepository(RoleRepository roleRepository) {
         this.roleRepository = roleRepository;
     }
 

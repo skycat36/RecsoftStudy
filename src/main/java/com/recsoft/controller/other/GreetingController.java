@@ -15,15 +15,11 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.Map;
 
-/* Отображение стартовой страницы и страниц входа и выхода.
- * @author Евгений Попов */
 @RestController
 @RequestMapping("/")
 @Api(value = "Start Resource", description = "shows start view")
 public class GreetingController {
 
-    /*
-     * @return ModelAndView - отображение стартовой страницы приложения.*/
     @GetMapping
     public ModelAndView greeting(){
         ModelAndView mav = new ModelAndView("/pages/for_menu/greeting");
@@ -40,7 +36,6 @@ public class GreetingController {
         return "redirect:/login";
     }
 
-    /* Главное меню приложения. */
     @ResponseBody
     @GetMapping("main_menu")
     @ApiOperation(value = "Returns Hello World")

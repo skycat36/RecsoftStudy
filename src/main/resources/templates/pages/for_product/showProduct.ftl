@@ -6,27 +6,27 @@
             <h1><label class="col-ml-2 col-form-label"><#if product??>${product.name}</#if></label></h1>
         </div>
 
-        <#if (product.photos?size > 0)>
+        <#if (product.photoProducts?size > 0)>
             <div id="carouselExampleIndicators" class="carousel slide d-inline-block" data-ride="carousel">
                 <ol class="carousel-indicators">
-                    <#list product.photos as photo>
-                        <#if photo_index == 0>
-                            <li data-target="#carouselExampleIndicators" data-slide-to="${photo_index}" class="active"></li>
+                    <#list product.photoProducts as photoProduct>
+                        <#if photoProduct_index == 0>
+                            <li data-target="#carouselExampleIndicators" data-slide-to="${photoProduct_index}" class="active"></li>
                         <#else>
-                            <li data-target="#carouselExampleIndicators" data-slide-to="${photo_index}"></li>
+                            <li data-target="#carouselExampleIndicators" data-slide-to="${photoProduct_index}"></li>
                         </#if>
                     </#list>
                 </ol>
                 <div class="carousel-inner">
 
-                    <#list product.photos as photo>
-                        <#if photo_index == 0>
+                    <#list product.photoProducts as photoProduct>
+                        <#if photoProduct_index == 0>
                             <div class="carousel-item active">
-                                <img class="d-block w-100 img-fluid" src="/img/${photo.name}" alt="${photo_index} slide">
+                                <img class="d-block w-100 img-fluid" src="/img/${photoProduct.name}" alt="${photoProduct_index} slide">
                             </div>
                         <#else>
                             <div class="carousel-item">
-                                <img class="d-block w-100 img-fluid" src="/img/${photo.name}" alt="${photo_index} slide">
+                                <img class="d-block w-100 img-fluid" src="/img/${photoProduct.name}" alt="${photoProduct_index} slide">
                             </div>
                         </#if>
                     </#list>

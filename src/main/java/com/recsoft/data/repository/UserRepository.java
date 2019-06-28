@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Optional;
 
 /* Репозиторий для работы с пользователями
 * @author Evgeny Popov
@@ -20,6 +21,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     User findByLogin(String login);
 
-    List<User> findAllByRole(Role role);
+    @Override
+    @Query(value = "select * from usr u where u.id =:idUser", nativeQuery = true)
+    Optional<User> findById(@Param("idUser") Long aLong);
 
+    List<User> findAllByRole(Role role);
 }

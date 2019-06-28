@@ -35,16 +35,24 @@ public class OrderController {
 
     private final String ADMIN = "admin", SELLER = "seller", USER = "user";
 
-    private final OrderService orderService;
+    private OrderService orderService;
 
-    private final ProductService productService;
+    private ProductService productService;
 
-    private final UserService userService;
+    private UserService userService;
 
     @Autowired
-    public OrderController(OrderService orderService, ProductService productService, UserService userService) {
+    public void setOrderService(OrderService orderService) {
         this.orderService = orderService;
+    }
+
+    @Autowired
+    public void setProductService(ProductService productService) {
         this.productService = productService;
+    }
+
+    @Autowired
+    public void setUserService(UserService userService) {
         this.userService = userService;
     }
 
@@ -57,9 +65,6 @@ public class OrderController {
         mnv.addObject("product", productService.getProductById(Long.parseLong(idProduct)));
         return mnv;
     }
-
-    //TODO Доделать добавление в корзину
-
 
     @PostMapping("/create_order/{idProduct}")
     @ApiOperation(value = "Создать заказ пользователя")

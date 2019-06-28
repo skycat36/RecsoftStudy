@@ -1,13 +1,11 @@
 package com.recsoft.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import io.swagger.annotations.ApiModel;
 
 import javax.persistence.*;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import java.util.Set;
 
 /* Информация о товаре
@@ -81,12 +79,12 @@ public class Product {
 
     /* Фотографии товара. */
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private Set<Photo> photos;
+    private Set<PhotoProduct> photoProducts;
 
     public Product() {
     }
 
-    public Product(@NotBlank(message = "Имя продукта не может быть пустым") String name, @NotBlank(message = "Описание продукта не может быть пустым") String description, Set<User> users, Set<Order> orders, Category category, Set<SizeUser> sizeUsers, @Min(value = 0, message = "Цена за товар не может быть отрицательной") Double price, @Min(value = 0, message = "Скидка на товар не может быть отрицательной") Integer discount, @Min(value = 0, message = "Количество лайков на товар не может быть отрицательным") Integer like_p, @Min(value = 0, message = "Количество дизлайков на товар не может быть отрицательным") Integer dislike_p, @Min(value = 0, message = "Количество товаров не может быть отрицательной") Integer count, Set<Photo> photos) {
+    public Product(@NotBlank(message = "Имя продукта не может быть пустым") String name, @NotBlank(message = "Описание продукта не может быть пустым") String description, Set<User> users, Set<Order> orders, Category category, Set<SizeUser> sizeUsers, @Min(value = 0, message = "Цена за товар не может быть отрицательной") Double price, @Min(value = 0, message = "Скидка на товар не может быть отрицательной") Integer discount, @Min(value = 0, message = "Количество лайков на товар не может быть отрицательным") Integer like_p, @Min(value = 0, message = "Количество дизлайков на товар не может быть отрицательным") Integer dislike_p, @Min(value = 0, message = "Количество товаров не может быть отрицательной") Integer count, Set<PhotoProduct> photoProducts) {
         this.name = name;
         this.description = description;
         this.users = users;
@@ -98,7 +96,7 @@ public class Product {
         this.like_p = like_p;
         this.dislike_p = dislike_p;
         this.count = count;
-        this.photos = photos;
+        this.photoProducts = photoProducts;
     }
 
     public Set<SizeUser> getSizeUsers() {
@@ -213,12 +211,12 @@ public class Product {
         this.count = count;
     }
 
-    public Set<Photo> getPhotos() {
-        return photos;
+    public Set<PhotoProduct> getPhotoProducts() {
+        return photoProducts;
     }
 
-    public void setPhotos(Set<Photo> photos) {
-        this.photos = photos;
+    public void setPhotoProducts(Set<PhotoProduct> photoProducts) {
+        this.photoProducts = photoProducts;
     }
 
     public Set<UserProdCom> getComents() {

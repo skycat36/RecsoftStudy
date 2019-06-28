@@ -31,9 +31,10 @@
                     <a class="nav-link" href="/order/orders_user">Список заказов</a>
                 </li>
             </#if>
-        </#if>
+
         </ul>
         <div class="navbar-text mr-3">${name}</div>
+        </#if>
     <#if known?if_exists>
         <@l.logout/>
     <#else>

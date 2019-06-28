@@ -10,7 +10,7 @@ import javax.persistence.*;
 @Entity
 @Table(name = "photo_m")
 @ApiModel(description = "Фотографии товаров.")
-public class Photo {
+public class PhotoProduct {
 
     /*Идентификатор обьекта*/
     @Id
@@ -26,16 +26,16 @@ public class Photo {
     @JoinColumn(referencedColumnName = "id")
     private Product product;
 
-    public Photo(String name, Product product) {
+    public PhotoProduct(String name, Product product) {
         this.name = name;
         this.product = product;
     }
 
-    public Photo(String name) {
+    public PhotoProduct(String name) {
         this.name = name;
     }
 
-    public Photo() {
+    public PhotoProduct() {
     }
 
     public String getName() {

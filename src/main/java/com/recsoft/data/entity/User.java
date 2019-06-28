@@ -24,26 +24,30 @@ public class User implements UserDetails {
     private Long id;
 
     /* Имя. */
-    @NotBlank(message = "Name cannot be empty")
+    @NotBlank(message = "Поле Имя не может быть пустым")
+    @Length(max = 50, message = "Длинна поля превышена.")
     private String name;
 
     /* Фамилия. */
-    @NotBlank(message = "Family cannot be empty")
+    @NotBlank(message = "Поле Фамилия не может быть пустым")
+    @Length(max = 50, message = "Длинна поля превышена.")
     private String fam;
 
     /* Отчество. */
-    @NotBlank(message = "Second name cannot be empty")
-    private String sec_name;
+    @NotBlank(message = "Поле Отчество не может быть пустым")
+    @Length(max = 50, message = "Длинна поля превышена.")
+    @Column(name = "sec_name")
+    private String secName;
 
     /* Логин пользователя. */
     @NotBlank(message = "Поле Логин не может быть пустым")
     @Column(nullable = false, unique = true)
-    @Length(max = 50, message = "Login too long")
+    @Length(max = 50, message = "Длинна поля превышена.")
     private String login;
 
     /* Пароль пользователя. */
     @NotBlank(message = "Поле Пароль не может быть пустым")
-    @Length(max = 50, message = "Password too long")
+    @Length(max = 50, message = "Длинна поля превышена.")
     private String password;
 
     /* Имеющаяся деньги на кошельке. */
@@ -53,14 +57,17 @@ public class User implements UserDetails {
     private Integer rating;
 
     /* email пользователя. */
-    @Email(message = "Email is not correct")
-    @NotBlank(message = "Email cannot be empty")
+    @Email(message = "Поле Email введено некорректно")
+    @NotBlank(message = "Поле Логин не может быть пустым")
     private String email;
 
     /* Ссылка на роль. */
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(referencedColumnName = "id")
     private Role role;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private PhotoUser photoUser;
 
     /* Список сделанных заказов. */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -83,17 +90,19 @@ public class User implements UserDetails {
     public User() {
     }
 
-    public User(@NotBlank(message = "Name cannot be empty") String name, @NotBlank(message = "Family cannot be empty") String fam, @NotBlank(message = "Second name cannot be empty") String sec_name, @NotBlank(message = "Поле Логин не может быть пустым") @Length(max = 50, message = "Login too long") String login, @NotBlank(message = "Поле Пароль не может быть пустым") @Length(max = 50, message = "Password too long") String password, Integer cash, Integer rating, @Email(message = "Email is not correct") @NotBlank(message = "Email cannot be empty") String email, Role role, Set<Order> orders, Set<Product> products, Boolean activity) {
+    public User(@NotBlank(message = "Name cannot be empty") String name, @NotBlank(message = "Family cannot be empty") String fam, @NotBlank(message = "Second name cannot be empty") String secName, @NotBlank(message = "Поле Логин не может быть пустым") @Length(max = 50, message = "Login too long") String login, @NotBlank(message = "Поле Пароль не может быть пустым") @Length(max = 50, message = "Password too long") String password, Integer cash, Integer rating, @Email(message = "Email is not correct") @NotBlank(message = "Email cannot be empty") String email, Role role, PhotoUser photoUser, Set<Order> orders, Set<UserProdCom> coments, Set<Product> products, Boolean activity) {
         this.name = name;
         this.fam = fam;
-        this.sec_name = sec_name;
+        this.secName = secName;
         this.login = login;
         this.password = password;
         this.cash = cash;
         this.rating = rating;
         this.email = email;
         this.role = role;
+        this.photoUser = photoUser;
         this.orders = orders;
+        this.coments = coments;
         this.products = products;
         this.activity = activity;
     }
@@ -130,12 +139,12 @@ public class User implements UserDetails {
         this.fam = fam;
     }
 
-    public String getSec_name() {
-        return sec_name;
+    public String getSecName() {
+        return secName;
     }
 
-    public void setSec_name(String sec_name) {
-        this.sec_name = sec_name;
+    public void setSecName(String secName) {
+        this.secName = secName;
     }
 
     public Integer getCash() {
@@ -214,7 +223,13 @@ public class User implements UserDetails {
         this.coments = coments;
     }
 
+    public PhotoUser getPhotoUser() {
+        return photoUser;
+    }
 
+    public void setPhotoUser(PhotoUser photoUser) {
+        this.photoUser = photoUser;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

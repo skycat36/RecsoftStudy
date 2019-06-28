@@ -1,6 +1,6 @@
 package com.recsoft.controller.product;
 
-import com.recsoft.data.entity.Photo;
+import com.recsoft.data.entity.PhotoProduct;
 import com.recsoft.data.entity.Product;
 import com.recsoft.data.entity.User;
 import com.recsoft.data.entity.UserProdCom;
@@ -39,13 +39,17 @@ public class ProductController {
     @Value("${upload.path}")
     private String uploadPath;
 
-    private final ProductService productService;
+    private ProductService productService;
 
-    private final UserService userService;
+    private UserService userService;
 
     @Autowired
-    public ProductController(ProductService productService, UserService userService) {
+    public void setProductService(ProductService productService) {
         this.productService = productService;
+    }
+
+    @Autowired
+    public void setUserService(UserService userService) {
         this.userService = userService;
     }
 
@@ -278,9 +282,9 @@ public class ProductController {
 
         Product product = productService.getProductById(Long.parseLong(idProduct));
 
-        Photo photo = product.getPhotos().stream().findFirst().get();
+        PhotoProduct photoProduct = product.getPhotoProducts().stream().findFirst().get();
 
-        String path = uploadPath + "/" + photo.getName();
+        String path = uploadPath + "/" + photoProduct.getName();
         ServiceUtils.downloadFile(resonse, path);
     }
 
