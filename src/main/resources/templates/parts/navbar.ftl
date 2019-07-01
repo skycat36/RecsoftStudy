@@ -33,7 +33,9 @@
             </#if>
 
         </ul>
-        <div class="navbar-text mr-3">${name}</div>
+            <a class="nav-link" href="/change_profile">
+                <div class="navbar-text mr-3">${name}</div>
+            </a>
         </#if>
     <#if known?if_exists>
         <@l.logout/>

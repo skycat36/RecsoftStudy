@@ -51,14 +51,16 @@ public class User implements UserDetails {
     private String password;
 
     /* Имеющаяся деньги на кошельке. */
+    @NotBlank(message = "Поле деньги на кошельке не может быть пустым")
     private Integer cash;
 
     /* Рейтинг пользователя. */
+    @NotBlank(message = "Поле рейтинг не может быть пустым")
     private Integer rating;
 
     /* email пользователя. */
     @Email(message = "Поле Email введено некорректно")
-    @NotBlank(message = "Поле Логин не может быть пустым")
+    @NotBlank(message = "Поле Email не может быть пустым")
     private String email;
 
     /* Ссылка на роль. */
@@ -90,7 +92,7 @@ public class User implements UserDetails {
     public User() {
     }
 
-    public User(@NotBlank(message = "Name cannot be empty") String name, @NotBlank(message = "Family cannot be empty") String fam, @NotBlank(message = "Second name cannot be empty") String secName, @NotBlank(message = "Поле Логин не может быть пустым") @Length(max = 50, message = "Login too long") String login, @NotBlank(message = "Поле Пароль не может быть пустым") @Length(max = 50, message = "Password too long") String password, Integer cash, Integer rating, @Email(message = "Email is not correct") @NotBlank(message = "Email cannot be empty") String email, Role role, PhotoUser photoUser, Set<Order> orders, Set<UserProdCom> coments, Set<Product> products, Boolean activity) {
+    public User(@NotBlank(message = "Поле Имя не может быть пустым") @Length(max = 50, message = "Длинна поля превышена.") String name, @NotBlank(message = "Поле Фамилия не может быть пустым") @Length(max = 50, message = "Длинна поля превышена.") String fam, @NotBlank(message = "Поле Отчество не может быть пустым") @Length(max = 50, message = "Длинна поля превышена.") String secName, @NotBlank(message = "Поле Логин не может быть пустым") @Length(max = 50, message = "Длинна поля превышена.") String login, @NotBlank(message = "Поле Пароль не может быть пустым") @Length(max = 50, message = "Длинна поля превышена.") String password, @NotBlank(message = "Поле деньги на кошельке не может быть пустым") Integer cash, @NotBlank(message = "Поле рейтинг не может быть пустым") Integer rating, @Email(message = "Поле Email введено некорректно") @NotBlank(message = "Поле Email не может быть пустым") String email, Role role, PhotoUser photoUser, Set<Order> orders, Set<UserProdCom> coments, Set<Product> products, Boolean activity) {
         this.name = name;
         this.fam = fam;
         this.secName = secName;

@@ -1,8 +1,10 @@
 package com.recsoft.data.entity;
 
 import io.swagger.annotations.ApiModel;
+import org.hibernate.validator.constraints.Length;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
 
 /* Коментарии к товару.
  * @author Евгений Попов */
@@ -17,6 +19,8 @@ public class UserProdCom implements Comparable<UserProdCom> {
     private Long id;
 
     /* Комментарий на товар. */
+    @Length(max = 255, message = "Длинна поля превышена.")
+    @NotBlank(message = "Комментарий не может быть пустым")
     private String comment;
 
     /* Ссылка на пользователя сделавшего заказ. */
@@ -33,7 +37,7 @@ public class UserProdCom implements Comparable<UserProdCom> {
     public UserProdCom() {
     }
 
-    public UserProdCom(String comment, User user, Product product) {
+    public UserProdCom(@Length(max = 255, message = "Длинна поля превышена.") @NotBlank(message = "Комментарий не может быть пустым") String comment, User user, Product product) {
         this.comment = comment;
         this.user = user;
         this.product = product;

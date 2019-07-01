@@ -3,7 +3,7 @@
 <@c.page>
 
     <div class="form-group row">
-        <h1><label class="col-ml-2 col-form-label">Регестрация</label></h1>
+        <h1><label class="col-ml-2 col-form-label">Изменить профиль</label></h1>
     </div>
 
     <div class="row justify-content-center">
@@ -15,13 +15,15 @@
     </div>
 
     <img id="output" class="img-fluid mb-4"
-            <#if photo??>
-                src="/img/${photo.name}"
-                alt="${photo.name}"
+            <#if user??>
+                <#if user.photoUser??>
+                    src="/img/${user.photoUser.name}"
+                    alt="${user.photoUser.name}"
+                </#if>
             </#if>
          width="25%" height="25%"/>
 
-    <form action="/registration" method="post" enctype="multipart/form-data">
+    <form action="/change_profile" method="post" enctype="multipart/form-data">
 
         <div class="form-group">
             <div class="custom-file col-4 col-mb-4 col-mt-4">
@@ -38,7 +40,7 @@
         <div class="form-group row">
             <label class="col-sm-2 col-form-label">Login :</label>
             <div class="col-sm-3">
-                <input type="text" name="login" value="<#if userTemp??>${userTemp.login}</#if>"
+                <input type="text" name="login" value="<#if user??>${user.login}</#if>"
                        class="form-control small ${(loginError??)?string('is-invalid', '')}"
                        placeholder="Логин"/>
                 <#if nameError??>
@@ -80,7 +82,7 @@
         <div class="form-group row">
             <label class="col-sm-2 col-form-label">Имя :</label>
             <div class="col-sm-3">
-                <input type="text" name="name" value="<#if userTemp??>${userTemp.name}</#if>"
+                <input type="text" name="name" value="<#if user??>${user.name}</#if>"
                        class="form-control small ${(nameError??)?string('is-invalid', '')}"
                        placeholder="Имя"/>
                 <#if nameError??>
@@ -94,7 +96,7 @@
         <div class="form-group row">
             <label class="col-sm-2 col-form-label">Фамилия :</label>
             <div class="col-sm-3">
-                <input type="text" name="fam" value="<#if userTemp??>${userTemp.fam}</#if>"
+                <input type="text" name="fam" value="<#if user??>${user.fam}</#if>"
                        class="form-control small ${(famError??)?string('is-invalid', '')}"
                        placeholder="Фамилия"/>
                 <#if famError??>
@@ -108,7 +110,7 @@
         <div class="form-group row">
             <label class="col-sm-2 col-form-label">Отчество :</label>
             <div class="col-sm-3">
-                <input type="text" name="secName" value="<#if userTemp??>${userTemp.secName}</#if>"
+                <input type="text" name="secName" value="<#if user??>${user.secName}</#if>"
                        class="form-control small ${(secNameError??)?string('is-invalid', '')}"
                        placeholder="Отчество"/>
                 <#if secNameError??>
@@ -122,7 +124,7 @@
         <div class="form-group row">
             <label class="col-sm-2 col-form-label">Email :</label>
             <div class="col-sm-3">
-                <input type="email" name="email" value="<#if userTemp??>${userTemp.email}</#if>"
+                <input type="email" name="email" value="<#if user??>${user.email}</#if>"
                        class="form-control small ${(emailError??)?string('is-invalid', '')}"
                        placeholder="Email"/>
                 <#if emailError??>
@@ -133,14 +135,12 @@
             </div>
         </div>
 
-
         <div class="form-group row">
             <div class="col-sm-1 mr-4"><button type="submit" class="btn btn-primary ml-0">Изменить</button></div>
             <input type="hidden" value="${_csrf.token}" name="_csrf">
         </div>
     </form>
     <script>
-
 
         var loadFile = function(event) {
             var img = document.getElementById('output');

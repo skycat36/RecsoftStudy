@@ -2,6 +2,7 @@ package com.recsoft.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
+import org.hibernate.validator.constraints.Length;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -20,7 +21,8 @@ public class SizeUser {
     private Long id;
 
     /* Название размера*/
-    @NotBlank(message = "Name size cannot be empty")
+    @NotBlank(message = "Название размера не может быть пустым")
+    @Length(max = 50, message = "Длинна поля превышена.")
     @Column(name = "name_size")
     private String nameSize;
 
@@ -35,7 +37,7 @@ public class SizeUser {
     public SizeUser() {
     }
 
-    public SizeUser(@NotBlank(message = "Name size cannot be empty") String nameSize, Set<Product> products) {
+    public SizeUser(@NotBlank(message = "Название размера не может быть пустым") @Length(max = 50, message = "Длинна поля превышена.") String nameSize, Set<Product> products) {
         this.nameSize = nameSize;
         this.products = products;
     }

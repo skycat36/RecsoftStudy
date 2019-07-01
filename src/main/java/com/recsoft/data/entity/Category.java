@@ -3,6 +3,8 @@ package com.recsoft.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
+import org.hibernate.annotations.Type;
+import org.hibernate.validator.constraints.Length;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -22,6 +24,7 @@ public class Category {
 
     /*Название категории*/
     @NotBlank(message = "Name category cannot be empty")
+    @Length(max = 255, message = "Длинна поля превышена.")
     private String name;
 
     /* Ссылка на продукты с такой категорией. */
@@ -32,7 +35,7 @@ public class Category {
     public Category() {
     }
 
-    public Category(@NotBlank(message = "Name category cannot be empty") String name, Set<Product> products) {
+    public Category(@NotBlank(message = "Name category cannot be empty") @Length(max = 255, message = "Длинна поля превышена.") String name, Set<Product> products) {
         this.name = name;
         this.products = products;
     }

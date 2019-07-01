@@ -2,8 +2,10 @@ package com.recsoft.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
+import org.hibernate.validator.constraints.Length;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
 
 /* Хранимые фотографии
  * @author Евгений Попов */
@@ -18,6 +20,8 @@ public class PhotoProduct {
     private Long id;
 
     /* Путь хранимой фотографии. */
+    @Length(max = 255, message = "Длинна поля превышена.")
+    @NotBlank(message = "Название изображения не может быть пустым")
     private String name;
 
     /* Ссылка на продукт с хранимой фотографией. */
@@ -26,7 +30,7 @@ public class PhotoProduct {
     @JoinColumn(referencedColumnName = "id")
     private Product product;
 
-    public PhotoProduct(String name, Product product) {
+    public PhotoProduct(@Length(max = 255, message = "Длинна поля превышена.") @NotBlank(message = "Название изображения не может быть пустым") String name, Product product) {
         this.name = name;
         this.product = product;
     }

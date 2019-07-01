@@ -2,8 +2,10 @@ package com.recsoft.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
+import org.hibernate.validator.constraints.Length;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 
 @Entity
@@ -18,14 +20,15 @@ public class PhotoUser implements Serializable {
 
     @JsonIgnore
     @OneToOne(cascade = CascadeType.ALL)
-    //@Column(name = "id_user")
     @JoinColumn(referencedColumnName = "id", name = "id_user")
     private User user;
 
     /* Путь хранимой фотографии. */
+    @Length(max = 255, message = "Длинна поля превышена.")
+    @NotBlank(message = "Название изображения не может быть пустым")
     private String name;
 
-    public PhotoUser(User user, String name) {
+    public PhotoUser(User user, @Length(max = 255, message = "Длинна поля превышена.") @NotBlank(message = "Название изображения не может быть пустым") String name) {
         this.user = user;
         this.name = name;
     }

@@ -2,6 +2,7 @@ package com.recsoft.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
+import org.hibernate.validator.constraints.Length;
 
 import javax.persistence.*;
 import javax.validation.constraints.Min;
@@ -22,10 +23,12 @@ public class Product {
 
     /* Название продукта. */
     @NotBlank(message = "Имя продукта не может быть пустым")
+    @Length(max = 255, message = "Длинна поля превышена.")
     private String name;
 
     /* Описание продукта. */
     @NotBlank(message = "Описание продукта не может быть пустым")
+    @Length(max = 255, message = "Длинна поля превышена.")
     private String description;
 
     /* Список пользователей оставивших коментарии. */
@@ -59,22 +62,29 @@ public class Product {
 
     /* Цена за товар. */
     @Min(value = 0, message = "Цена за товар не может быть отрицательной")
+    @NotBlank(message = "Цена за товар не может быть пустым")
     private Double price;
 
     /* Скидка на товар. */
     @Min(value = 0, message = "Скидка на товар не может быть отрицательной")
+    @NotBlank(message = "Скидка не может быть пустой")
     private Integer discount;
 
     /* Лайки. */
     @Min(value = 0, message = "Количество лайков на товар не может быть отрицательным")
-    private Integer like_p;
+    @Column(name = "like_p")
+    @NotBlank(message = "Количество лайков не может быть пустым")
+    private Integer like;
 
     /* Дизлайки. */
     @Min(value = 0, message = "Количество дизлайков на товар не может быть отрицательным")
-    private Integer dislike_p;
+    @Column(name = "dislike_p")
+    @NotBlank(message = "Количество дизлайков не может быть пустым")
+    private Integer dislike;
 
     /* Количество имеюихся товаров. */
     @Min(value = 0, message = "Количество товаров не может быть отрицательной")
+    @NotBlank(message = "Количество товаров не может быть пустым")
     private Integer count;
 
     /* Фотографии товара. */
@@ -84,17 +94,18 @@ public class Product {
     public Product() {
     }
 
-    public Product(@NotBlank(message = "Имя продукта не может быть пустым") String name, @NotBlank(message = "Описание продукта не может быть пустым") String description, Set<User> users, Set<Order> orders, Category category, Set<SizeUser> sizeUsers, @Min(value = 0, message = "Цена за товар не может быть отрицательной") Double price, @Min(value = 0, message = "Скидка на товар не может быть отрицательной") Integer discount, @Min(value = 0, message = "Количество лайков на товар не может быть отрицательным") Integer like_p, @Min(value = 0, message = "Количество дизлайков на товар не может быть отрицательным") Integer dislike_p, @Min(value = 0, message = "Количество товаров не может быть отрицательной") Integer count, Set<PhotoProduct> photoProducts) {
+    public Product(@NotBlank(message = "Имя продукта не может быть пустым") @Length(max = 255, message = "Длинна поля превышена.") String name, @NotBlank(message = "Описание продукта не может быть пустым") @Length(max = 255, message = "Длинна поля превышена.") String description, Set<User> users, Set<Order> orders, Category category, Set<UserProdCom> coments, Set<SizeUser> sizeUsers, @Min(value = 0, message = "Цена за товар не может быть отрицательной") @NotBlank(message = "Цена за товар не может быть пустым") Double price, @Min(value = 0, message = "Скидка на товар не может быть отрицательной") @NotBlank(message = "Скидка не может быть пустой") Integer discount, @Min(value = 0, message = "Количество лайков на товар не может быть отрицательным") @NotBlank(message = "Количество лайков не может быть пустым") Integer like, @Min(value = 0, message = "Количество дизлайков на товар не может быть отрицательным") @NotBlank(message = "Количество дизлайков не может быть пустым") Integer dislike, @Min(value = 0, message = "Количество товаров не может быть отрицательной") @NotBlank(message = "Количество товаров не может быть пустым") Integer count, Set<PhotoProduct> photoProducts) {
         this.name = name;
         this.description = description;
         this.users = users;
         this.orders = orders;
         this.category = category;
+        this.coments = coments;
         this.sizeUsers = sizeUsers;
         this.price = price;
         this.discount = discount;
-        this.like_p = like_p;
-        this.dislike_p = dislike_p;
+        this.like = like;
+        this.dislike = dislike;
         this.count = count;
         this.photoProducts = photoProducts;
     }
@@ -105,22 +116,6 @@ public class Product {
 
     public void setSizeUsers(Set<SizeUser> sizeUsers) {
         this.sizeUsers = sizeUsers;
-    }
-
-    public Integer getLike_p() {
-        return like_p;
-    }
-
-    public void setLike_p(Integer like_p) {
-        this.like_p = like_p;
-    }
-
-    public Integer getDislike_p() {
-        return dislike_p;
-    }
-
-    public void setDislike_p(Integer dislike_p) {
-        this.dislike_p = dislike_p;
     }
 
     public Long getId() {
@@ -188,19 +183,19 @@ public class Product {
     }
 
     public Integer getLike() {
-        return like_p;
+        return like;
     }
 
-    public void setLike(Integer like_p) {
-        this.like_p = like_p;
+    public void setLike(Integer like) {
+        this.like = like;
     }
 
     public Integer getDislike() {
-        return dislike_p;
+        return dislike;
     }
 
-    public void setDislike(Integer dislike_p) {
-        this.dislike_p = dislike_p;
+    public void setDislike(Integer dislike) {
+        this.dislike = dislike;
     }
 
     public Integer getCount() {

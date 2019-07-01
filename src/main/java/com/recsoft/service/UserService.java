@@ -130,8 +130,8 @@ public class UserService implements UserDetailsService {
 
     @ApiOperation(value = "Создать пользователя.")
     public void addUser(
-            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) User user,
-            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) MultipartFile file) throws IOException {
+            @ApiParam(value = "Выдергивает пользователя авторизованного.", required = true) User user,
+            @ApiParam(value = "Аватарка пользователя.", required = true) MultipartFile file) throws IOException {
 
             if (file.getSize() > 0) {
                 user.setPhotoUser(new PhotoUser(user, ServiceUtils.saveFile(file, WEIGHT_IMAGE, HEIGHT_IMAGE, uploadPath)));
@@ -142,6 +142,25 @@ public class UserService implements UserDetailsService {
             user = userRepository.save(user);
 
             if (user.getId() != null){
+            log.info("Product with name " + user.getId() + " was added.");
+        }else {
+            log.error("Product with name " + user.getLogin() + " don't added.");
+        }
+    }
+
+    @ApiOperation(value = "Создать пользователя.")
+    public void changeUser(
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) User user,
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) MultipartFile file) throws IOException {
+
+        if (file.getSize() > 0) {
+            user.setPhotoUser(new PhotoUser(user, ServiceUtils.saveFile(file, WEIGHT_IMAGE, HEIGHT_IMAGE, uploadPath)));
+            photoUserRepository.save(user.getPhotoUser());
+        }
+
+        user = userRepository.save(user);
+
+        if (user.getId() != null){
             log.info("Product with name " + user.getId() + " was added.");
         }else {
             log.error("Product with name " + user.getLogin() + " don't added.");

@@ -2,6 +2,7 @@ package com.recsoft.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
+import org.hibernate.validator.constraints.Length;
 import org.springframework.security.core.GrantedAuthority;
 
 import javax.persistence.*;
@@ -21,7 +22,8 @@ public class Role implements GrantedAuthority {
     private Long id;
 
     /* Название роли. */
-    @NotBlank(message = "Name cannot be empty")
+    @NotBlank(message = "Название роли не может быть пустой.")
+    @Length(max = 50, message = "Длинна поля превышена.")
     private String name;
 
     /* Список пользователей имеющих эту роль*/
@@ -32,7 +34,7 @@ public class Role implements GrantedAuthority {
     public Role() {
     }
 
-    public Role(@NotBlank(message = "Name cannot be empty") String name, Set<User> users) {
+    public Role(@NotBlank(message = "Название роли не может быть пустой.") @Length(max = 50, message = "Длинна поля превышена.") String name, Set<User> users) {
         this.name = name;
         this.users = users;
     }

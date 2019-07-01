@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.recsoft.utils.ReadbleUtils;
 import io.swagger.annotations.ApiModel;
 import jdk.nashorn.internal.ir.annotations.Ignore;
+import org.hibernate.validator.constraints.Length;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -23,7 +24,8 @@ public class Status  {
     private Long id;
 
     /* Название статуса заказа.*/
-    @NotBlank(message = "Name cannot be empty")
+    @NotBlank(message = "Поле название заказа не может быть пустым")
+    @Length(max = 50, message = "Длинна поля превышена.")
     private String name;
 
     /* Список заказов имеющих этот статус.*/
@@ -34,7 +36,7 @@ public class Status  {
     public Status() {
     }
 
-    public Status(@NotBlank(message = "Name cannot be empty") String name, Set<Order> orders) {
+    public Status(@NotBlank(message = "Поле название заказа не может быть пустым") @Length(max = 50, message = "Длинна поля превышена.") String name, Set<Order> orders) {
         this.name = name;
         this.orders = orders;
     }

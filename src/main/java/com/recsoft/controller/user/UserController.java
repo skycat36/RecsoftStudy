@@ -6,6 +6,7 @@ import com.recsoft.utils.ControllerUtils;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -54,6 +55,10 @@ public class UserController {
             errors.putAll(ControllerUtils.getErrors(bindingResult));
         }
 
+        if (!password2.equals(user.getPassword())){
+            errors.put(ControllerUtils.constructError("password2"), "Поля паролей не совпадают.");
+        }
+
         if (errors.isEmpty()) {
             try {
                 userService.addUser(user, file);
@@ -68,6 +73,55 @@ public class UserController {
             mav.addAllObjects(errors);
         }
 
+        return mav;
+    }
+
+    @GetMapping("/change_profile")
+    @ApiOperation(value = "Изменить профиль пользователя.")
+    public ModelAndView showChangeProfile(
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) @AuthenticationPrincipal User user
+    ) {
+        ModelAndView mav = new ModelAndView("/pages/for_user/changeProfile");
+
+        mav.addObject("user", userService.getUserById(user.getId()));
+        return mav;
+    }
+
+    @PostMapping("/change_profile")
+    @ApiOperation(value = "Изменить профиль пользователя.")
+    public ModelAndView changeProfile(
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) @AuthenticationPrincipal User user,
+            @ApiParam(value = "Выдергивает пользователя с формы.", required = true) @ModelAttribute(name = "user") @Valid User changeUser,
+            BindingResult bindingResult,
+            @ApiParam(value = "Проверка пароля.", required = true) @RequestParam String password2,
+            @ApiParam(value = "Выбранные пользователем файл картиноки.", required = true) @RequestParam("file") MultipartFile file
+
+    ) {
+        ModelAndView mav = new ModelAndView("/pages/for_user/changeProfile");
+        Map<String, String> errors = new HashMap<>();
+
+
+        if (bindingResult.hasErrors()){
+            errors.putAll(ControllerUtils.getErrors(bindingResult));
+        }
+
+        if (!password2.equals(user.getPassword())){
+            errors.put(ControllerUtils.constructError("password2"), "Поля паролей не совпадают.");
+        }
+
+        if (errors.isEmpty()) {
+            try {
+                changeUser.setId(user.getId());
+                userService.changeUser(changeUser, file);
+            } catch (IOException e) {
+                errors.put(ControllerUtils.constructError("file"), e.getMessage());
+            }
+        }
+
+        if (!errors.isEmpty()){
+            mav.addAllObjects(errors);
+        }
+        mav.addObject("user", changeUser);
         return mav;
     }
 }

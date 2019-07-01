@@ -2,9 +2,11 @@ package com.recsoft.data.entity;
 
 import io.swagger.annotations.ApiModel;
 import net.bytebuddy.implementation.bind.annotation.Default;
+import org.hibernate.validator.constraints.Length;
 import org.springframework.beans.factory.annotation.Value;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.Set;
 
@@ -36,34 +38,29 @@ public class Order {
     private Status status;
 
     /* Адресс доставки товара*/
+
+    @Length(max = 255, message = "Длинна поля превышена.")
+    @NotBlank(message = "Поле адресс не может быть пустым")
     private String adress;
 
     /* Количество выбранных заказов */
     @Column(name = "count_p")
+    @NotBlank(message = "Поле количество товаров не может быть пустым")
     private Integer count;
 
     @Column(name = "pay")
+    @Value("#{false}")
     private Boolean pay;
 
     public Order() {
     }
 
-    public Order(Product product, User user, Status status, String adress, Integer count, Boolean pay) {
+    public Order(Product product, User user, Status status, @Length(max = 255, message = "Длинна поля превышена.") @NotBlank(message = "Поле адресс не может быть пустым") String adress, @NotBlank(message = "Поле количество товаров не может быть пустым") Integer count) {
         this.product = product;
         this.user = user;
         this.status = status;
         this.adress = adress;
         this.count = count;
-        this.pay = pay;
-    }
-
-    public Order(Product product, User user, Status status, String adress, Integer count) {
-        this.product = product;
-        this.user = user;
-        this.status = status;
-        this.adress = adress;
-        this.count = count;
-        this.pay = false;
     }
 
     public Product getProduct() {
