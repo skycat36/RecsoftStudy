@@ -17,6 +17,7 @@ import java.util.List;
 @Transactional
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
+    //@Query(value = "select * from order_m ord where ord.user_id =:idUser and ord.pay = false", nativeQuery = true)
     List<Order> findAllByUserAndPayFalse(User user);
 
     List<Order> findAllByUserAndPayTrue(User user);

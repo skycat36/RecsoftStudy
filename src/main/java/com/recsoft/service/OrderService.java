@@ -86,7 +86,7 @@ public class OrderService {
 
         Status status = statusRepository.findById(DEFAULT_STATUS_ORDER).get();
 
-        Order order = new Order(product, user, status, adress, countProd);
+        Order order = new Order(product, user, status, adress, countProd, false);
 
         product.setCount(product.getCount() - countProd);
         productRepository.save(product);

@@ -9,28 +9,30 @@
     <h1><label class="col-ml-2 col-form-label">${nameAction}</label></h1>
 </div>
 
-<div class="row justify-content-center">
-    <#if fileError??>
-        <div class="alert alert-danger" role="alert">
-            ${fileError}
-        </div>
-    </#if>
-</div>
+    <div class="row justify-content-center">
+        <#if messageError??>
+            <div class="alert alert-danger" role="alert">
+                ${messageError}
+            </div>
+        </#if>
+    </div>
 
     <div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
         <div class="carousel-inner">
             <#if product??>
-                <#list product.photoProducts as photoProduct>
-                    <#if photoProduct_index == 0>
-                            <div class="carousel-item active">
-                                <img class="d-block w-100 img-fluid" src="/img/${photoProduct.name}" alt="${photoProduct_index} slide">
-                            </div>
-                    <#else>
-                            <div class="carousel-item">
-                                <img class="d-block w-100 img-fluid" src="/img/${photoProduct.name}" alt="${photoProduct_index} slide">
-                            </div>
-                    </#if>
-                </#list>
+                <#if product.photoProducts??>
+                    <#list product.photoProducts as photoProduct>
+                        <#if photoProduct_index == 0>
+                                <div class="carousel-item active">
+                                    <img class="d-block w-100 img-fluid" src="/img/${photoProduct.name}" alt="${photoProduct_index} slide">
+                                </div>
+                        <#else>
+                                <div class="carousel-item">
+                                    <img class="d-block w-100 img-fluid" src="/img/${photoProduct.name}" alt="${photoProduct_index} slide">
+                                </div>
+                        </#if>
+                    </#list>
+                </#if>
             </#if>
         </div>
         <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-slide="prev">
@@ -49,18 +51,13 @@
         <div class="custom-file col-4 col-mb-4 col-mt-4">
             <input type="file" accept="image/jpeg,image/png" name="file" id="customFile" onchange="loadFile(event)" multiple >
             <label class="custom-file-label" for="customFile">Выберите файл</label>
-            <#if fileError??>
-                <div class="invalid-feedback">
-                    ${fileError}
-                </div>
-            </#if>
         </div>
     </div>
 
     <div class="form-group row">
         <label class="col-sm-2 col-form-label">Название :</label>
         <div class="col-sm-3">
-            <input type="text" name="name" value="<#if product??>${product.name}</#if>"
+            <input type="text" name="name" value="<#if product??><#if product.name??>${product.name}</#if></#if>"
                    class="form-control small ${(nameError??)?string('is-invalid', '')}"
                    placeholder="Название"/>
             <#if nameError??>
@@ -88,7 +85,7 @@
     <div class="form-group row">
         <label class="col-sm-2 col-form-label">Количество :</label>
         <div class="col-sm-3">
-            <input type="number" step="0" min="0" name="count" value="<#if product??>${product.count}</#if>"
+            <input type="number" step="0" min="0" name="count" value="<#if product??><#if product.count??>${product.count}</#if></#if>"
                    class="form-control small ${(countError??)?string('is-invalid', '')}"
                    placeholder="Количество"/>
             <#if countError??>
@@ -102,7 +99,7 @@
     <div class="form-group row">
         <label class="col-sm-2 col-form-label">Скидка %:</label>
         <div class="col-sm-3">
-            <input type="number" step="0" min="0" name="discount" value="<#if product??>${product.discount}</#if>"
+            <input type="number" step="0" min="0" name="discount" value="<#if product??><#if product.discount??>${product.discount}</#if></#if>"
                    class="form-control small ${(discountError??)?string('is-invalid', '')}"
                    placeholder="Скидка"/>
             <#if discountError??>
@@ -118,19 +115,34 @@
         <div class="col-sm-3">
             <select class="custom-select" name="categoryProd" id="inputGroupSelect01" required>
                 <#list listCategory as category>
-                    <option value="${category.id}" <#if product??><#if (category.name == product.category.name)>selected</#if></#if>>${category.name}</option>
+                    <option value="${category.id}"
+                        <#if categoryProd??><#if category.id == categoryProd>selected</#if></#if>>
+                            ${category.name}
+                    </option>
                 </#list>
             </select>
+            <#if categoryProdError??>
+                <div class="invalid-feedback">
+                    ${categoryProdError}
+                </div>
+            </#if>
         </div>
     </div>
 
     <div class="form-group row">
         <label for="exampleFormControlSelect2">Выберите имеющиеся размеры : </label>
         <select multiple class="form-control col-4" name="sizeUsersProd" id="exampleFormControlSelect2" required>
-            <#list listSizeUser as sizeUser>
-                <option value="${sizeUser.id}">${sizeUser.nameSize}</option>
+            <#list listSizeUser as sUser>
+                <option value="${sUser.id}"
+                <#if sizeUsersProd??><#list sizeUsersProd as sizeNum><#if sizeNum == sUser.id>selected</#if></#list></#if>>
+                ${sUser.nameSize}
             </#list>
         </select>
+        <#if sizeUsersProdError??>
+            <div class="invalid-feedback">
+                ${sizeUsersProdError}
+            </div>
+        </#if>
     </div>
 
 
@@ -138,7 +150,7 @@
         <label class="col-sm-2 col-form-label">Описание :</label>
         <div class="col-sm-3">
             <textarea name="description" class="form-control small ${(descriptionError??)?string('is-invalid', '')}"
-                      placeholder="Описание"><#if product??>${product.description}</#if></textarea>
+                      placeholder="Описание"><#if product??><#if product.description??>${product.description}</#if></#if></textarea>
             <#if descriptionError??>
                 <div class="invalid-feedback">
                     ${descriptionError}

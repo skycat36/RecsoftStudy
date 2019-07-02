@@ -1,13 +1,11 @@
 package com.recsoft.controller.product;
 
-import com.recsoft.data.entity.PhotoProduct;
-import com.recsoft.data.entity.Product;
-import com.recsoft.data.entity.User;
-import com.recsoft.data.entity.UserProdCom;
+import com.recsoft.data.entity.*;
+import com.recsoft.data.exeption.ProductExeption;
 import com.recsoft.service.ProductService;
 import com.recsoft.service.UserService;
-import com.recsoft.utils.ServiceUtils;
 import com.recsoft.utils.ControllerUtils;
+import com.recsoft.utils.ServiceUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -23,7 +21,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import java.io.*;
+import java.io.IOException;
 import java.util.*;
 
 /* Предоставляет отображение работы с продуктами.
@@ -95,10 +93,10 @@ public class ProductController {
     @ApiOperation(value = "Добавить продукты в базу.")
     public ModelAndView addProduct(
             @ApiParam(value = "Выдергивает продукт с формы.", required = true) @ModelAttribute @Valid Product product,
+            @ApiParam(value = "Сообщения о возможных ошибках.", required = true) BindingResult bindingResult,
             @ApiParam(value = "Категория выбранного продукта.", required = true) @RequestParam Long categoryProd,
             @ApiParam(value = "Размеры товара выбранного пользователем.", required = true) @RequestParam ArrayList<Long> sizeUsersProd,
-            @ApiParam(value = "Выбранные пользователем файлы картинок.", required = true) @RequestParam("file") List<MultipartFile> file,
-            @ApiParam(value = "Сообщения о возможных ошибках.", required = true) BindingResult bindingResult
+            @ApiParam(value = "Выбранные пользователем файлы картинок.", required = true) @RequestParam("file") List<MultipartFile> file
     ){
         Map<String, String> errors = new HashMap<>();
         ModelAndView mav = new ModelAndView("redirect:/product/product_list");
@@ -108,7 +106,7 @@ public class ProductController {
         }
 
         if (file.size() > 4){
-            errors.put(ControllerUtils.constructError("file"), "Превышено максимальное количество загруженых фотографий.");
+            errors.put(ControllerUtils.constructError("message"), "Превышено максимальное количество загруженых фотографий.");
         }
 
         if (bindingResult.hasErrors()){
@@ -118,20 +116,18 @@ public class ProductController {
         if (errors.isEmpty()) {
             try {
                 productService.addProduct(product, categoryProd, sizeUsersProd, file);
-            } catch (IOException e) {
-                log.error("Ошибка загрузки файла.");
+            } catch (IOException | ProductExeption e) {
+                log.error(e.getMessage());
 
                 mav.setViewName("/pages/for_product/addProduct");
-                mav.addObject("listSizeUser", productService.getAllSizeUser());
-                mav.addObject("listCategory", productService.getAllCategory());
-                mav.addObject(ControllerUtils.constructError("file"), "Ошибка загрузки файла.");
+                constructPageActionWithProd(categoryProd, sizeUsersProd, mav);
+                mav.addObject(ControllerUtils.constructError("message"), e.getMessage());
                 mav.addObject("product",product);
             }
 
         }else{
             mav.setViewName("/pages/for_product/addProduct");
-            mav.addObject("listSizeUser", productService.getAllSizeUser());
-            mav.addObject("listCategory", productService.getAllCategory());
+            constructPageActionWithProd(categoryProd, sizeUsersProd, mav);
             mav.addAllObjects(errors);
             mav.addObject("product",product);
         }
@@ -165,17 +161,17 @@ public class ProductController {
     @PostMapping("/show_product/{idProduct}/add_comment")
     public ModelAndView addComment(
             @ApiParam(value = "Id выбранного продукта.", required = true) @PathVariable String idProduct,
-            @ApiParam(value = "Комментарий для продукта.", required = true) @RequestParam String comment,
+            @ApiParam(value = "Комментарий для продукта.", required = true) @ModelAttribute @Valid UserProdCom comment,
+            BindingResult bindingResult,
             @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
     ){
         ModelAndView mav = new ModelAndView("/pages/for_product/showProduct");
         Map<String, String> errors = new HashMap<>();
 
-
-        if (comment.equals("")){
-            errors.put(ControllerUtils.constructError("comment"), "Нельзя коментировать пустым текстом");
+        if (bindingResult.hasErrors()){
+            errors.putAll(ControllerUtils.getErrors(bindingResult));
         }else {
-            productService.addComment(comment, user.getId(), Long.parseLong(idProduct));
+            productService.addComment(comment.getComment(), user.getId(), Long.parseLong(idProduct));
         }
         Product product = productService.getProductById(Long.parseLong(idProduct));
 
@@ -208,10 +204,15 @@ public class ProductController {
         mav.addObject("listCategory", productService.getAllCategory());
 
         Product product = productService.getProductById(Long.parseLong(idProduct));
-        mav.addObject("price", product.getPrice().toString());
 
         if (product != null) {
+            mav.addObject("price", product.getPrice().toString());
             mav.addObject("product", product);
+            ArrayList <Long> sizeUsers = new ArrayList<>();
+            for (SizeUser sUser: product.getSizeUsers()){
+                sizeUsers.add(sUser.getId());
+            }
+            this.constructPageActionWithProd(product.getCategory().getId(), sizeUsers, mav);
         }else {
             mav.addObject("prodError", "Такого продукта не существует");
             mav.setViewName("redirect:/product/product_list");
@@ -224,26 +225,36 @@ public class ProductController {
     public ModelAndView editProduct(
             @ApiParam(value = "Id выбранного продукта.", required = true) @PathVariable String idProduct,
             @ApiParam(value = "Выдергивает продукт с формы.", required = true) @ModelAttribute @Valid Product product,
+            @ApiParam(value = "Сообщения о возможных ошибках.", required = true) BindingResult bindingResult,
             @ApiParam(value = "Id выбранной категории продукта.", required = true) @RequestParam Long categoryProd,
             @ApiParam(value = "Id выбранных размеров товара.", required = true) @RequestParam ArrayList<Long> sizeUsersProd,
-            @ApiParam(value = "Выбранные пользователем файлы картинок.", required = true) @RequestParam("file") List<MultipartFile> file,
-            @ApiParam(value = "Сообщения о возможных ошибках.", required = true) BindingResult bindingResult){
+            @ApiParam(value = "Выбранные пользователем файлы картинок.", required = true) @RequestParam("file") List<MultipartFile> file
+            ){
 
         ModelAndView mav = new ModelAndView("redirect:/product/show_product/" + idProduct);
 
-        if (productService.getProductById(Long.parseLong(idProduct)) == null) {
+        Product oldProduct = productService.getProductById(Long.parseLong(idProduct));
+
+        if (oldProduct == null) {
             mav.addObject(ControllerUtils.constructError("prod"), "Такого продукта не существует");
             mav.setViewName("redirect:/product/product_list");
 
             return mav;
-        }else {
-            product.setId(Long.parseLong(idProduct));
         }
 
+        product.setId(oldProduct.getId());
         Map<String, String> errors = new HashMap<>();
 
+        if (categoryProd == null){
+            errors.put(ControllerUtils.constructError("categoryProd"), "Выбирете категорию товара.");
+        }
+
+        if (sizeUsersProd.size() == 0){
+            errors.put(ControllerUtils.constructError("sizeUsersProd"), "Выбирете размер товара.");
+        }
+
         if (file.size() > 4){
-            errors.put(ControllerUtils.constructError("file"), "Превышено максимальное количество загруженых фотографий.");
+            errors.put(ControllerUtils.constructError("message"), "Превышено максимальное количество загруженых фотографий.");
         }
 
         if (bindingResult.hasErrors()){
@@ -252,26 +263,31 @@ public class ProductController {
 
         if (errors.isEmpty()) {
             try {
-                productService.deletePhotoProduct(product.getId());
-                productService.addProduct(product, categoryProd, sizeUsersProd, file);
-            } catch (IOException e) {
-                log.error("Ошибка загрузки файла.");
+                productService.deletePhotoProduct(oldProduct.getId());
+                productService.updateProduct(product, oldProduct, categoryProd, sizeUsersProd, file);
+            } catch (IOException | ProductExeption e) {
+                log.error(e.getMessage());
 
                 mav.setViewName("/pages/for_product/editProduct");
-                mav.addObject("listSizeUser", productService.getAllSizeUser());
-                mav.addObject("listCategory", productService.getAllCategory());
-                mav.addObject(ControllerUtils.constructError("file"), "Ошибка загрузки файла.");
-                mav.addObject("product",product);
+                this.constructPageActionWithProd(categoryProd, sizeUsersProd, mav);
+                mav.addObject(ControllerUtils.constructError("message"), e.getMessage());
+                mav.addObject("product", product);
             }
         }else{
             mav.setViewName("/pages/for_product/editProduct");
-            mav.addObject("listSizeUser", productService.getAllSizeUser());
-            mav.addObject("listCategory", productService.getAllCategory());
+            this.constructPageActionWithProd(categoryProd, sizeUsersProd, mav);
             mav.addAllObjects(errors);
             mav.addObject("product",product);
         }
 
         return mav;
+    }
+
+    private void constructPageActionWithProd(Long categoryProd, ArrayList<Long> sizeUsersProd, ModelAndView mav) {
+        mav.addObject("listSizeUser", productService.getAllSizeUser());
+        mav.addObject("listCategory", productService.getAllCategory());
+        mav.addObject("sizeUsersProd", sizeUsersProd);
+        mav.addObject("categoryProd", categoryProd);
     }
 
     @GetMapping("/download/{idProduct}")

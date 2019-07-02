@@ -20,6 +20,8 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -79,6 +81,10 @@ public class OrderController {
         Product product = productService.getProductById(Long.parseLong(idProduct));
 
         user = userService.getUserById(user.getId());
+
+        if (count <= 0){
+            errors.put(ControllerUtils.constructError("count"), "Поле не может быть отрицательным или равным 0.");
+        }
 
         if (count == null){
             errors.put(ControllerUtils.constructError("count"), "Поле количества товаров не может быть пустым.");
@@ -186,12 +192,13 @@ public class OrderController {
     @ApiOperation(value = "Обновить список сделанных заказов")
     public ModelAndView createOrderListUser(
             @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user,
-            @ApiParam(value = "Адрес куда отправлять продукт.", required = true) @RequestParam String adress,
+            @ApiParam(value = "Адрес куда отправлять продукт.", required = true) @RequestParam @NotBlank(message = "Поле адреса не может ") String adress,
             @ApiParam(value = "Список количества обновленных товаров .", required = true)  @RequestParam(value = "count_p[]", required = true) Integer[] countProducts
     ){
         Map<String, String> errors = new HashMap<>();
         ModelAndView mnv = new ModelAndView("redirect:/order/orders_user");
 
+        user = userService.getUserById(user.getId());
         orderService.updateOrderListWhoNotPay(user, adress, errors);
 
         if (!errors.isEmpty()){
@@ -244,7 +251,6 @@ public class OrderController {
 
         List<Order> ordersUser = orderService.getOrderUser(userService.getUserById(Long.parseLong(idUser)));
         User user = userService.getUserById(Long.parseLong(idUser));
-        mav.addObject("cash", user.getCash().toString());
         mav.addObject("user", user);
         mav.addObject("listStatus", ReadbleUtils.createListReadbleStatuses());
         mav.addObject("orderList", ordersUser);
@@ -258,7 +264,6 @@ public class OrderController {
     @ApiOperation(value = "Обновить данные о заказах выбранного пользователя.")
     public ModelAndView updateOrdersUser(
             @ApiParam(value = "Id выбранного пользователя.", required = true)  @PathVariable String idUser,
-            @ApiParam(value = "Новое значение кошелька пользователя.", required = true)  @RequestParam String cash,
             @ApiParam(value = "Список обновленных статусов заказов.", required = true)  @RequestParam(value = "statusOrd[]", required = false) String[] statusOrd,
             @ApiParam(value = "Событие которое будет происходить при обновлении данных.", required = true)  @RequestParam(required = false) String bUpdate,
             @ApiParam(value = "Событие которое будет происходить при удалении заказа.", required = true)  @RequestParam(required = false) String bDelete,
@@ -273,10 +278,6 @@ public class OrderController {
         }
 
         ModelAndView mnv = new ModelAndView("redirect:/order/cart");
-
-        if (cash.equals("")){
-            errors.put(ControllerUtils.constructError("cash"), "Поле кошелька не может быть пустым.");
-        }
 
         if (errors.isEmpty()) {
             orderService.updateStatusOrders(userService.getUserById(Long.parseLong(idUser)), Arrays.asList(statusOrd));

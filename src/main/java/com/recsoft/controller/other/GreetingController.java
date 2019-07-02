@@ -1,9 +1,14 @@
 package com.recsoft.controller.other;
 
 import com.recsoft.data.entity.Status;
+import com.recsoft.data.entity.User;
+import com.recsoft.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.ui.Model;
@@ -20,9 +25,19 @@ import java.util.Map;
 @Api(value = "Start Resource", description = "shows start view")
 public class GreetingController {
 
+    private UserService userService;
+
+    @Autowired
+    public void setUserService(UserService userService) {
+        this.userService = userService;
+    }
+
     @GetMapping
-    public ModelAndView greeting(){
+    public ModelAndView greeting(
+            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
+    ){
         ModelAndView mav = new ModelAndView("/pages/for_menu/greeting");
+        mav.addObject("user", userService.getUserById(user.getId()));
         return mav;
     }
 

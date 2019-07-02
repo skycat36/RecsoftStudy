@@ -40,27 +40,27 @@ public class Order {
     /* Адресс доставки товара*/
 
     @Length(max = 255, message = "Длинна поля превышена.")
-    @NotBlank(message = "Поле адресс не может быть пустым")
+    //@NotBlank(message = "Поле адресс не может быть пустым")
     private String adress;
 
     /* Количество выбранных заказов */
     @Column(name = "count_p")
-    @NotBlank(message = "Поле количество товаров не может быть пустым")
+    //@NotBlank(message = "Поле количество товаров не может быть пустым")
     private Integer count;
 
     @Column(name = "pay")
-    @Value("#{false}")
     private Boolean pay;
 
     public Order() {
     }
 
-    public Order(Product product, User user, Status status, @Length(max = 255, message = "Длинна поля превышена.") @NotBlank(message = "Поле адресс не может быть пустым") String adress, @NotBlank(message = "Поле количество товаров не может быть пустым") Integer count) {
+    public Order(Product product, User user, Status status, @Length(max = 255, message = "Длинна поля превышена.") String adress, Integer count, Boolean pay) {
         this.product = product;
         this.user = user;
         this.status = status;
         this.adress = adress;
         this.count = count;
+        this.pay = pay;
     }
 
     public Product getProduct() {

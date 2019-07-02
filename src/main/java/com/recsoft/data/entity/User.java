@@ -51,11 +51,11 @@ public class User implements UserDetails {
     private String password;
 
     /* Имеющаяся деньги на кошельке. */
-    @NotBlank(message = "Поле деньги на кошельке не может быть пустым")
+    //@NotBlank(message = "Поле деньги на кошельке не может быть пустым")
     private Integer cash;
 
     /* Рейтинг пользователя. */
-    @NotBlank(message = "Поле рейтинг не может быть пустым")
+    //@NotBlank(message = "Поле рейтинг не может быть пустым")
     private Integer rating;
 
     /* email пользователя. */

@@ -28,6 +28,9 @@ public class ServiceUtils {
         BufferedImage bufferedImage = null;
         try {
             bufferedImage = ImageIO.read(file.getInputStream());
+            if (bufferedImage == null) {
+                throw new IOException();
+            }
         } catch (IOException e) {
             throw new IOException("Картинка не грузится.");
         }

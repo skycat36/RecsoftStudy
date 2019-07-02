@@ -7,17 +7,7 @@
     </div>
 
     <div class="form-group row">
-        <label class="col-sm-2 col-form-label">Кошелек : </label>
-        <div class="col-sm-2">
-            <input type="number" step="0" min="0" name="cash" value="<#if cash??>${cash}</#if>"
-                   class="form-control small ${(cashError??)?string('is-invalid', '')}"
-                   placeholder="Кошелек"/>
-            <#if cashError??>
-                <div class="invalid-feedback">
-                    ${cashError}
-                </div>
-            </#if>
-        </div>
+        <label class="col-sm-2 col-form-label">Кошелек : <#if user??>${user.cash}</#if></label>
     </div>
 
     <table class="table">

@@ -3,10 +3,12 @@ package com.recsoft.data.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
 import org.hibernate.validator.constraints.Length;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.persistence.*;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.util.Set;
 
 /* Информация о товаре
@@ -62,29 +64,36 @@ public class Product {
 
     /* Цена за товар. */
     @Min(value = 0, message = "Цена за товар не может быть отрицательной")
-    @NotBlank(message = "Цена за товар не может быть пустым")
+    @NotNull(message = "Цена за товар не может быть пустой")
+    //@NotBlank(message = "Цена за товар не может быть пустым")
     private Double price;
 
     /* Скидка на товар. */
     @Min(value = 0, message = "Скидка на товар не может быть отрицательной")
-    @NotBlank(message = "Скидка не может быть пустой")
+    @NotNull(message = "Скидка не может быть пустой")
+    //@NotBlank(message = "Скидка не может быть пустой")
     private Integer discount;
 
     /* Лайки. */
-    @Min(value = 0, message = "Количество лайков на товар не может быть отрицательным")
+    //@Min(value = 0, message = "Количество лайков на товар не может быть отрицательным")
+    //@Value("#{0}")
     @Column(name = "like_p")
-    @NotBlank(message = "Количество лайков не может быть пустым")
+    //@NotNull(message = "Количество лайков не может быть пустой")
+    //@NotBlank(message = "Количество лайков не может быть пустым")
     private Integer like;
 
     /* Дизлайки. */
-    @Min(value = 0, message = "Количество дизлайков на товар не может быть отрицательным")
+    //@Min(value = 0, message = "Количество дизлайков на товар не может быть отрицательным")
+    //@Value("#{0}")
     @Column(name = "dislike_p")
-    @NotBlank(message = "Количество дизлайков не может быть пустым")
+    //@NotNull(message = "Количество дизлайков не может быть пустой")
+    //@NotBlank(message = "Количество дизлайков не может быть пустым")
     private Integer dislike;
 
     /* Количество имеюихся товаров. */
     @Min(value = 0, message = "Количество товаров не может быть отрицательной")
-    @NotBlank(message = "Количество товаров не может быть пустым")
+    @NotNull(message = "Количество товаров не может быть пустым")
+    //@NotBlank(message = "Количество товаров не может быть пустым")
     private Integer count;
 
     /* Фотографии товара. */
@@ -94,7 +103,7 @@ public class Product {
     public Product() {
     }
 
-    public Product(@NotBlank(message = "Имя продукта не может быть пустым") @Length(max = 255, message = "Длинна поля превышена.") String name, @NotBlank(message = "Описание продукта не может быть пустым") @Length(max = 255, message = "Длинна поля превышена.") String description, Set<User> users, Set<Order> orders, Category category, Set<UserProdCom> coments, Set<SizeUser> sizeUsers, @Min(value = 0, message = "Цена за товар не может быть отрицательной") @NotBlank(message = "Цена за товар не может быть пустым") Double price, @Min(value = 0, message = "Скидка на товар не может быть отрицательной") @NotBlank(message = "Скидка не может быть пустой") Integer discount, @Min(value = 0, message = "Количество лайков на товар не может быть отрицательным") @NotBlank(message = "Количество лайков не может быть пустым") Integer like, @Min(value = 0, message = "Количество дизлайков на товар не может быть отрицательным") @NotBlank(message = "Количество дизлайков не может быть пустым") Integer dislike, @Min(value = 0, message = "Количество товаров не может быть отрицательной") @NotBlank(message = "Количество товаров не может быть пустым") Integer count, Set<PhotoProduct> photoProducts) {
+    public Product(@NotBlank(message = "Имя продукта не может быть пустым") @Length(max = 255, message = "Длинна поля превышена.") String name, @NotBlank(message = "Описание продукта не может быть пустым") @Length(max = 255, message = "Длинна поля превышена.") String description, Set<User> users, Set<Order> orders, Category category, Set<UserProdCom> coments, Set<SizeUser> sizeUsers, @Min(value = 0, message = "Цена за товар не может быть отрицательной") @NotNull(message = "Цена за товар не может быть пустой") Double price, @Min(value = 0, message = "Скидка на товар не может быть отрицательной") @NotNull(message = "Скидка не может быть пустой") Integer discount, @NotNull(message = "Количество лайков не может быть пустой") Integer like, @NotNull(message = "Количество дизлайков не может быть пустой") Integer dislike, @Min(value = 0, message = "Количество товаров не может быть отрицательной") @NotNull(message = "Количество товаров не может быть пустым") Integer count, Set<PhotoProduct> photoProducts) {
         this.name = name;
         this.description = description;
         this.users = users;

@@ -1,6 +1,7 @@
 package com.recsoft.service;
 
 import com.recsoft.data.entity.*;
+import com.recsoft.data.exeption.ProductExeption;
 import com.recsoft.data.repository.*;
 import com.recsoft.utils.ServiceUtils;
 import io.swagger.annotations.Api;
@@ -111,32 +112,43 @@ public class ProductService {
 
     @ApiOperation(value = "Создать продукт.")
     public void addProduct(
-            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) @Valid Product product,
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Product product,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Long idCategory,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<Long> idSizeUser,
-            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<MultipartFile> files) throws IOException {
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<MultipartFile> files) throws IOException, ProductExeption {
         if (product != null){
-            product.setCategory(categoryRepository.findById(idCategory).get());
-
-            Set<SizeUser> sizeUserSet = new HashSet<>();
-            for (SizeUser sizeUser: sizeUserRepository.findAll()){
-                if (idSizeUser.contains(sizeUser.getId())){
-                    sizeUserSet.add(sizeUser);
-                }
-            }
-            product.setSizeUsers(sizeUserSet);
-
-            Set<PhotoProduct> photoProductSet = new HashSet<>();
-
-            for (MultipartFile multipartFile: files){
-                photoProductSet.add(new PhotoProduct(ServiceUtils.saveFile(multipartFile, WEIGHT_IMAGE, HEIGHT_IMAGE, uploadPath), product));
-            }
-            product.setPhotoProducts(photoProductSet);
+            this.createRelationsForParamersProduct(idCategory, product, idSizeUser, files);
             productRepository.save(product);
             log.info("Product with name " + product.getName() + " was added.");
         }else {
             log.error("Product with name " + product.getName() + " don't added.");
         }
+    }
+
+    private void createRelationsForParamersProduct(@ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Long idCategory, @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Product product, @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<Long> idSizeUser, @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<MultipartFile> files) throws IOException, ProductExeption {
+        Category category = categoryRepository.findById(idCategory).orElse(null);
+        if (category == null) {
+            throw new ProductExeption("Хакер вали прочь.");
+        }
+
+        product.setCategory(category);
+
+        Set<SizeUser> sizeUserSet = new HashSet<>();
+        for (SizeUser sizeUser: sizeUserRepository.findAll()){
+            if (idSizeUser.contains(sizeUser.getId())){
+                sizeUserSet.add(sizeUser);
+            }
+        }
+        product.setSizeUsers(sizeUserSet);
+
+        Set<PhotoProduct> photoProductSet = new HashSet<>();
+
+        for (MultipartFile multipartFile: files){
+            if (multipartFile.getSize() > 0) {
+                photoProductSet.add(new PhotoProduct(ServiceUtils.saveFile(multipartFile, WEIGHT_IMAGE, HEIGHT_IMAGE, uploadPath), product));
+            }
+        }
+        product.setPhotoProducts(photoProductSet);
     }
 
     @ApiOperation(value = "Удалить фотографию продукта.")
@@ -175,9 +187,22 @@ public class ProductService {
     }
 
     @ApiOperation(value = "Обновить информацию о продукте")
-    public void updateProduct(Product product){
-        productRepository.save(product);
-        log.info("Product with Id " + product.getId() + " was update.");
+    public void updateProduct(
+            Product productReal,
+            Product productOld,
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Long idCategory,
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<Long> idSizeUser,
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<MultipartFile> files) throws IOException, ProductExeption {
+
+        this.createRelationsForParamersProduct(idCategory, productOld, idSizeUser, files);
+
+        productOld.setCount(productReal.getCount());
+        productOld.setDiscount(productReal.getDiscount());
+        productOld.setDescription(productReal.getDescription());
+        productOld.setPrice(productReal.getPrice());
+        productOld.setName(productReal.getName());
+        productRepository.save(productOld);
+        log.info("Product with Id " + productReal.getId() + " was update.");
     }
 
     @ApiOperation(value = "Обновить заказы пользователя")

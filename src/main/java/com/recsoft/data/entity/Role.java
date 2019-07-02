@@ -23,6 +23,7 @@ public class Role implements GrantedAuthority {
 
     /* Название роли. */
     @NotBlank(message = "Название роли не может быть пустой.")
+    @Column(name = "name")
     @Length(max = 50, message = "Длинна поля превышена.")
     private String name;
 
@@ -62,6 +63,8 @@ public class Role implements GrantedAuthority {
     public void setUsers(Set<User> users) {
         this.users = users;
     }
+
+
 
     @Override
     public String getAuthority() {
