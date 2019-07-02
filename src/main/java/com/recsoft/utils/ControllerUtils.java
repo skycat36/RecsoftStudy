@@ -2,6 +2,7 @@ package com.recsoft.utils;
 
 import org.springframework.http.MediaType;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.ServletContext;
 import java.util.HashMap;
@@ -11,6 +12,7 @@ import java.util.Map;
 * Класс обработчик для корректного отображения логов отображаемых ошибок
  * @author Евгений Попов */
 public class ControllerUtils {
+    public static final String ADMIN = "admin", SELLER = "seller", USER = "user";
 
     /*
     * Обработчик ошибок валидации.
@@ -45,6 +47,13 @@ public class ControllerUtils {
         } catch (Exception e) {
             return MediaType.APPLICATION_OCTET_STREAM;
         }
+    }
+
+    public static ModelAndView createMessageForHacker(
+    ){
+        ModelAndView mnv = new ModelAndView("/pages/for_menu/greeting");
+        mnv.addObject("error", "Прочь хакер.");
+        return mnv;
     }
 
 

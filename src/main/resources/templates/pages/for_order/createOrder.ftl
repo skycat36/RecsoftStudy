@@ -42,7 +42,7 @@
 
         <label class="col-form-label">Количество выбранных товаров : </label>
         <div class="col-sm-3">
-            <input type="number" name="count" min="1" step="1" value="<#if order??>${order.count}</#if>"
+            <input type="number" name="count" min="1" step="1" value="<#if count??>${count}</#if>"
                    class="form-control small ${(countError??)?string('is-invalid', '')}"
                    placeholder="Количество товаров"/>
             <#if countError??>

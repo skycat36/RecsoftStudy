@@ -18,8 +18,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-//TODO доделать регестрацию пользователя и обновления и просмотра информации пользователя.
-
 @Controller
 public class UserController {
 

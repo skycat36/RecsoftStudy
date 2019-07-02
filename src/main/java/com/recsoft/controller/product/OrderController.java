@@ -20,8 +20,6 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotBlank;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -34,8 +32,6 @@ import java.util.Map;
 @RequestMapping("/order")
 @Api(value = "Контроллер заказов", description = "Класс-контроллер отвечающий за работу с заказами.")
 public class OrderController {
-
-    private final String ADMIN = "admin", SELLER = "seller", USER = "user";
 
     private OrderService orderService;
 
@@ -61,6 +57,7 @@ public class OrderController {
     @GetMapping("/create_order/{idProduct}")
     @ApiOperation(value = "Отобразить страницу создания заказа")
     public ModelAndView showNewOrder(
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) @AuthenticationPrincipal User user,
             @ApiParam(value = "Id продукта который заказывают.", required = true) @PathVariable String idProduct
     ) {
         ModelAndView mnv = new ModelAndView("/pages/for_order/createOrder");
@@ -82,6 +79,10 @@ public class OrderController {
 
         user = userService.getUserById(user.getId());
 
+        if (count > product.getCount()){
+            errors.put(ControllerUtils.constructError("count"), "Количество выбранных товаров ме может быть больше имеющихся.");
+        }
+
         if (count <= 0){
             errors.put(ControllerUtils.constructError("count"), "Поле не может быть отрицательным или равным 0.");
         }
@@ -101,6 +102,7 @@ public class OrderController {
         }else{
             mnv.addAllObjects(errors);
             mnv.addObject("product", productService.getProductById(Long.parseLong(idProduct)));
+            mnv.addObject("count", count);
             mnv.setViewName("/pages/for_order/createOrder");
         }
         return mnv;
@@ -119,15 +121,15 @@ public class OrderController {
         mnv.addObject("user", user);
 
         switch (user.getRole().getName()){
-            case ADMIN: break;
+            case ControllerUtils.ADMIN: break;
 
-            case SELLER:{
+            case ControllerUtils.SELLER:{
                 mnv.setViewName("/pages/for_order/showCartSeller");
                 constructPageCartSeller(mnv);
                 break;
             }
 
-            case USER:{
+            case ControllerUtils.USER:{
                 mnv.setViewName("/pages/for_order/showCartUser");
                 constructPageCartUser(mnv, user);
 
@@ -156,7 +158,7 @@ public class OrderController {
     @ApiOperation(value = "Добавляет параметры для отображения корзины продавца.")
     private void constructPageCartSeller(
             @ApiParam(value = "Модель хранящая параметры для передачи на экран.", required = true) ModelAndView mnv){
-        Role buyer = orderService.getRoleByName(USER);
+        Role buyer = orderService.getRoleByName(ControllerUtils.USER);
         mnv.addObject("userList", userService.getAllUserWithRoleUser(buyer));
     }
 
@@ -192,7 +194,7 @@ public class OrderController {
     @ApiOperation(value = "Обновить список сделанных заказов")
     public ModelAndView createOrderListUser(
             @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user,
-            @ApiParam(value = "Адрес куда отправлять продукт.", required = true) @RequestParam @NotBlank(message = "Поле адреса не может ") String adress,
+            @ApiParam(value = "Адрес куда отправлять продукт.", required = true) @RequestParam String adress,
             @ApiParam(value = "Список количества обновленных товаров .", required = true)  @RequestParam(value = "count_p[]", required = true) Integer[] countProducts
     ){
         Map<String, String> errors = new HashMap<>();
@@ -203,7 +205,8 @@ public class OrderController {
 
         if (!errors.isEmpty()){
             mnv.setViewName("/pages/for_order/showCartUser");
-            constructPageCartUser(mnv, user);
+            this.constructPageCartUser(mnv, user);
+            mnv.addObject("user", user);
             mnv.addAllObjects(errors);
         }
 
@@ -223,7 +226,7 @@ public class OrderController {
         mnv.addObject("user", user);
 
         switch (user.getRole().getName()){
-            case USER:{
+            case ControllerUtils.USER:{
                 mnv.setViewName("/pages/for_order/showOrdersUser");
                 List<Order> ordersUser = orderService.getOrderUser(user);
                 mnv.addObject("orderList", ordersUser);
@@ -233,10 +236,7 @@ public class OrderController {
             }
 
             default:{
-                mnv = new ModelAndView("/pages/for_menu/greeting");
-                errors.put("error", "Карзины для такого уровня пользователя нет.");
-                mnv.addAllObjects(errors);
-                break;
+                return ControllerUtils.createMessageForHacker();
             }
         }
         return mnv;
@@ -245,17 +245,24 @@ public class OrderController {
     @GetMapping("/cart/select_user/{idUser}")
     @ApiOperation(value = "Отобразить данные пользователя выбранного продавцом.")
     public ModelAndView showSelectUser(
-            @ApiParam(value = "Id выбранного пользователя.", required = true)  @PathVariable String idUser
+            @ApiParam(value = "Id выбранного пользователя.", required = true)  @PathVariable String idUser,
+            @ApiParam(value = "Выдергивает пользователя авторизованного") @AuthenticationPrincipal User user
     ){
         ModelAndView mav = new ModelAndView("/pages/for_order/selectUserCart");
 
-        List<Order> ordersUser = orderService.getOrderUser(userService.getUserById(Long.parseLong(idUser)));
-        User user = userService.getUserById(Long.parseLong(idUser));
-        mav.addObject("user", user);
-        mav.addObject("listStatus", ReadbleUtils.createListReadbleStatuses());
-        mav.addObject("orderList", ordersUser);
-        mav.addObject("listReadbleStatus", orderService.createListReadbleStatusOrders(ordersUser));
-        mav.addObject("priceUser", orderService.calculetePriseForUser(ordersUser));
+        user = userService.getUserById(user.getId());
+        if (user.getRole().getName().equals(ControllerUtils.SELLER) || user.getRole().getName().equals(ControllerUtils.ADMIN)){
+            User selectUser = userService.getUserById(Long.parseLong(idUser));
+            List<Order> ordersUser = orderService.getOrderUser(userService.getUserById(Long.parseLong(idUser)));
+
+            mav.addObject("user", selectUser);
+            mav.addObject("listStatus", ReadbleUtils.createListReadbleStatuses());
+            mav.addObject("orderList", ordersUser);
+            mav.addObject("listReadbleStatus", orderService.createListReadbleStatusOrders(ordersUser));
+            mav.addObject("priceUser", orderService.calculetePriseForUser(ordersUser));
+        }else {
+            mav = ControllerUtils.createMessageForHacker();
+        }
 
         return mav;
     }

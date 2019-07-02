@@ -82,10 +82,18 @@ public class ProductController {
     /* @return ModelAndView - отображает интерфейс для добавления продуктов в базу. */
     @GetMapping("/add_product")
     @ApiOperation(value = "Отображает страницу добавления продуктов")
-    public ModelAndView showAddProduct(){
+    public ModelAndView showAddProduct(
+            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
+    ){
         ModelAndView mav = new ModelAndView("/pages/for_product/addProduct");
-        mav.addObject("listSizeUser", productService.getAllSizeUser());
-        mav.addObject("listCategory", productService.getAllCategory());
+
+        user = userService.getUserById(user.getId());
+        if (user.getRole().getName().equals(ControllerUtils.SELLER) || user.getRole().getName().equals(ControllerUtils.ADMIN)) {
+            mav.addObject("listSizeUser", productService.getAllSizeUser());
+            mav.addObject("listCategory", productService.getAllCategory());
+        }else {
+            return ControllerUtils.createMessageForHacker();
+        }
         return mav;
     }
 
@@ -197,25 +205,32 @@ public class ProductController {
     @GetMapping("/edit_product/{idProduct}")
     @ApiOperation(value = "Отобразить страницу для обновления информации о продукте.")
     public ModelAndView showEditProduct(
-            @ApiParam(value = "Id выбранного продукта.", required = true) @PathVariable String idProduct){
+            @ApiParam(value = "Id выбранного продукта.", required = true) @PathVariable String idProduct,
+            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
+    ){
         ModelAndView mav = new ModelAndView("/pages/for_product/editProduct");
 
-        mav.addObject("listSizeUser", productService.getAllSizeUser());
-        mav.addObject("listCategory", productService.getAllCategory());
+        user = userService.getUserById(user.getId());
+        if (user.getRole().getName().equals(ControllerUtils.SELLER) || user.getRole().getName().equals(ControllerUtils.ADMIN)) {
+            mav.addObject("listSizeUser", productService.getAllSizeUser());
+            mav.addObject("listCategory", productService.getAllCategory());
 
-        Product product = productService.getProductById(Long.parseLong(idProduct));
+            Product product = productService.getProductById(Long.parseLong(idProduct));
 
-        if (product != null) {
-            mav.addObject("price", product.getPrice().toString());
-            mav.addObject("product", product);
-            ArrayList <Long> sizeUsers = new ArrayList<>();
-            for (SizeUser sUser: product.getSizeUsers()){
-                sizeUsers.add(sUser.getId());
+            if (product != null) {
+                mav.addObject("price", product.getPrice().toString());
+                mav.addObject("product", product);
+                ArrayList<Long> sizeUsers = new ArrayList<>();
+                for (SizeUser sUser : product.getSizeUsers()) {
+                    sizeUsers.add(sUser.getId());
+                }
+                this.constructPageActionWithProd(product.getCategory().getId(), sizeUsers, mav);
+            } else {
+                mav.addObject("prodError", "Такого продукта не существует");
+                mav.setViewName("redirect:/product/product_list");
             }
-            this.constructPageActionWithProd(product.getCategory().getId(), sizeUsers, mav);
         }else {
-            mav.addObject("prodError", "Такого продукта не существует");
-            mav.setViewName("redirect:/product/product_list");
+            return ControllerUtils.createMessageForHacker();
         }
         return mav;
     }
