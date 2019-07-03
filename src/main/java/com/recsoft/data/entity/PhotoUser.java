@@ -19,7 +19,7 @@ public class PhotoUser implements Serializable {
     private Long id;
 
     @JsonIgnore
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne//(cascade = CascadeType.ALL)
     @JoinColumn(referencedColumnName = "id", name = "id_user")
     private User user;
 

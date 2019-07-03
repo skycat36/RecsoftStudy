@@ -150,20 +150,36 @@ public class UserService implements UserDetailsService {
 
     @ApiOperation(value = "Создать пользователя.")
     public void changeUser(
-            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) User user,
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) User userOld,
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) User userNew,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) MultipartFile file) throws IOException {
 
-        if (file.getSize() > 0) {
-            user.setPhotoUser(new PhotoUser(user, ServiceUtils.saveFile(file, WEIGHT_IMAGE, HEIGHT_IMAGE, uploadPath)));
-            photoUserRepository.save(user.getPhotoUser());
+        if (userOld.getPhotoUser() != null) {
+            photoUserRepository.deleteByUser(userOld.getId());
+            userOld.setPhotoUser(null);
         }
 
-        user = userRepository.save(user);
+        if (file.getSize() > 0) {
+            PhotoUser photoUser = new PhotoUser(userOld, ServiceUtils.saveFile(file, WEIGHT_IMAGE, HEIGHT_IMAGE, uploadPath));
+            photoUser = photoUserRepository.save(photoUser);
+            userOld.setPhotoUser(photoUser);
+        }
 
-        if (user.getId() != null){
-            log.info("Product with name " + user.getId() + " was added.");
+        userOld.setLogin(userNew.getLogin());
+        userOld.setFam(userNew.getFam());
+        userOld.setSecName(userNew.getSecName());
+        userOld.setCash(userNew.getCash());
+        userOld.setPassword(userNew.getPassword());
+        userOld.setName(userNew.getName());
+        userOld.setRating(userNew.getRating());
+        userOld.setEmail(userNew.getEmail());
+
+        userOld = userRepository.save(userOld);
+
+        if (userOld.getId() != null){
+            log.info("Product with name " + userOld.getId() + " was added.");
         }else {
-            log.error("Product with name " + user.getLogin() + " don't added.");
+            log.error("Product with name " + userOld.getLogin() + " don't added.");
         }
     }
 

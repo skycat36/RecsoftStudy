@@ -103,14 +103,13 @@ public class UserController {
             errors.putAll(ControllerUtils.getErrors(bindingResult));
         }
 
-        if (!password2.equals(user.getPassword())){
+        if (!password2.equals(changeUser.getPassword())){
             errors.put(ControllerUtils.constructError("password2"), "Поля паролей не совпадают.");
         }
 
         if (errors.isEmpty()) {
             try {
-                changeUser.setId(user.getId());
-                userService.changeUser(changeUser, file);
+                userService.changeUser(user, changeUser, file);
             } catch (IOException e) {
                 errors.put(ControllerUtils.constructError("file"), e.getMessage());
             }
@@ -119,7 +118,7 @@ public class UserController {
         if (!errors.isEmpty()){
             mav.addAllObjects(errors);
         }
-        mav.addObject("user", changeUser);
+        mav.addObject("user", user);
         return mav;
     }
 }
