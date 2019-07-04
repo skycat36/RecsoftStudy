@@ -1,5 +1,6 @@
 <#macro action nameAction isCart>
 
+
     <div class="row justify-content-center">
             <#if priceError??>
                 <div class="alert alert-danger" role="alert">
@@ -42,7 +43,13 @@
                 <#if isCart>
                     ${order.count}
                 <#else>
-                    <div class="col-sm-4"><input type="number" step="0" min="0"  max="${order.product.count + order.count}" name="count_p[]" value="${order.count}"></div>
+                    <div>
+                        <#--class="form-control small ${(discountError??)?string('is-invalid', '')}"-->
+                        <input  class="col-sm-10 form-control small"
+                                type="number" id="countProduct${order.id}" onchange="ajaxPost(${order.id})" step="0" min="0"
+                                max="${order.product.count + order.count}" name="count_p[]" value="${order.count}">
+                    </div>
+
                 </#if>
             </td>
             <#if isCart>
@@ -84,10 +91,49 @@
         </div>
     </#if>
 
-    <input type="hidden" name="_csrf" value="${_csrf.token}" />
+    <input type="hidden" id="csrf" name="_csrf" value="${_csrf.token}" />
 </form>
     <div class="form-group row">
         <label class="col-form-label"><#if priceUser != 0>Общая сумма заказа : ${priceUser}<#else>Заказов нет</#if></label>
     </div>
 
+<script>
+
+        function ajaxPost(order) {
+
+            //event.preventDefault();
+            // PREPARE FORM DATA
+            var formData = document.getElementById("countProduct" + order).value;
+            var token = document.getElementById("csrf").value;
+            console.log(token);
+            console.log(formData);
+
+            // DO POST
+            $.ajax({
+                type: "POST",
+                contentType: "application/json",
+                url: window.location + "/change_count_prod/" + order,
+                data: formData,
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                    'X-Csrf-Token': token
+                },
+                dataType: 'json',
+                success: function (result) {
+                        var item = document.getElementById("countProduct" + order);
+                        item.classList.remove('is-invalid');
+                        item.value = result;
+                        console.log("r2d2");
+                },
+                error: function (e) {
+                    var item = document.getElementById("countProduct" + order);
+                    item.classList.add('is-invalid');
+                    //alert(e);
+                    console.log("ERROR: ", e);
+                }
+            });
+
+        }
+</script>
 </#macro>

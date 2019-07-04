@@ -7,6 +7,7 @@ import com.recsoft.data.exeption.UserExeption;
 import com.recsoft.data.repository.PhotoUserRepository;
 import com.recsoft.data.repository.RoleRepository;
 import com.recsoft.data.repository.UserRepository;
+import com.recsoft.utils.ControllerUtils;
 import com.recsoft.utils.ServiceUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -38,15 +39,6 @@ public class UserService implements UserDetailsService {
 
     @Value("${height.img}")
     private Integer WEIGHT_IMAGE;
-
-    @Value("${role.admin}")
-    private String ADMIN;
-
-    @Value("${role.seller}")
-    private String SELLER;
-
-    @Value("${role.user}")
-    private String USER;
 
     @Value("${upload.path}")
     private String uploadPath;
@@ -100,7 +92,6 @@ public class UserService implements UserDetailsService {
     @ApiOperation(value = "Поиск пользователя по ID")
     public User getUserById(
             @ApiParam(value = "ID пользователя", required = true) Long idUser){
-        Optional optional = userRepository.findById(idUser);
         return userRepository.findById(idUser).get();
     }
 
@@ -138,7 +129,7 @@ public class UserService implements UserDetailsService {
                 photoUserRepository.save(user.getPhotoUser());
             }
 
-            user.setRole(roleRepository.findFirstByName(USER));
+            user.setRole(roleRepository.findFirstByName(ControllerUtils.USER));
             user = userRepository.save(user);
 
             if (user.getId() != null){
@@ -168,18 +159,16 @@ public class UserService implements UserDetailsService {
         userOld.setLogin(userNew.getLogin());
         userOld.setFam(userNew.getFam());
         userOld.setSecName(userNew.getSecName());
-        userOld.setCash(userNew.getCash());
         userOld.setPassword(userNew.getPassword());
         userOld.setName(userNew.getName());
-        userOld.setRating(userNew.getRating());
         userOld.setEmail(userNew.getEmail());
 
         userOld = userRepository.save(userOld);
 
         if (userOld.getId() != null){
-            log.info("Product with name " + userOld.getId() + " was added.");
+            log.info("User with name " + userOld.getId() + " was update.");
         }else {
-            log.error("Product with name " + userOld.getLogin() + " don't added.");
+            log.error("User with name " + userOld.getLogin() + " don't update.");
         }
     }
 

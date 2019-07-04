@@ -132,6 +132,39 @@ public class OrderService {
         log.info("Заказ с id = " + idOrder + " удален.");
     }
 
+    @ApiOperation(value = "Обновить количество сделанных заказов заказ.")
+    public void updateCountOrderWhoNotPay(
+            @ApiParam(value = "Id продукта который надо обновить.", required = true) long idOrder,
+            @ApiParam(value = "Обновленное количество товаров.", required = true) int countNewProd){
+
+        Order order = orderRepository.findById(idOrder).get();
+        Product product = order.getProduct();
+
+        int realCount = product.getCount() + order.getCount();
+
+        product.setCount(realCount - countNewProd);
+        order.setCount(countNewProd);
+
+        productRepository.save(product);
+        orderRepository.save(order);
+
+        log.info("Заказ с id = " + idOrder + " обновлен.");
+    }
+
+    @ApiOperation(value = "Проверить правильность выбора количества товаров.")
+    public boolean proveCountOrderedProduct(
+            @ApiParam(value = "Id продукта у которого проверяется количество товара.", required = true) long idOrder,
+            @ApiParam(value = "Обновленное количество товаров.", required = true) int countProd){
+
+        Order order = orderRepository.findById(idOrder).get();
+        Product product = order.getProduct();
+
+        if (product.getCount() + order.getCount() < countProd || countProd < 0){
+            return false;
+        }
+        return true;
+    }
+
     @ApiOperation(value = "Удалить заказы пользователя.")
     public void deleteAllOrdersNotPayUser(
             @ApiParam(value = "Id продукта который надо удалить", required = true) Long idUser){
@@ -248,7 +281,7 @@ public class OrderService {
     public void updateStatusOrders(
             @ApiParam(value = "Пользователь системы.", required = true) User user,
             @ApiParam(value = "Информация о статусе товаров.", required = true) List<String> statusOrd
-            ){
+    ){
         List<Order> ordersUser = this.getOrderUser(user);
         List<Order> orderWhoNeedUpdate = new ArrayList<>();
 

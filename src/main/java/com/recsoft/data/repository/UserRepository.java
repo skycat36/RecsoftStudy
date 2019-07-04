@@ -21,9 +21,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     User findByLogin(String login);
 
-    @Override
-    @Query(value = "select * from usr u where u.id =:idUser", nativeQuery = true)
-    Optional<User> findById(@Param("idUser") Long aLong);
+//    @Override
+//    @Query(value = "select * from usr u where u.id =:idUser", nativeQuery = true)
+//    Optional<User> findById(@Param("idUser") Long aLong);
 
     List<User> findAllByRole(Role role);
 }

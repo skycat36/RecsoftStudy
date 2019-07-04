@@ -14,6 +14,8 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
@@ -190,6 +192,25 @@ public class OrderController {
         return new ModelAndView("redirect:/order/cart");
     }
 
+    @PostMapping(value = "/cart/change_count_prod/{idOrder}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ApiOperation(value = "Обновить список сделанных заказов")
+    public ResponseEntity<String> changeCountOrderInCart(
+            @ApiParam(value = "Id продукта который заказывают.", required = true)  @PathVariable String idOrder,
+            @ApiParam(value = "Обновленное количество товара.", required = true) @RequestBody  String newCountData
+    ){
+        if (orderService.proveCountOrderedProduct(Long.parseLong(idOrder), Integer.parseInt(newCountData))) {
+            orderService.updateCountOrderWhoNotPay(Long.parseLong(idOrder), Integer.parseInt(newCountData));
+            return new ResponseEntity<>(
+                    newCountData,
+                    HttpStatus.OK);
+        }
+        else {
+            return new ResponseEntity<>(
+                    "Количество товаров выбрано неправильно.",
+                    HttpStatus.BAD_REQUEST);
+        }
+    }
+
     @PostMapping("/cart/create_list_order")
     @ApiOperation(value = "Обновить список сделанных заказов")
     public ModelAndView createOrderListUser(
@@ -199,8 +220,15 @@ public class OrderController {
     ){
         Map<String, String> errors = new HashMap<>();
         ModelAndView mnv = new ModelAndView("redirect:/order/orders_user");
-
         user = userService.getUserById(user.getId());
+
+        List<Order> ordersNotPay = orderService.getOrderUserNotPay(user);
+        for (int i = 0; i < ordersNotPay.size(); i++){
+            if (!ordersNotPay.get(i).getCount().equals(countProducts[i])){
+                return ControllerUtils.createMessageForHacker();
+            }
+        }
+
         orderService.updateOrderListWhoNotPay(user, adress, errors);
 
         if (!errors.isEmpty()){
@@ -219,7 +247,6 @@ public class OrderController {
             @ApiParam(value = "Выдергивает пользователя авторизованного") @AuthenticationPrincipal User user
     ) {
         ModelAndView mnv = new ModelAndView();
-        Map<String, String> errors = new HashMap<>();
 
         user = userService.getUserById(user.getId());
 
