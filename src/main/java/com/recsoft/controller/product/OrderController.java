@@ -12,6 +12,7 @@ import com.recsoft.utils.ReadbleUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -164,23 +165,21 @@ public class OrderController {
         mnv.addObject("userList", userService.getAllUserWithRoleUser(buyer));
     }
 
-    @PostMapping("/cart/delete/{idOrder}")
+    @PostMapping("/orders_user/delete/{idOrder}")
     @ApiOperation(value = "Удалить заказ пользователя")
-    public ModelAndView deleteOrderUser(
+    public ResponseEntity<String> deleteOrderUser(
             @ApiParam(value = "Id продукта который заказывают.", required = true)  @PathVariable String idOrder,
             @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
     ){
-        orderService.deleteOrder(Long.parseLong(idOrder), user.getId());
-        return new ModelAndView("redirect:/order/orders_user");
-    }
-
-    @PostMapping("/cart/delete_not_pay/{idOrder}")
-    @ApiOperation(value = "Удалить заказ пользователя")
-    public ModelAndView deleteOrderUserWhoNotPay(
-            @ApiParam(value = "Id продукта который заказывают.", required = true)  @PathVariable String idOrder
-    ){
-        orderService.deleteOrderWhoNotPay(Long.parseLong(idOrder));
-        return new ModelAndView("redirect:/order/cart");
+        orderService.deletePayOrder(Long.parseLong(idOrder), user.getId());
+        user = userService.getUserById(user.getId());
+        List<Order> orderListPay = orderService.getOrderUserPay(user);
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("cashUser", user.getCash());
+        jsonObject.put("priseOrders", orderService.calculetePriseForUser(orderListPay));
+        return new ResponseEntity<>(
+                JSONObject.quote(jsonObject.toString()),
+                HttpStatus.OK);
     }
 
     @PostMapping("/cart/delete_all")
@@ -192,16 +191,38 @@ public class OrderController {
         return new ModelAndView("redirect:/order/cart");
     }
 
+    @PostMapping(value = "/cart/delete_not_pay/{idOrder}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ApiOperation(value = "Удалить заказ пользователя")
+    public ResponseEntity<String> deleteOrderUserWhoNotPay(
+            @ApiParam(value = "Id продукта который заказывают.", required = true)  @PathVariable String idOrder,
+            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
+    ){
+        orderService.deleteOrderWhoNotPay(Long.parseLong(idOrder));
+        user = userService.getUserById(user.getId());
+        List<Order> orderListNotPay = orderService.getOrderUserNotPay(user);
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("priseOrders", orderService.calculetePriseForUser(orderListNotPay));
+        return new ResponseEntity<>(
+                JSONObject.quote(jsonObject.toString()),
+                HttpStatus.OK);
+    }
+
     @PostMapping(value = "/cart/change_count_prod/{idOrder}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Обновить список сделанных заказов")
     public ResponseEntity<String> changeCountOrderInCart(
             @ApiParam(value = "Id продукта который заказывают.", required = true)  @PathVariable String idOrder,
-            @ApiParam(value = "Обновленное количество товара.", required = true) @RequestBody  String newCountData
+            @ApiParam(value = "Обновленное количество товара.", required = true) @RequestBody  String newCountData,
+            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
     ){
         if (orderService.proveCountOrderedProduct(Long.parseLong(idOrder), Integer.parseInt(newCountData))) {
             orderService.updateCountOrderWhoNotPay(Long.parseLong(idOrder), Integer.parseInt(newCountData));
+            user = userService.getUserById(user.getId());
+            List<Order> orderListNotPay = orderService.getOrderUserNotPay(user);
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("newCountData", Integer.parseInt(newCountData));
+            jsonObject.put("priseOrders", orderService.calculetePriseForUser(orderListNotPay));
             return new ResponseEntity<>(
-                    newCountData,
+                    JSONObject.quote(jsonObject.toString()),
                     HttpStatus.OK);
         }
         else {
@@ -261,7 +282,6 @@ public class OrderController {
                 mnv.addObject("priceUser", orderService.calculetePriseForUser(ordersUser));
                 break;
             }
-
             default:{
                 return ControllerUtils.createMessageForHacker();
             }
@@ -337,7 +357,7 @@ public class OrderController {
             @ApiParam(value = "Id удаляемого заказа.", required = true) @PathVariable String idOrder,
             @ApiParam(value = "Id пользователя у которого удаляют заказ.", required = true) @PathVariable String idUser
     ){
-        orderService.deleteOrder(Long.parseLong(idOrder), Long.parseLong(idUser));
+        orderService.deletePayOrder(Long.parseLong(idOrder), Long.parseLong(idUser));
         return new ModelAndView("redirect:/order/cart/select_user/" + idUser);
     }
 
