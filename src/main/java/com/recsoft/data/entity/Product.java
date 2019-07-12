@@ -2,8 +2,8 @@ package com.recsoft.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.validator.constraints.Length;
-import org.springframework.beans.factory.annotation.Value;
 
 import javax.persistence.*;
 import javax.validation.constraints.Min;
@@ -18,92 +18,81 @@ import java.util.Set;
 @ApiModel(description = "Данные о продукте.")
 public class Product {
 
-    /*Идентификатор обьекта*/
+    @ApiModelProperty(notes = "Идентификатор обьекта.", name="id", required=true)
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    /* Название продукта. */
-    @NotBlank(message = "Имя продукта не может быть пустым")
-    @Length(max = 255, message = "Длинна поля превышена.")
+    @ApiModelProperty(notes = "Название продукта.", name="name", required=true)
+    @NotBlank
+    @Length(max = 255)
     private String name;
 
-    /* Описание продукта. */
-    @NotBlank(message = "Описание продукта не может быть пустым")
-    @Length(max = 255, message = "Длинна поля превышена.")
+    @ApiModelProperty(notes = "Описание продукта.", name="description", required=true)
+    @NotBlank
+    @Length(max = 255)
     private String description;
 
-    /* Список пользователей оставивших коментарии. */
+    @ApiModelProperty(notes = "Список пользователей оставивших коментарии.", name="users", required=true)
     @ManyToMany
     @JoinTable (name="user_prod_com",
                 joinColumns=@JoinColumn (name="prod_id"),
                 inverseJoinColumns=@JoinColumn(name="user_id"))
     private Set<User> users;
 
-    /* Список сделанных заказов на товар. */
+    @ApiModelProperty(notes = "Список сделанных заказов на товар.", name="orders", required=true)
     @JsonIgnore
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<Order> orders;
 
-
-    /* Ссылка на категорию товара. */
+    @ApiModelProperty(notes = "Ссылка на категорию товара.", name="category", required=true)
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(referencedColumnName = "id")
     private Category category;
 
+    @ApiModelProperty(notes = "Ссылки на коментарии пользователя.", name="coments", required=true)
     @JsonIgnore
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<UserProdCom> coments;
 
-    /* Список ссылок на имеющиеся размеры товара. */
+    @ApiModelProperty(notes = "Список ссылок на имеющиеся размеры товара.", name="sizeUsers", required=true)
     @ManyToMany
     @JoinTable (name="prod_size",
             joinColumns=@JoinColumn (name="id_prod"),
             inverseJoinColumns=@JoinColumn(name="id_size"))
     private Set<SizeUser> sizeUsers;
 
-    /* Цена за товар. */
-    @Min(value = 0, message = "Цена за товар не может быть отрицательной")
-    @NotNull(message = "Цена за товар не может быть пустой")
-    //@NotBlank(message = "Цена за товар не может быть пустым")
+    @ApiModelProperty(notes = "Цена за товар.", name="price", required=true)
+    @Min(value = 0)
+    @NotNull
     private Double price;
 
-    /* Скидка на товар. */
-    @Min(value = 0, message = "Скидка на товар не может быть отрицательной")
-    @NotNull(message = "Скидка не может быть пустой")
-    //@NotBlank(message = "Скидка не может быть пустой")
+    @ApiModelProperty(notes = "Скидка на товар.", name="discount", required=true)
+    @Min(value = 0)
+    @NotNull
     private Integer discount;
 
-    /* Лайки. */
-    //@Min(value = 0, message = "Количество лайков на товар не может быть отрицательным")
-    //@Value("#{0}")
+    @ApiModelProperty(notes = "Лайки.", name="like", required=true)
     @Column(name = "like_p")
-    //@NotNull(message = "Количество лайков не может быть пустой")
-    //@NotBlank(message = "Количество лайков не может быть пустым")
     private Integer like;
 
-    /* Дизлайки. */
-    //@Min(value = 0, message = "Количество дизлайков на товар не может быть отрицательным")
-    //@Value("#{0}")
+    @ApiModelProperty(notes = "Дизлайки.", name="dislike", required=true)
     @Column(name = "dislike_p")
-    //@NotNull(message = "Количество дизлайков не может быть пустой")
-    //@NotBlank(message = "Количество дизлайков не может быть пустым")
     private Integer dislike;
 
-    /* Количество имеюихся товаров. */
-    @Min(value = 0, message = "Количество товаров не может быть отрицательной")
-    @NotNull(message = "Количество товаров не может быть пустым")
-    //@NotBlank(message = "Количество товаров не может быть пустым")
+    @ApiModelProperty(notes = "Количество имеюихся товаров.", name="count", required=true)
+    @Min(value = 0)
+    @NotNull
     private Integer count;
 
-    /* Фотографии товара. */
+    @ApiModelProperty(notes = "Фотографии товара.", name="photoProducts", required=true)
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<PhotoProduct> photoProducts;
 
     public Product() {
     }
 
-    public Product(@NotBlank(message = "Имя продукта не может быть пустым") @Length(max = 255, message = "Длинна поля превышена.") String name, @NotBlank(message = "Описание продукта не может быть пустым") @Length(max = 255, message = "Длинна поля превышена.") String description, Set<User> users, Set<Order> orders, Category category, Set<UserProdCom> coments, Set<SizeUser> sizeUsers, @Min(value = 0, message = "Цена за товар не может быть отрицательной") @NotNull(message = "Цена за товар не может быть пустой") Double price, @Min(value = 0, message = "Скидка на товар не может быть отрицательной") @NotNull(message = "Скидка не может быть пустой") Integer discount, @NotNull(message = "Количество лайков не может быть пустой") Integer like, @NotNull(message = "Количество дизлайков не может быть пустой") Integer dislike, @Min(value = 0, message = "Количество товаров не может быть отрицательной") @NotNull(message = "Количество товаров не может быть пустым") Integer count, Set<PhotoProduct> photoProducts) {
+    public Product(@NotBlank @Length(max = 255) String name, @NotBlank @Length(max = 255) String description, Set<User> users, Set<Order> orders, Category category, Set<UserProdCom> coments, Set<SizeUser> sizeUsers, @Min(value = 0) @NotNull Double price, @Min(value = 0) @NotNull Integer discount, Integer like, Integer dislike, @Min(value = 0) @NotNull Integer count, Set<PhotoProduct> photoProducts) {
         this.name = name;
         this.description = description;
         this.users = users;

@@ -1,60 +1,54 @@
 package com.recsoft.data.entity;
 
-import io.swagger.annotations.ApiModel;
-import net.bytebuddy.implementation.bind.annotation.Default;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.validator.constraints.Length;
-import org.springframework.beans.factory.annotation.Value;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import java.util.Set;
 
 /* Заказ на товар.
  * @author Евгений Попов */
 @Entity
 @Table(name = "order_m")
-@ApiModel(description = "Заказ на товар.")
+@Api(description = "Заказ на товар.")
 public class Order {
 
-    /*Идентификатор обьекта*/
+    @ApiModelProperty(notes = "Идентификатор обьекта.", name="id", required=true)
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    /* Ссылка на продукты с таким заказом. */
+    @ApiModelProperty(notes = "Ссылка на продукты с таким заказом.", name="product", required=true)
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(referencedColumnName = "id")
     private Product product;
 
-    /* Ссылка на пользователя сделавшего заказ. */
+    @ApiModelProperty(notes = "Ссылка на пользователя сделавшего заказ.", name="user", required=true)
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(referencedColumnName = "id")
     private User user;
 
-    /* Ссылка на статус заказа. */
+    @ApiModelProperty(notes = "Ссылка на статус заказа.", name="status", required=true)
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(referencedColumnName = "id")
     private Status status;
 
-    /* Адресс доставки товара*/
-
-    @Length(max = 255, message = "Длинна поля превышена.")
-    //@NotBlank(message = "Поле адресс не может быть пустым")
+    @ApiModelProperty(notes = "Адресс доставки товара.", name="adress", required=true)
+    @Length(max = 255)
     private String adress;
 
-    /* Количество выбранных заказов */
+    @ApiModelProperty(notes = "Количество выбранных заказов.", name="count", required=true)
     @Column(name = "count_p")
-    //@NotBlank(message = "Поле количество товаров не может быть пустым")
     private Integer count;
 
+    @ApiModelProperty(notes = "Флаг оплаты товара.", name="pay", required=true)
     @Column(name = "pay")
     private Boolean pay;
 
     public Order() {
     }
 
-    public Order(Product product, User user, Status status, @Length(max = 255, message = "Длинна поля превышена.") String adress, Integer count, Boolean pay) {
+    public Order(Product product, User user, Status status, @Length(max = 255) String adress, Integer count, Boolean pay) {
         this.product = product;
         this.user = user;
         this.status = status;

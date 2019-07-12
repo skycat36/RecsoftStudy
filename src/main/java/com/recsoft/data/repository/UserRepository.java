@@ -2,6 +2,7 @@ package com.recsoft.data.repository;
 
 import com.recsoft.data.entity.Role;
 import com.recsoft.data.entity.User;
+import io.swagger.annotations.Api;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -12,18 +13,13 @@ import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 
-/* Репозиторий для работы с пользователями
-* @author Evgeny Popov
-* */
+@Api(value = "Репозиторий пользователей",
+        description = "Репозиторий для работы с базой пользователей")
 @Repository
 @Transactional
 public interface UserRepository extends JpaRepository<User, Long> {
 
     User findByLogin(String login);
-
-//    @Override
-//    @Query(value = "select * from usr u where u.id =:idUser", nativeQuery = true)
-//    Optional<User> findById(@Param("idUser") Long aLong);
 
     List<User> findAllByRole(Role role);
 }

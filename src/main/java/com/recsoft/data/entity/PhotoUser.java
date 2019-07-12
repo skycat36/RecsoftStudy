@@ -2,6 +2,7 @@ package com.recsoft.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.validator.constraints.Length;
 
 import javax.persistence.*;
@@ -13,22 +14,23 @@ import java.io.Serializable;
 @ApiModel(description = "Фотографии пользователей.")
 public class PhotoUser implements Serializable {
 
-    /*Идентификатор обьекта*/
+    @ApiModelProperty(notes = "Идентификатор обьекта.", name="id", required=true)
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @ApiModelProperty(notes = "Ссылка на пользователя.", name="user", required=true)
     @JsonIgnore
-    @OneToOne//(cascade = CascadeType.ALL)
+    @OneToOne
     @JoinColumn(referencedColumnName = "id", name = "id_user")
     private User user;
 
-    /* Путь хранимой фотографии. */
-    @Length(max = 255, message = "Длинна поля превышена.")
-    @NotBlank(message = "Название изображения не может быть пустым")
+    @ApiModelProperty(notes = "Путь хранимой фотографии.", name="name", required=true)
+    @Length(max = 255)
+    @NotBlank
     private String name;
 
-    public PhotoUser(User user, @Length(max = 255, message = "Длинна поля превышена.") @NotBlank(message = "Название изображения не может быть пустым") String name) {
+    public PhotoUser(User user, @Length(max = 255) @NotBlank String name) {
         this.user = user;
         this.name = name;
     }

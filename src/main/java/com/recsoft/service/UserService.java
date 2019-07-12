@@ -1,15 +1,20 @@
 package com.recsoft.service;
 
+import com.recsoft.data.entity.Language;
 import com.recsoft.data.entity.PhotoUser;
 import com.recsoft.data.entity.Role;
 import com.recsoft.data.entity.User;
 import com.recsoft.data.exeption.UserExeption;
+import com.recsoft.data.repository.LanguageRepository;
 import com.recsoft.data.repository.PhotoUserRepository;
 import com.recsoft.data.repository.RoleRepository;
 import com.recsoft.data.repository.UserRepository;
+import com.recsoft.utils.ConfigureErrors;
 import com.recsoft.utils.ControllerUtils;
 import com.recsoft.utils.ServiceUtils;
+import com.recsoft.validation.MessageGenerator;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
@@ -34,14 +39,20 @@ import java.util.Optional;
                         "отвечающий за целостность базы данных пользователей")
 public class UserService implements UserDetailsService {
 
+    @ApiModelProperty(notes = "Name of the Student",name="name",required=true,value="test name")
     @Value("${weight.img}")
     private Integer HEIGHT_IMAGE;
 
+    @ApiModelProperty(notes = "Name of the Student",name="name",required=true,value="test name")
     @Value("${height.img}")
     private Integer WEIGHT_IMAGE;
 
+    @ApiModelProperty(notes = "Путь до файла хранимых изображений", required=true)
     @Value("${upload.path}")
     private String uploadPath;
+
+    @ApiModelProperty(notes = "Записывает логи сделанных действий и ошибок.", name="log", value="ProductController")
+    private Logger log = LoggerFactory.getLogger(UserService.class.getName());
 
     private UserRepository userRepository;
 
@@ -49,7 +60,9 @@ public class UserService implements UserDetailsService {
 
     private RoleRepository roleRepository;
 
-    private Logger log = LoggerFactory.getLogger(UserService.class.getName());
+    private LanguageRepository languageRepository;
+
+
 
     @Autowired
     public void setUserRepository(UserRepository userRepository) {
@@ -59,6 +72,11 @@ public class UserService implements UserDetailsService {
     @Autowired
     public void setPhotoUserRepository(PhotoUserRepository photoUserRepository) {
         this.photoUserRepository = photoUserRepository;
+    }
+
+    @Autowired
+    public void setLanguageRepository(LanguageRepository languageRepository) {
+        this.languageRepository = languageRepository;
     }
 
     @Autowired
@@ -97,12 +115,12 @@ public class UserService implements UserDetailsService {
 
     @ApiOperation(value = "Обновляет информацию о кошельке пользователя")
     public void subtractCashUser(
-            @ApiParam(value = "ID пользователя.", required = true) Long idUser,
+            @ApiParam(value = "Генератор сообщений пользователя.", required = true) MessageGenerator messageGenerator,
+            @ApiParam(value = "ID пользователя.", required = true) User user,
             @ApiParam(value = "Вычитаемая сумма.", required = true) Integer number) throws UserExeption {
-        User user = userRepository.findById(idUser).get();
 
         if (user.getCash() - number < 0){
-            throw new UserExeption("Недостаточно средств");
+            throw new UserExeption(ControllerUtils.getMessageProperty(ConfigureErrors.NEED_MORE_CASH.toString(), "subtractCashUser", messageGenerator));
         }
 
         user.setCash(user.getCash() - number);
@@ -121,15 +139,18 @@ public class UserService implements UserDetailsService {
 
     @ApiOperation(value = "Создать пользователя.")
     public void addUser(
+            @ApiParam(value = "Генератор сообщений пользователя.", required = true) MessageGenerator messageGenerator,
             @ApiParam(value = "Выдергивает пользователя авторизованного.", required = true) User user,
+            @ApiParam(value = "Выбранный пользователем язык.", required = true) Language language,
             @ApiParam(value = "Аватарка пользователя.", required = true) MultipartFile file) throws IOException {
 
             if (file.getSize() > 0) {
-                user.setPhotoUser(new PhotoUser(user, ServiceUtils.saveFile(file, WEIGHT_IMAGE, HEIGHT_IMAGE, uploadPath)));
+                user.setPhotoUser(new PhotoUser(user, ServiceUtils.saveFile(messageGenerator, file, WEIGHT_IMAGE, HEIGHT_IMAGE, uploadPath)));
                 photoUserRepository.save(user.getPhotoUser());
             }
 
-            user.setRole(roleRepository.findFirstByName(ControllerUtils.USER));
+            user.setLanguage(language);
+            user.setRole(roleRepository.findFirstByName(Role.USER));
             user = userRepository.save(user);
 
             if (user.getId() != null){
@@ -139,10 +160,11 @@ public class UserService implements UserDetailsService {
         }
     }
 
-    @ApiOperation(value = "Создать пользователя.")
+    @ApiOperation(value = "Изменить данные пользователя.")
     public void changeUser(
-            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) User userOld,
-            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) User userNew,
+            @ApiParam(value = "Генератор сообщений пользователя.", required = true) MessageGenerator messageGenerator,
+            @ApiParam(value = "Текущий пользователь", required = true) User userOld,
+            @ApiParam(value = "Обновленная информация пользователя", required = true) User userNew,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) MultipartFile file) throws IOException {
 
         if (userOld.getPhotoUser() != null) {
@@ -151,7 +173,7 @@ public class UserService implements UserDetailsService {
         }
 
         if (file.getSize() > 0) {
-            PhotoUser photoUser = new PhotoUser(userOld, ServiceUtils.saveFile(file, WEIGHT_IMAGE, HEIGHT_IMAGE, uploadPath));
+            PhotoUser photoUser = new PhotoUser(userOld, ServiceUtils.saveFile(messageGenerator, file, WEIGHT_IMAGE, HEIGHT_IMAGE, uploadPath));
             photoUser = photoUserRepository.save(photoUser);
             userOld.setPhotoUser(photoUser);
         }
@@ -171,6 +193,38 @@ public class UserService implements UserDetailsService {
             log.error("User with name " + userOld.getLogin() + " don't update.");
         }
     }
+
+    @ApiOperation(value = "Вернуть язык по его человеко-читабельному виду.")
+    public Language getLanguageByName(
+            @ApiParam(value = "Человеко-читабельный вид языка", required = true) String name){
+
+        return languageRepository.findFirstByReadbleName(name);
+    }
+
+    @ApiOperation(value = "Вернуть список всех языков в человекочитабельном виде.")
+    public List<String> getListNamesLanguage(){
+        return languageRepository.getAllByReadbleName();
+    }
+
+    @ApiOperation(value = "Изменить язык пользователя.")
+    public Language changeLanguageUserByNameLanguage(
+            @ApiParam(value = "Пользователь системы.", required = true) User user,
+            @ApiParam(value = "Человеко-читабельный вид языка", required = true) String nameLanguage
+    ){
+
+        Language language = languageRepository.findFirstByReadbleName(nameLanguage);
+
+        if (language != null) {
+            user.setLanguage(language);
+            userRepository.save(user);
+
+            return language;
+        }
+
+        return language;
+    }
+
+
 
 
 }

@@ -1,11 +1,12 @@
 package com.recsoft.data.repository;
 
 import com.recsoft.data.entity.Role;
+import io.swagger.annotations.Api;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-/* Репозиторий для работы с ролями пользователей
-* @author Evgeny Popov */
+@Api(value = "Репозиторий ролей",
+        description = "Репозиторий для работы с базой ролей")
 @Repository
 public interface RoleRepository extends JpaRepository<Role, Long> {
 

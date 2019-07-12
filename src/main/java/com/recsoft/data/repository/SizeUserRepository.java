@@ -1,16 +1,12 @@
 package com.recsoft.data.repository;
 
 import com.recsoft.data.entity.SizeUser;
+import io.swagger.annotations.Api;
 import org.springframework.data.jpa.repository.JpaRepository;
-import springfox.documentation.annotations.Cacheable;
+import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
-/*  Репозиторий для работы с базой размеров продуктов
-* @author Evgeny Popov */
+@Api(value = "Репозиторий размеров товара",
+        description = "Репозиторий для работы с базой размеров товара")
+@Repository
 public interface SizeUserRepository extends JpaRepository<SizeUser, Long> {
-
-//    @Cacheable("sizes")
-//    @Override
-//    List<SizeUser> findAll();
 }

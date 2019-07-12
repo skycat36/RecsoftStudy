@@ -3,9 +3,12 @@ package com.recsoft.service;
 import com.recsoft.data.entity.*;
 import com.recsoft.data.exeption.UserExeption;
 import com.recsoft.data.repository.*;
+import com.recsoft.utils.ConfigureErrors;
 import com.recsoft.utils.ControllerUtils;
 import com.recsoft.utils.ReadbleUtils;
+import com.recsoft.validation.MessageGenerator;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
@@ -23,19 +26,17 @@ import java.util.Map;
                 "отвечающий за целостность базы данных заказов")
 public class OrderService {
 
+    @ApiModelProperty(notes = "Константа для выбора статуса заказа по умолчанию", name="DEFAULT_STATUS_ORDER")
     private final long DEFAULT_STATUS_ORDER = 1;
 
+    @ApiModelProperty(notes = "Записывает логи сделанных действий и ошибок.", name="log", value="ProductController")
     private Logger log = LoggerFactory.getLogger(ProductService.class.getName());
 
     private UserService userService;
 
-    private ProductService productService;
-
     private ProductRepository productRepository;
 
     private OrderRepository orderRepository;
-
-    private UserRepository userRepository;
 
     private StatusRepository statusRepository;
 
@@ -47,11 +48,6 @@ public class OrderService {
     }
 
     @Autowired
-    public void setProductService(ProductService productService) {
-        this.productService = productService;
-    }
-
-    @Autowired
     public void setProductRepository(ProductRepository productRepository) {
         this.productRepository = productRepository;
     }
@@ -59,11 +55,6 @@ public class OrderService {
     @Autowired
     public void setOrderRepository(OrderRepository orderRepository) {
         this.orderRepository = orderRepository;
-    }
-
-    @Autowired
-    public void setUserRepository(UserRepository userRepository) {
-        this.userRepository = userRepository;
     }
 
     @Autowired
@@ -95,10 +86,10 @@ public class OrderService {
         log.info("Заказ " + order.getId() + " добавлен в корзину");
     }
 
-    @ApiOperation(value = "Удалить заказ.")
+    @ApiOperation(value = "Удалить оплаченный заказ.")
     public void deletePayOrder(
-            @ApiParam(value = "Id продукта который надо удалить", required = true) Long idOrder,
-            @ApiParam(value = "Id продукта который надо удалить", required = true) Long idUser){
+            @ApiParam(value = "Id заказа который надо удалить", required = true) Long idOrder,
+            @ApiParam(value = "Id пользователя у которого удаляют заказ", required = true) Long idUser){
 
         Order order = orderRepository.findById(idOrder).get();
 
@@ -116,9 +107,9 @@ public class OrderService {
         log.info("Заказ с id = " + idOrder + " удален.");
     }
 
-    @ApiOperation(value = "Удалить заказ.")
+    @ApiOperation(value = "Удалить неоплаченный заказ.")
     public void deleteOrderWhoNotPay(
-            @ApiParam(value = "Id продукта который надо удалить", required = true) Long idOrder){
+            @ApiParam(value = "Id заказа который надо удалить", required = true) Long idOrder){
 
         Order order = orderRepository.findById(idOrder).get();
 
@@ -134,7 +125,7 @@ public class OrderService {
 
     @ApiOperation(value = "Обновить количество сделанных заказов заказ.")
     public void updateCountOrderWhoNotPay(
-            @ApiParam(value = "Id продукта который надо обновить.", required = true) long idOrder,
+            @ApiParam(value = "Id заказа который надо обновить.", required = true) long idOrder,
             @ApiParam(value = "Обновленное количество товаров.", required = true) int countNewProd){
 
         Order order = orderRepository.findById(idOrder).get();
@@ -153,7 +144,7 @@ public class OrderService {
 
     @ApiOperation(value = "Проверить правильность выбора количества товаров.")
     public boolean proveCountOrderedProduct(
-            @ApiParam(value = "Id продукта у которого проверяется количество товара.", required = true) long idOrder,
+            @ApiParam(value = "Id заказа у которого проверяется количество товара.", required = true) long idOrder,
             @ApiParam(value = "Обновленное количество товаров.", required = true) int countProd){
 
         Order order = orderRepository.findById(idOrder).get();
@@ -165,9 +156,9 @@ public class OrderService {
         return true;
     }
 
-    @ApiOperation(value = "Удалить заказ.")
+    @ApiOperation(value = "Удалить все неоплаченные заказы.")
     public void deleteAllOrdersNotPayUser(
-            @ApiParam(value = "Id продукта который надо удалить", required = true) Long idUser){
+            @ApiParam(value = "Id пользователя у которого удаляют неоплаченные заказы", required = true) Long idUser){
 
         User user = userService.getUserById(idUser);
 
@@ -187,9 +178,9 @@ public class OrderService {
         log.info("Заказ с id = " + user.getId() + " удален.");
     }
 
-    @ApiOperation(value = "Удалить заказы пользователя.")
+    @ApiOperation(value = "Удалить оплаченные заказы пользователя.")
     public void deleteAllOrdersWhoPayUser(
-            @ApiParam(value = "Id продукта который надо удалить", required = true) Long idUser){
+            @ApiParam(value = "Id пользователя у которого удаляют оплаченные заказы", required = true) Long idUser){
 
         User user = userService.getUserById(idUser);
 
@@ -219,12 +210,6 @@ public class OrderService {
         return roleRepository.findFirstByName(nameRole);
     }
 
-    @ApiOperation(value = "Возвращает статус по названию.")
-    public Status getStatusByName(
-            @ApiParam(value = "Имя статуса.", required = true) String nameStatus){
-        return statusRepository.findFirstByName(nameStatus);
-    }
-
     @ApiOperation(value = "Заказы сделанные пользователем не оплаченные.")
     public List<Order> getOrderUserNotPay(
             @ApiParam(value = "Пользователь у которого необходимо вернуть неоплаченные заказы", required = true) User user){
@@ -233,11 +218,11 @@ public class OrderService {
 
     @ApiOperation(value = "Заказы сделанные пользователем оплаченные.")
     public List<Order> getOrderUserPay(
-            @ApiParam(value = "Пользователь у которого необходимо вернуть неоплаченные заказы", required = true) User user){
+            @ApiParam(value = "Пользователь у которого необходимо вернуть оплаченные заказы", required = true) User user){
         return orderRepository.findAllByUserAndPayTrue(user);
     }
 
-    @ApiOperation(value = "Заказы сделанные пользователем.")
+    @ApiOperation(value = "Оплаченные заказы сделанные пользователем.")
     public List<Order> getOrderUser(
             @ApiParam(value = "Пользователь у которого необходимо вернуть заказы", required = true) User user){
         return orderRepository.findAllByUserAndPayTrue(user);
@@ -255,6 +240,7 @@ public class OrderService {
     }
     @ApiOperation(value = "Обновить заказы пользователя")
     public void updateOrderListWhoNotPay(
+            @ApiParam(value = "Генератор сообщений пользователя.", required = true) MessageGenerator messageGenerator,
             @ApiParam(value = "Пользователь системы.", required = true) User user,
             @ApiParam(value = "Адрес куда отправлять продукт.", required = true) String adress,
             @ApiParam(value = "Информация об ошибках.", required = true) Map<String, String> errors){
@@ -263,12 +249,14 @@ public class OrderService {
         double realPriceOrder = this.calculetePriseForUser(ordersUser);
         adress = adress.trim();
 
+        user = userService.getUserById(user.getId());
+
         if (user.getCash() < realPriceOrder){
-            errors.put(ControllerUtils.constructError("price"), "Не достаточно средств");
+            errors.put(ControllerUtils.constructError("price"), ControllerUtils.getMessageProperty(ConfigureErrors.NEED_MORE_CASH.toString(), "updateOrderListWhoNotPay", messageGenerator));
         }
 
         if (adress.equals("")){
-            errors.put(ControllerUtils.constructError("adress"), "Поле адреса пустое");
+            errors.put(ControllerUtils.constructError("adress"), ControllerUtils.getMessageProperty(ConfigureErrors.ADRESS_EMPTY.toString(), "updateOrderListWhoNotPay", messageGenerator));
         }
 
         if (errors.isEmpty()){
@@ -278,7 +266,7 @@ public class OrderService {
             }
 
             try {
-                userService.subtractCashUser(user.getId(), Math.abs(this.roundPriseForUser(realPriceOrder)));
+                userService.subtractCashUser(messageGenerator, user, Math.abs(this.roundPriseForUser(realPriceOrder)));
                 orderRepository.saveAll(ordersUser);
             } catch (UserExeption userExeption) {
                 errors.put(ControllerUtils.constructError("price"), userExeption.getMessage());
@@ -300,30 +288,28 @@ public class OrderService {
     }
 
     @ApiOperation(value = "Сумма округленная.")
-    public Integer roundPriseForUser(
+    private Integer roundPriseForUser(
             @ApiParam(value = "Сумма пользователя.", required = true) Double prise){
 
         return Integer.parseInt(String.valueOf(Math.round(prise)));
     }
 
-    @ApiOperation(value = "Обновить статус списка переданных заказов.")
-    public void updateStatusOrders(
-            @ApiParam(value = "Пользователь системы.", required = true) User user,
-            @ApiParam(value = "Информация о статусе товаров.", required = true) List<String> statusOrd
+    @ApiOperation(value = "Обновить статус заказа.")
+    public boolean updateStatusOrders(
+            @ApiParam(value = "Id заказа у которого проверяется количество товара.", required = true) long idOrder,
+            @ApiParam(value = "Информация о статусе товаров.", required = true) String statusOrd
     ){
-        List<Order> ordersUser = this.getOrderUser(user);
-        List<Order> orderWhoNeedUpdate = new ArrayList<>();
 
-        for (int i = 0; i < ordersUser.size(); i++) {
-            Status statusRealOrder = ordersUser.get(i).getStatus();
-            String newStatusName = ReadbleUtils.createStatusOrderFromReadable(statusOrd.get(i));
-            if (!statusRealOrder.getName().equals(newStatusName)) {
-                ordersUser.get(i).setStatus(this.getStatusByName(newStatusName));
-                orderWhoNeedUpdate.add(ordersUser.get(i));
+            Status status = statusRepository.findFirstByName(ReadbleUtils.createStatusOrderFromReadable(statusOrd));
+            if (status != null) {
+                 Order order = orderRepository.findById(idOrder).get();
+                 order.setStatus(status);
+
+                 orderRepository.save(order);
+                 return true;
+            }else {
+                return false;
             }
-        }
-        orderRepository.saveAll(orderWhoNeedUpdate);
-
     }
 
 }

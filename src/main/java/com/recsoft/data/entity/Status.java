@@ -1,10 +1,8 @@
 package com.recsoft.data.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.recsoft.utils.ReadbleUtils;
 import io.swagger.annotations.ApiModel;
-import jdk.nashorn.internal.ir.annotations.Ignore;
+import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.validator.constraints.Length;
 
 import javax.persistence.*;
@@ -18,17 +16,17 @@ import java.util.Set;
 @ApiModel(description = "Статус заказа.")
 public class Status  {
 
-    /*Идентификатор обьекта*/
+    @ApiModelProperty(notes = "Идентификатор обьекта.", name="id", required=true)
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    /* Название статуса заказа.*/
-    @NotBlank(message = "Поле название заказа не может быть пустым")
-    @Length(max = 50, message = "Длинна поля превышена.")
+    @ApiModelProperty(notes = "Название статуса заказа.", name="name", required=true)
+    @NotBlank
+    @Length(max = 50)
     private String name;
 
-    /* Список заказов имеющих этот статус.*/
+    @ApiModelProperty(notes = "Список заказов имеющих этот статус.", name="orders", required=true)
     @JsonIgnore
     @OneToMany(mappedBy = "status", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<Order> orders;
@@ -36,12 +34,12 @@ public class Status  {
     public Status() {
     }
 
-    public Status(@NotBlank(message = "Поле название заказа не может быть пустым") @Length(max = 50, message = "Длинна поля превышена.") String name, Set<Order> orders) {
+    public Status(@NotBlank @Length(max = 50) String name, Set<Order> orders) {
         this.name = name;
         this.orders = orders;
     }
 
-    public Status(@NotBlank(message = "Name cannot be empty") String name) {
+    public Status(@NotBlank String name) {
         this.name = name;
     }
 

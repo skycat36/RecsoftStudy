@@ -2,6 +2,8 @@ package com.recsoft.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.security.core.GrantedAuthority;
 
@@ -16,18 +18,26 @@ import java.util.Set;
 @ApiModel(description = "Определяет роль пользователя.")
 public class Role implements GrantedAuthority {
 
+    @ApiModelProperty(notes = "Константы названия имеющихся ролей.", required=true)
+    @Ignore
+    @Transient
+    public static final String ADMIN = "admin", SELLER = "seller", USER = "user";
+
     /*Идентификатор обьекта*/
+    @ApiModelProperty(notes = "Идентификатор обьекта.", name="id", required=true)
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     /* Название роли. */
-    @NotBlank(message = "Название роли не может быть пустой.")
+    @ApiModelProperty(notes = "Название роли.", name="name", required=true)
     @Column(name = "name")
-    @Length(max = 50, message = "Длинна поля превышена.")
+    @NotBlank
+    @Length(max = 50)
     private String name;
 
     /* Список пользователей имеющих эту роль*/
+    @ApiModelProperty(notes = "Список пользователей имеющих эту роль.", name="users", required=true)
     @JsonIgnore
     @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<User> users;
@@ -35,7 +45,7 @@ public class Role implements GrantedAuthority {
     public Role() {
     }
 
-    public Role(@NotBlank(message = "Название роли не может быть пустой.") @Length(max = 50, message = "Длинна поля превышена.") String name, Set<User> users) {
+    public Role(@NotBlank @Length(max = 50) String name, Set<User> users) {
         this.name = name;
         this.users = users;
     }

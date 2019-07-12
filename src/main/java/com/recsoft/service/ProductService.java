@@ -3,8 +3,12 @@ package com.recsoft.service;
 import com.recsoft.data.entity.*;
 import com.recsoft.data.exeption.ProductExeption;
 import com.recsoft.data.repository.*;
+import com.recsoft.utils.ConfigureErrors;
+import com.recsoft.utils.ControllerUtils;
 import com.recsoft.utils.ServiceUtils;
+import com.recsoft.validation.MessageGenerator;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
@@ -14,31 +18,30 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/* Представляет функционал для работы с продуктами
- * @author Evgeny Popov
- * */
 @Service
 @Api(value = "Сервис продуктов",
         description = "Класс-сервис выполняет операции связанные с продуктами, " +
                 "отвечающий за целостность базы данных продуктов")
 public class ProductService {
 
+    @ApiModelProperty(notes = "Высота изображения", name = "HEIGHT_IMAGE", required = true)
     @Value("${weight.img}")
     private Integer HEIGHT_IMAGE;
 
+    @ApiModelProperty(notes = "Ширина изображения", name = "WEIGHT_IMAGE",required=true)
     @Value("${height.img}")
     private Integer WEIGHT_IMAGE;
 
+    @ApiModelProperty(notes = "Записывает логи сделанных действий и ошибок.", name = "log", value = "ProductController")
     private Logger log = LoggerFactory.getLogger(ProductService.class.getName());
 
-    /*Путь к папке хранения данных*/
+    @ApiModelProperty(notes = "Путь до файла хранимых изображений", required=true)
     @Value("${upload.path}")
     private String uploadPath;
 
@@ -84,6 +87,7 @@ public class ProductService {
         this.userProdComRepository = userProdComRepository;
     }
 
+    @ApiOperation(value = "Вернуть продукт по ID")
     public Product getProductById(
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Long idProd){
         return productRepository.findById(idProd).get();
@@ -112,12 +116,14 @@ public class ProductService {
 
     @ApiOperation(value = "Создать продукт.")
     public void addProduct(
+            @ApiParam(value = "Генератор сообщений пользователя.", required = true) MessageGenerator messageGenerator,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Product product,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Long idCategory,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<Long> idSizeUser,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<MultipartFile> files) throws IOException, ProductExeption {
+
         if (product != null){
-            this.createRelationsForParamersProduct(idCategory, product, idSizeUser, files);
+            this.createRelationsForParamersProduct(messageGenerator, idCategory, product, idSizeUser, files);
             productRepository.save(product);
             log.info("Product with name " + product.getName() + " was added.");
         }else {
@@ -125,10 +131,16 @@ public class ProductService {
         }
     }
 
-    private void createRelationsForParamersProduct(@ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Long idCategory, @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Product product, @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<Long> idSizeUser, @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<MultipartFile> files) throws IOException, ProductExeption {
+    private void createRelationsForParamersProduct(
+            @ApiParam(value = "Генератор сообщений пользователя.", required = true) MessageGenerator messageGenerator,
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Long idCategory,
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Product product,
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<Long> idSizeUser,
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<MultipartFile> files) throws IOException, ProductExeption {
+
         Category category = categoryRepository.findById(idCategory).orElse(null);
         if (category == null) {
-            throw new ProductExeption("Хакер вали прочь.");
+            throw new ProductExeption(ControllerUtils.getMessageProperty(ConfigureErrors.HACKER_GO_OUT.toString(), "createRelationsForParamersProduct", messageGenerator));
         }
 
         product.setCategory(category);
@@ -145,15 +157,16 @@ public class ProductService {
 
         for (MultipartFile multipartFile: files){
             if (multipartFile.getSize() > 0) {
-                photoProductSet.add(new PhotoProduct(ServiceUtils.saveFile(multipartFile, WEIGHT_IMAGE, HEIGHT_IMAGE, uploadPath), product));
+                photoProductSet.add(new PhotoProduct(ServiceUtils.saveFile(messageGenerator, multipartFile, WEIGHT_IMAGE, HEIGHT_IMAGE, uploadPath), product));
             }
         }
         product.setPhotoProducts(photoProductSet);
     }
 
-    @ApiOperation(value = "Удалить фотографию продукта.")
+    @ApiOperation(value = "Удалить фотографии продукта.")
     public void deletePhotoProduct(
-            @ApiParam(value = "Удалить фотографию продукта", required = true) Long idProduct){
+            @ApiParam(value = "Id продукта", required = true) Long idProduct){
+
         Product product = productRepository.findById(idProduct).get();
 
         for (PhotoProduct photoProduct : product.getPhotoProducts()){
@@ -167,7 +180,8 @@ public class ProductService {
 
     @ApiOperation(value = "Отобразить продукты по категории.")
     public List<Product> getProductListByCategory(
-            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Long idCategory){
+            @ApiParam(value = "Id категории", required = true) Long idCategory){
+
         if (idCategory != null) {
             Category category = categoryRepository.findById(idCategory).get();
             return productRepository.findAllByCategory(category);
@@ -176,7 +190,12 @@ public class ProductService {
     }
 
     @ApiOperation(value = "Добавить комментарий к продукту")
-    public void addComment(String comment, Long idUser, Long idProduct){
+    public void addComment(
+            @ApiParam(value = "Текст коментария", required = true) String comment,
+            @ApiParam(value = "Id пользователя", required = true) Long idUser,
+            @ApiParam(value = "Id продукта", required = true) Long idProduct
+    ){
+
         Product product = productRepository.findById(idProduct).get();
         User user = userRepository.findById(idUser).get();
 
@@ -188,13 +207,14 @@ public class ProductService {
 
     @ApiOperation(value = "Обновить информацию о продукте")
     public void updateProduct(
-            Product productReal,
-            Product productOld,
+            @ApiParam(value = "Генератор сообщений пользователя.", required = true) MessageGenerator messageGenerator,
+            @ApiParam(value = "Обновленный продукт", required = true) Product productReal,
+            @ApiParam(value = "Текущий продукт", required = true) Product productOld,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Long idCategory,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<Long> idSizeUser,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<MultipartFile> files) throws IOException, ProductExeption {
 
-        this.createRelationsForParamersProduct(idCategory, productOld, idSizeUser, files);
+        this.createRelationsForParamersProduct(messageGenerator, idCategory, productOld, idSizeUser, files);
 
         productOld.setCount(productReal.getCount());
         productOld.setDiscount(productReal.getDiscount());
@@ -204,13 +224,4 @@ public class ProductService {
         productRepository.save(productOld);
         log.info("Product with Id " + productReal.getId() + " was update.");
     }
-
-    @ApiOperation(value = "Обновить заказы пользователя")
-    public void updateProductList(
-            @ApiParam(value = "Обновляемые заказы", required = true) List<Product> productList){
-        productRepository.saveAll(productList);
-    }
-
-
-
 }

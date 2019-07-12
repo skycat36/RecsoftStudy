@@ -1,34 +1,34 @@
 package com.recsoft.data.entity;
 
 import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.validator.constraints.Length;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 
-/* Коментарии к товару.
- * @author Евгений Попов */
 @Entity
 @Table(name = "user_prod_com")
 @ApiModel(description = "Комментарий пользователя для продукта.")
 public class UserProdCom implements Comparable<UserProdCom> {
 
-    /*Идентификатор обьекта*/
+    @ApiModelProperty(notes = "Идентификатор обьекта.", name="id", required=true)
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    /* Комментарий на товар. */
-    @Length(max = 255, message = "Длинна поля превышена.")
-    @NotBlank(message = "Комментарий не может быть пустым")
+    @ApiModelProperty(notes = "Комментарий на товар.",name="comment",required=true)
+    @Length(max = 255)
+    @NotBlank
     private String comment;
 
-    /* Ссылка на пользователя сделавшего заказ. */
+    @ApiModelProperty(notes = "Ссылка на пользователя сделавшего заказ.",name="user",required=true)
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id",
             referencedColumnName = "id")
     private User user;
 
+    @ApiModelProperty(notes = "Ссылка на комментируемый продукт",name="product",required=true)
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "prod_id",
             referencedColumnName = "id")
@@ -37,7 +37,7 @@ public class UserProdCom implements Comparable<UserProdCom> {
     public UserProdCom() {
     }
 
-    public UserProdCom(@Length(max = 255, message = "Длинна поля превышена.") @NotBlank(message = "Комментарий не может быть пустым") String comment, User user, Product product) {
+    public UserProdCom(@Length(max = 255) @NotBlank String comment, User user, Product product) {
         this.comment = comment;
         this.user = user;
         this.product = product;

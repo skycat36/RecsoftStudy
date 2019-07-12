@@ -1,8 +1,8 @@
 package com.recsoft.data.repository;
 
 import com.recsoft.data.entity.Order;
-import com.recsoft.data.entity.Role;
 import com.recsoft.data.entity.User;
+import io.swagger.annotations.Api;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -12,12 +12,12 @@ import org.springframework.stereotype.Repository;
 import javax.transaction.Transactional;
 import java.util.List;
 
-/* Репозиторий для работы с корзиной товаров */
+@Api(value = "Репозиторий категорий",
+        description = "Репозиторий для работы с базой заказами")
 @Repository
 @Transactional
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-    //@Query(value = "select * from order_m ord where ord.user_id =:idUser and ord.pay = false", nativeQuery = true)
     List<Order> findAllByUserAndPayFalse(User user);
 
     List<Order> findAllByUserAndPayTrue(User user);

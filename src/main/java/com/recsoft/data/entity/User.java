@@ -1,8 +1,9 @@
 package com.recsoft.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.validator.constraints.Length;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -12,73 +13,80 @@ import javax.validation.constraints.NotBlank;
 import java.util.Collection;
 import java.util.Set;
 
-/* Информация о пользователе.
- * @author Евгений Попов */
 @Entity
 @Table(name = "usr")
+@Api(description = "Информация о пользователе.")
 public class User implements UserDetails {
 
-    /*Идентификатор обьекта*/
+    @ApiModelProperty(notes = "Идентификатор обьекта.", name="id", required=true)
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     /* Имя. */
-    @NotBlank(message = "Поле Имя не может быть пустым")
-    @Length(max = 50, message = "Длинна поля превышена.")
+    @ApiModelProperty(notes = "Имя.", name="name", required=true)
+    @NotBlank
+    @Length(max = 50)
     private String name;
 
-    /* Фамилия. */
-    @NotBlank(message = "Поле Фамилия не может быть пустым")
-    @Length(max = 50, message = "Длинна поля превышена.")
+    @ApiModelProperty(notes = "Фамилия.", name="fam", required=true)
+    @NotBlank
+    @Length(max = 50)
     private String fam;
 
-    /* Отчество. */
-    @NotBlank(message = "Поле Отчество не может быть пустым")
-    @Length(max = 50, message = "Длинна поля превышена.")
+    @ApiModelProperty(notes = "Отчество.", name="secName", required=true)
     @Column(name = "sec_name")
+    @NotBlank
+    @Length(max = 50)
     private String secName;
 
-    /* Логин пользователя. */
-    @NotBlank(message = "Поле Логин не может быть пустым")
+    @ApiModelProperty(notes = "Логин пользователя.", name="login", required=true)
     @Column(nullable = false, unique = true)
-    @Length(max = 50, message = "Длинна поля превышена.")
+    @NotBlank
+    @Length(max = 50)
     private String login;
 
-    /* Пароль пользователя. */
-    @NotBlank(message = "Поле Пароль не может быть пустым")
-    @Length(max = 50, message = "Длинна поля превышена.")
+    @ApiModelProperty(notes = "Пароль пользователя.", name="password", required=true)
+    @NotBlank
+    @Length(max = 50)
     private String password;
 
-    /* Имеющаяся деньги на кошельке. */
     //@NotBlank(message = "Поле деньги на кошельке не может быть пустым")
+    @ApiModelProperty(notes = "Имеющаяся деньги на кошельке.", name="cash", required=true)
     private Integer cash;
 
-    /* Рейтинг пользователя. */
     //@NotBlank(message = "Поле рейтинг не может быть пустым")
+    @ApiModelProperty(notes = "Рейтинг пользователя.", name="rating", required=true)
     private Integer rating;
 
-    /* email пользователя. */
-    @Email(message = "Поле Email введено некорректно")
-    @NotBlank(message = "Поле Email не может быть пустым")
+    @ApiModelProperty(notes = "email пользователя.", name="email", required=true)
+    @Email
+    @NotBlank
     private String email;
 
-    /* Ссылка на роль. */
+    @ApiModelProperty(notes = "Ссылка на роль.", name="role", required=true)
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(referencedColumnName = "id")
     private Role role;
 
+    @ApiModelProperty(notes = "Выбранный язык", name="language", required=true)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(referencedColumnName = "id")
+    private Language language;
+
+    @ApiModelProperty(notes = "Фотография пользователя", name="photoUser", required=true)
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private PhotoUser photoUser;
 
-    /* Список сделанных заказов. */
+    @ApiModelProperty(notes = "Список сделанных заказов.", name="orders", required=true)
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Order> orders;
 
+    @ApiModelProperty(notes = "Ссылки на коментарии пользователя.", name="coments", required=true)
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<UserProdCom> coments;
 
-    /* Ссылка на продукты к которым пользователь оставил коментарии. */
+    @ApiModelProperty(notes = "Ссылка на продукты к которым пользователь оставил коментарии.", name="products", required=true)
     @JsonIgnore
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable (name="user_prod_com",
@@ -86,13 +94,14 @@ public class User implements UserDetails {
             inverseJoinColumns=@JoinColumn(name="prod_id"))
     private Set<Product> products;
 
-    /* Активирован ли аккаунт пользователя. */
+    @ApiModelProperty(notes = "Активирован ли аккаунт пользователя.", name="activity", required=true)
     private Boolean activity;
 
     public User() {
     }
 
-    public User(@NotBlank(message = "Поле Имя не может быть пустым") @Length(max = 50, message = "Длинна поля превышена.") String name, @NotBlank(message = "Поле Фамилия не может быть пустым") @Length(max = 50, message = "Длинна поля превышена.") String fam, @NotBlank(message = "Поле Отчество не может быть пустым") @Length(max = 50, message = "Длинна поля превышена.") String secName, @NotBlank(message = "Поле Логин не может быть пустым") @Length(max = 50, message = "Длинна поля превышена.") String login, @NotBlank(message = "Поле Пароль не может быть пустым") @Length(max = 50, message = "Длинна поля превышена.") String password, @NotBlank(message = "Поле деньги на кошельке не может быть пустым") Integer cash, @NotBlank(message = "Поле рейтинг не может быть пустым") Integer rating, @Email(message = "Поле Email введено некорректно") @NotBlank(message = "Поле Email не может быть пустым") String email, Role role, PhotoUser photoUser, Set<Order> orders, Set<UserProdCom> coments, Set<Product> products, Boolean activity) {
+
+    public User(@NotBlank @Length(max = 50) String name, @NotBlank @Length(max = 50) String fam, @NotBlank @Length(max = 50) String secName, @NotBlank @Length(max = 50) String login, @NotBlank @Length(max = 50) String password, Integer cash, Integer rating, @Email @NotBlank String email, Role role, Language language, PhotoUser photoUser, Set<Order> orders, Set<UserProdCom> coments, Set<Product> products, Boolean activity) {
         this.name = name;
         this.fam = fam;
         this.secName = secName;
@@ -102,6 +111,7 @@ public class User implements UserDetails {
         this.rating = rating;
         this.email = email;
         this.role = role;
+        this.language = language;
         this.photoUser = photoUser;
         this.orders = orders;
         this.coments = coments;
@@ -231,6 +241,14 @@ public class User implements UserDetails {
 
     public void setPhotoUser(PhotoUser photoUser) {
         this.photoUser = photoUser;
+    }
+
+    public Language getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(Language language) {
+        this.language = language;
     }
 
     @Override

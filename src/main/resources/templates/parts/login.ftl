@@ -42,7 +42,7 @@
 </#macro>
 
 <#macro log_in>
-<form action="/" method="get">
+<form action="/product/product_list" method="get">
     <button type="submit" class="btn btn-primary">Войти</button>
 </form>
 </#macro>

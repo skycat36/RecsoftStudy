@@ -2,6 +2,7 @@ package com.recsoft.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.validator.constraints.Length;
 
 import javax.persistence.*;
@@ -15,18 +16,18 @@ import java.util.Set;
 @ApiModel(description = "Размер продукта.")
 public class SizeUser {
 
-    /*Идентификатор обьекта*/
+    @ApiModelProperty(notes = "Идентификатор обьекта.", name="id", required=true)
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    /* Название размера*/
-    @NotBlank(message = "Название размера не может быть пустым")
-    @Length(max = 50, message = "Длинна поля превышена.")
+    @ApiModelProperty(notes = "Название размера.", name="nameSize", required=true)
     @Column(name = "name_size")
+    @NotBlank
+    @Length(max = 50)
     private String nameSize;
 
-    /* Ссылка на продукты с таким размером. */
+    @ApiModelProperty(notes = "Ссылка на продукты с таким размером.", name="products", required=true)
     @JsonIgnore
     @ManyToMany
     @JoinTable (name="prod_size",
@@ -37,7 +38,7 @@ public class SizeUser {
     public SizeUser() {
     }
 
-    public SizeUser(@NotBlank(message = "Название размера не может быть пустым") @Length(max = 50, message = "Длинна поля превышена.") String nameSize, Set<Product> products) {
+    public SizeUser(@NotBlank @Length(max = 50) String nameSize, Set<Product> products) {
         this.nameSize = nameSize;
         this.products = products;
     }

@@ -1,33 +1,30 @@
 package com.recsoft.data.entity;
 
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
-import org.hibernate.annotations.Type;
+import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.validator.constraints.Length;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import java.util.Set;
 
-/* Категория товара.
- * @author Евгений Попов */
 @Entity
 @Table(name = "category")
 @ApiModel(description = "Категория товара.")
 public class Category {
 
-    /* Идентификатор обьекта. */
+    @ApiModelProperty(notes = "Идентификатор обьекта.",name="id", required=true)
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    /*Название категории*/
-    @NotBlank(message = "Name category cannot be empty")
-    @Length(max = 255, message = "Длинна поля превышена.")
+    @ApiModelProperty(notes = "Название категории", name="name", required=true)
+    @NotBlank
+    @Length(max = 255)
     private String name;
 
-    /* Ссылка на продукты с такой категорией. */
+    @ApiModelProperty(notes = "Ссылка на продукты с такой категорией.", name="products", required=true)
     @JsonIgnore
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<Product> products;
@@ -35,7 +32,7 @@ public class Category {
     public Category() {
     }
 
-    public Category(@NotBlank(message = "Name category cannot be empty") @Length(max = 255, message = "Длинна поля превышена.") String name, Set<Product> products) {
+    public Category(@NotBlank(message = "Name category cannot be empty") @Length(max = 255) String name, Set<Product> products) {
         this.name = name;
         this.products = products;
     }
