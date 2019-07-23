@@ -4,9 +4,9 @@ import com.recsoft.data.entity.*;
 import com.recsoft.data.exeption.ProductExeption;
 import com.recsoft.service.ProductService;
 import com.recsoft.service.UserService;
-import com.recsoft.utils.constants.ConfigureErrors;
 import com.recsoft.utils.ControllerUtils;
 import com.recsoft.utils.ServiceUtils;
+import com.recsoft.utils.constants.ConfigureErrors;
 import com.recsoft.validation.MessageGenerator;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModelProperty;
@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.IOException;

@@ -3,8 +3,8 @@ package com.recsoft.controller.user;
 import com.recsoft.data.entity.Language;
 import com.recsoft.data.entity.User;
 import com.recsoft.service.UserService;
-import com.recsoft.utils.constants.ConfigureErrors;
 import com.recsoft.utils.ControllerUtils;
+import com.recsoft.utils.constants.ConfigureErrors;
 import com.recsoft.validation.MessageGenerator;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModelProperty;
@@ -31,8 +31,6 @@ import javax.validation.Valid;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-
-//TODO Доделать перевод полей на иностранный язык, доделать логин
 
 @Api(value = "Контроллер пользователей",
         description = "Класс-контроллер отвечающий за работу с пользователями.")

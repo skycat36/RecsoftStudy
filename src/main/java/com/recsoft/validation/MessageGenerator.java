@@ -16,7 +16,8 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 @Api(value = "Класс-утилита сервисов.",
         description = "Предосталяет решения для работы изображениями и файлами для сервисов.")
