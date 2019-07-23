@@ -1,4 +1,4 @@
-package com.recsoft.utils;
+package com.recsoft.utils.constants;
 
 import io.swagger.annotations.Api;
 

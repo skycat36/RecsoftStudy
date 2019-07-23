@@ -2,5 +2,5 @@
 <#import "../../parts/cartUser.ftl" as cu>
 
 <@c.page>
-    <@cu.action "Корзина товаров" false/>
+    <@cu.action false/>
 </@c.page>

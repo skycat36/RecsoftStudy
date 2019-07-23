@@ -7,7 +7,7 @@ import com.recsoft.data.entity.User;
 import com.recsoft.service.OrderService;
 import com.recsoft.service.ProductService;
 import com.recsoft.service.UserService;
-import com.recsoft.utils.ConfigureErrors;
+import com.recsoft.utils.constants.ConfigureErrors;
 import com.recsoft.utils.ControllerUtils;
 import com.recsoft.utils.ReadbleUtils;
 import com.recsoft.validation.MessageGenerator;
@@ -26,7 +26,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +47,13 @@ public class OrderController {
     private ProductService productService;
 
     private UserService userService;
+
+    private MessageGenerator messageGenerator;
+
+    @Autowired
+    public void setMessageGenerator(MessageGenerator messageGenerator) {
+        this.messageGenerator = messageGenerator;
+    }
 
     @Autowired
     public void setOrderService(OrderService orderService) {
@@ -73,7 +79,9 @@ public class OrderController {
         ModelAndView mav = new ModelAndView("/pages/for_order/createOrder");
         user = userService.getUserById(user.getId());
 
-        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), mav);
+        mav.addAllObjects(messageGenerator.getAllValueForPage("createOrder", user.getLanguage()));
+
+        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "createOrder", mav);
         mav.addObject("product", productService.getProductById(Long.parseLong(idProduct)));
         return mav;
     }
@@ -92,38 +100,63 @@ public class OrderController {
 
         user = userService.getUserById(user.getId());
 
-        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), mav);
-
-        MessageGenerator messageGenerator;
-        try {
-            messageGenerator = new MessageGenerator(ControllerUtils.createPathToErroOrMessage(user.getLanguage(), MessageGenerator.FAIL_WHIS_OTHER_ERROR));
-        } catch (IOException e) {
-            log.error(e.getMessage());
-            return null;
-        }
 
         if (count == null){
-            errors.put(ControllerUtils.constructError("count"), ControllerUtils.getMessageProperty(ConfigureErrors.FIELD_CAN_NOT_BE_EMPTY.toString(), "createNewOrder", messageGenerator));
+            errors.put(
+                    ControllerUtils.constructError("count"),
+                    messageGenerator.getMessageErrorProperty(
+                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                            ConfigureErrors.FIELD_CAN_NOT_BE_EMPTY.toString(),
+                            "createNewOrder",
+                            user.getLanguage()
+                    )
+            );
         } else {
 
             if (count > product.getCount()){
-                errors.put(ControllerUtils.constructError("count"), ControllerUtils.getMessageProperty(ConfigureErrors.COUNT_BEGER_THEN_THIS.toString(), "createNewOrder", messageGenerator));
+                errors.put(
+                        ControllerUtils.constructError("count"),
+                        messageGenerator.getMessageErrorProperty(
+                                MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                                ConfigureErrors.COUNT_BEGER_THEN_THIS.toString(),
+                                "createNewOrder",
+                                user.getLanguage()
+                        )
+                );
             }
 
             if (count <= 0){
-                errors.put(ControllerUtils.constructError("count"), ControllerUtils.getMessageProperty(ConfigureErrors.COUNT_LESS_ZERO.toString(), "createNewOrder", messageGenerator));
+                errors.put(
+                        ControllerUtils.constructError("count"),
+                        messageGenerator.getMessageErrorProperty(
+                                MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                                ConfigureErrors.COUNT_LESS_ZERO.toString(),
+                                "createNewOrder",
+                                user.getLanguage()
+                        )
+                );
             }
         }
 
         if (errors.isEmpty()){
             if (count > product.getCount()){
-                errors.put(ControllerUtils.constructError("count"), ControllerUtils.getMessageProperty(ConfigureErrors.COUNT_BEGER_THEN_THIS.toString(), "createNewOrder", messageGenerator));
+                errors.put(
+                        ControllerUtils.constructError("count"),
+                        messageGenerator.getMessageErrorProperty(
+                                MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                                ConfigureErrors.COUNT_BEGER_THEN_THIS.toString(),
+                                "createNewOrder",
+                                user.getLanguage()
+                        )
+                );
             }
         }
 
         if (errors.isEmpty()) {
             orderService.createOrder(Long.parseLong(idProduct), "", count, user);
         }else{
+
+            ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "createOrder", mav);
             mav.addAllObjects(errors);
             mav.addObject("product", productService.getProductById(Long.parseLong(idProduct)));
             mav.addObject("count", count);
@@ -142,26 +175,20 @@ public class OrderController {
 
         user = userService.getUserById(user.getId());
 
-        MessageGenerator messageGenerator;
-        try {
-            messageGenerator = new MessageGenerator(ControllerUtils.createPathToErroOrMessage(user.getLanguage(), MessageGenerator.FAIL_WHIS_OTHER_ERROR));
-        } catch (IOException e) {
-            log.error(e.getMessage());
-            return null;
-        }
 
-        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), mav);
 
         switch (user.getRole().getName()){
             case Role.ADMIN: break;
 
             case Role.SELLER:{
+                ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "showCartSeller", mav);
                 mav.setViewName("/pages/for_order/showCartSeller");
                 constructPageCartSeller(mav);
                 break;
             }
 
             case Role.USER:{
+                ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "showCartUser", mav);
                 mav.setViewName("/pages/for_order/showCartUser");
                 constructPageCartUser(mav, user);
 
@@ -170,7 +197,16 @@ public class OrderController {
 
             default:{
                 mav = new ModelAndView("/pages/for_menu/greeting");
-                errors.put("error", ControllerUtils.getMessageProperty(ConfigureErrors.THIS_USER_NO.toString(), "showCart", messageGenerator));
+                mav.addAllObjects(messageGenerator.getAllValueForPage("navbar", user.getLanguage()));
+                errors.put(
+                        "error",
+                        messageGenerator.getMessageErrorProperty(
+                                MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                                ConfigureErrors.THIS_USER_NO.toString(),
+                                "showCart",
+                                user.getLanguage()
+                        )
+                );
                 mav.addAllObjects(errors);
                 break;
             }
@@ -254,16 +290,6 @@ public class OrderController {
             @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
     ){
 
-        MessageGenerator messageGenerator;
-        try {
-            messageGenerator = new MessageGenerator(ControllerUtils.createPathToErroOrMessage(user.getLanguage(), MessageGenerator.FAIL_WHIS_OTHER_ERROR));
-        } catch (IOException e) {
-            log.error(e.getMessage());
-            return new ResponseEntity<>(
-                    "Language nothing",
-                    HttpStatus.BAD_REQUEST);
-        }
-
         if (orderService.proveCountOrderedProduct(Long.parseLong(idOrder), Integer.parseInt(newCountData))) {
             orderService.updateCountOrderWhoNotPay(Long.parseLong(idOrder), Integer.parseInt(newCountData));
             user = userService.getUserById(user.getId());
@@ -278,9 +304,13 @@ public class OrderController {
                     HttpStatus.OK);
         }
         else {
-
             return new ResponseEntity<>(
-                    ControllerUtils.getMessageProperty(ConfigureErrors.SELECT_BAD.toString(), "changeCountOrderInCart", messageGenerator),
+                    messageGenerator.getMessageErrorProperty(
+                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                            ConfigureErrors.SELECT_BAD.toString(),
+                            "changeCountOrderInCart",
+                            user.getLanguage()
+                    ),
                     HttpStatus.BAD_REQUEST);
         }
     }
@@ -296,32 +326,19 @@ public class OrderController {
         ModelAndView mav = new ModelAndView("redirect:/order/orders_user");
         user = userService.getUserById(user.getId());
 
-        MessageGenerator messageGenerator;
-        try {
-            messageGenerator = new MessageGenerator(ControllerUtils.createPathToErroOrMessage(user.getLanguage(), MessageGenerator.FAIL_WHIS_OTHER_ERROR));
-        } catch (IOException e) {
-            log.error(e.getMessage());
-            return null;
-        }
-
         List<Order> ordersNotPay = orderService.getOrderUserNotPay(user);
         for (int i = 0; i < ordersNotPay.size(); i++){
             if (!ordersNotPay.get(i).getCount().equals(countProducts[i])){
-                try {
-                    return ControllerUtils.createMessageForHacker(user.getLanguage());
-                } catch (IOException e) {
-                    log.error(e.getMessage());
-                    return null;
-                }
+                return messageGenerator.createMessageForHacker(user.getLanguage());
             }
         }
 
-        orderService.updateOrderListWhoNotPay(messageGenerator, user, adress, errors);
+        orderService.updateOrderListWhoNotPay(user.getLanguage(), user, adress, errors);
 
         if (!errors.isEmpty()){
             mav.setViewName("/pages/for_order/showCartUser");
             this.constructPageCartUser(mav, user);
-            ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), mav);
+            ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "showCartUser", mav);
             mav.addAllObjects(errors);
         }
 
@@ -337,11 +354,10 @@ public class OrderController {
 
         user = userService.getUserById(user.getId());
 
-        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), mav);
-
         switch (user.getRole().getName()){
             case Role.USER:{
                 mav.setViewName("/pages/for_order/showOrdersUser");
+                ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "showOrdersUser", mav);
                 List<Order> ordersUser = orderService.getOrderUser(user);
                 mav.addObject("orderList", ordersUser);
                 mav.addObject("listReadbleStatus", orderService.createListReadbleStatusOrders(ordersUser));
@@ -349,12 +365,7 @@ public class OrderController {
                 break;
             }
             default:{
-                try {
-                    return ControllerUtils.createMessageForHacker(user.getLanguage());
-                } catch (IOException e) {
-                    log.error(e.getMessage());
-                    return null;
-                }
+                return messageGenerator.createMessageForHacker(user.getLanguage());
             }
         }
         return mav;
@@ -370,7 +381,7 @@ public class OrderController {
 
         user = userService.getUserById(user.getId());
 
-        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), mav);
+        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "selectUserCart", mav);
 
         if (user.getRole().getName().equals(Role.SELLER) || user.getRole().getName().equals(Role.ADMIN)){
             User selectUser = userService.getUserById(Long.parseLong(idUser));
@@ -382,12 +393,7 @@ public class OrderController {
             mav.addObject("listReadbleStatus", orderService.createListReadbleStatusOrders(ordersUser));
             mav.addObject("priceUser", orderService.calculetePriseForUser(ordersUser));
         }else {
-            try {
-                mav = ControllerUtils.createMessageForHacker(user.getLanguage());
-            } catch (IOException e) {
-                log.error(e.getMessage());
-                return null;
-            }
+            mav = messageGenerator.createMessageForHacker(user.getLanguage());
         }
 
         return mav;

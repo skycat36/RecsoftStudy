@@ -3,22 +3,22 @@
 <form action="/product/product_list/filter" method="get">
     <div class="form-row align-items-center">
         <div class="col-auto my-1">
-            <label class="mr-sm-2" for="inlineFormCustomSelect">Выбрать категорию</label>
+            <label class="mr-sm-2" for="inlineFormCustomSelect">${Select_category_message} </label>
             <select class="custom-select mr-sm-2" name="selectCategory" id="inlineFormCustomSelect">
-                <option value="" <#if selectCategory??>selected</#if>>Все товары</option>
+                <option value="" <#if selectCategory??>selected</#if>>${All_goods_message}</option>
                 <#list listCategory as category>
                     <option value="${category.id}" <#if selectCategory??><#if (category.id == selectCategory)>selected</#if></#if>>${category.name}</option>
                 </#list>
             </select>
         </div>
         <div class="col-auto my-1">
-            <button type="submit" name="filterCategory" class="btn btn-primary">Выбрать категорию</button>
+            <button type="submit" name="filterCategory" class="btn btn-primary">${Select_category_message}</button>
         </div>
     </div>
 </form>
 <div class="card-columns">
     <#list productList as product>
-        <div class="card my-3" style="width: 18rem;">
+        <div class="card my-3" style="width: 20rem;">
         <#if (product.photoProducts?size > 0)>
         <div id="carouselExampleIndicators" class="carousel slide d-inline-block" data-ride="carousel">
             <ol class="carousel-indicators">
@@ -57,17 +57,17 @@
                 <p class="card-text">${product.name}</p>
             </div>
             <ul class="list-group list-group-flush">
-                <li class="list-group-item">Цена: ${product.price} руб</li>
+                <li class="list-group-item">${Price_message} : ${product.price} ${RUB_message}</li>
             </ul>
             <div class="card-body">
-                <a href="/product/show_product/${product.id}" class="card-link">Посмотреть</a>
+                <a href="/product/show_product/${product.id}" class="card-link">${Look_message}</a>
                 <#if (user.role.name == 'user')>
-                    <a href="/order/create_order/${product.id}" class="card-link">Оформить заказ</a>
+                    <a href="/order/create_order/${product.id}" class="card-link">${Add_to_cart_message}</a>
                 </#if>
             </div>
         </div>
     <#else>
-    No message
+        ${No_goods_message}
     </#list>
 </div>
 </@c.page>

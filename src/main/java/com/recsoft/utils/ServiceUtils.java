@@ -1,7 +1,10 @@
 package com.recsoft.utils;
 
+import com.recsoft.data.entity.Language;
+import com.recsoft.utils.constants.ConfigureErrors;
 import com.recsoft.validation.MessageGenerator;
 import io.swagger.annotations.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,6 +20,13 @@ import java.util.UUID;
         description = "Предосталяет решения для работы изображениями и файлами для сервисов.")
 public class ServiceUtils {
 
+    private static MessageGenerator messageGenerator;
+
+    @Autowired
+    public void setMessageGenerator(MessageGenerator messageGenerator) {
+        ServiceUtils.messageGenerator = messageGenerator;
+    }
+
     @ApiOperation(value = "Генерация уникального идентификатора.")
     public static String getUnicalUUID(){
         return UUID.randomUUID().toString();
@@ -24,7 +34,7 @@ public class ServiceUtils {
 
     @ApiOperation(value = "Обработка изображения.")
     public static BufferedImage changeImage(
-            @ApiParam(value = "Генератор сообщений.", required = true) MessageGenerator messageGenerator,
+            @ApiParam(value = "Генератор сообщений.", required = true) Language language,
             @ApiParam(value = "Файл изображения.", required = true) MultipartFile file,
             @ApiParam(value = "Ширина.", required = true) int weight,
             @ApiParam(value = "Высота.", required = true) int height) throws IOException {
@@ -32,10 +42,20 @@ public class ServiceUtils {
         try {
             bufferedImage = ImageIO.read(file.getInputStream());
             if (bufferedImage == null) {
-                throw new IOException(ControllerUtils.getMessageProperty(ConfigureErrors.BAD_FILE.toString(), "changeImage", messageGenerator));
+                throw new IOException(
+                        messageGenerator.getMessageErrorProperty(
+                                MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                                ConfigureErrors.BAD_FILE.toString(), "changeImage", language
+                        )
+                );
             }
         } catch (IOException e) {
-            throw new IOException(ControllerUtils.getMessageProperty(ConfigureErrors.PHOTO_BAD.toString(), "changeImage", messageGenerator));
+            throw new IOException(
+                    messageGenerator.getMessageErrorProperty(
+                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                            ConfigureErrors.PHOTO_BAD.toString(), "changeImage", language
+                    )
+            );
         }
 
         BufferedImage changeImage = new BufferedImage(weight,height, BufferedImage.TYPE_INT_RGB);
@@ -81,16 +101,23 @@ public class ServiceUtils {
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Имя сохраненного файла")})
     public static String saveFile(
-            @ApiParam(value = "Генератор сообщений.", required = true) MessageGenerator messageGenerator,
+            @ApiParam(value = "Генератор сообщений.", required = true) Language language,
             @ApiParam(value = "Файл изображения.", required = true) MultipartFile multipartFile,
             @ApiParam(value = "Ширина.", required = true) int weight,
             @ApiParam(value = "Высота.", required = true) int height,
             @ApiParam(value = "Путь к папке хранения данных.", required = true) String uploadPath
-            ) throws IOException {
+    ) throws IOException {
         try {
             ImageIO.read(multipartFile.getInputStream());
         } catch (IOException e) {
-            throw new IOException(ControllerUtils.getMessageProperty(ConfigureErrors.PHOTO_BAD.toString(), "saveFile", messageGenerator));
+            throw new IOException(
+                    messageGenerator.getMessageErrorProperty(
+                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                            ConfigureErrors.PHOTO_BAD.toString(),
+                            "saveFile",
+                            language
+                    )
+            );
         }
         String resultFilename = "";
         if (multipartFile != null && !multipartFile.getOriginalFilename().isEmpty()) {
@@ -101,12 +128,19 @@ public class ServiceUtils {
             }
 
             resultFilename = ServiceUtils.getUnicalUUID() + "." + multipartFile.getOriginalFilename();
-            ImageIO.write(ServiceUtils.changeImage(messageGenerator, multipartFile, weight, height), "JPEG", new File(uploadPath + "/" + resultFilename));
+            ImageIO.write(ServiceUtils.changeImage(language, multipartFile, weight, height), "JPEG", new File(uploadPath + "/" + resultFilename));
         }
         else{
-            throw new IOException(ControllerUtils.getMessageProperty(ConfigureErrors.BAD_FILE.toString(), "saveFile", messageGenerator));
+            throw new IOException(
+                    messageGenerator.getMessageErrorProperty(
+                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                            ConfigureErrors.BAD_FILE.toString(),
+                            "saveFile",
+                            language
+                    )
+            );
         }
-            return resultFilename;
+        return resultFilename;
     }
 
 }

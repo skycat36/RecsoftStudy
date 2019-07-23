@@ -3,7 +3,7 @@
 <@c.page>
 
     <div class="form-group row">
-        <h1><label class="col-ml-2 col-form-label">Регестрация</label></h1>
+        <h1><label class="col-ml-2 col-form-label">${Registration_message}</label></h1>
     </div>
 
     <div class="row justify-content-center">
@@ -26,7 +26,7 @@
         <div class="form-group">
             <div class="custom-file col-4 col-mb-4 col-mt-4">
                 <input type="file" accept="image/jpeg,image/png" name="file" id="customFile" onchange="loadFile(event)" multiple >
-                <label class="custom-file-label" for="customFile">Выберите файл</label>
+                <label class="custom-file-label" for="customFile">${Selected_file_message}</label>
                 <#if fileError??>
                     <div class="invalid-feedback">
                         ${fileError}
@@ -36,11 +36,11 @@
         </div>
 
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label">Login :</label>
+            <label class="col-sm-2 col-form-label">${Login_message} : </label>
             <div class="col-sm-3">
-                <input type="text" name="login" value="<#if userTemp??>${userTemp.login}</#if>"
+                <input type="text" name="login" value="<#if userTemp??><#if userTemp.login??>${userTemp.login}</#if></#if>"
                        class="form-control small ${(loginError??)?string('is-invalid', '')}"
-                       placeholder="Логин"/>
+                       placeholder="${Login_message}"/>
                 <#if nameError??>
                     <div class="invalid-feedback">
                         ${nameError}
@@ -50,11 +50,11 @@
         </div>
 
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label">Пароль :</label>
+            <label class="col-sm-2 col-form-label">${Password_message} : </label>
             <div class="col-sm-3">
                 <input type="password" name="password"
                        class="form-control small ${(passwordError??)?string('is-invalid', '')}"
-                       placeholder="Пароль"/>
+                       placeholder="${Password_message}"/>
                 <#if passwordError??>
                     <div class="invalid-feedback">
                         ${passwordError}
@@ -64,11 +64,11 @@
         </div>
 
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label">Повторить пароль :</label>
+            <label class="col-sm-2 col-form-label">${Repeat_password_message} : </label>
             <div class="col-sm-3">
                 <input type="password" name="password2"
                        class="form-control small ${(password2Error??)?string('is-invalid', '')}"
-                       placeholder="Повторить пароль"/>
+                       placeholder="${Repeat_password_message}"/>
                 <#if password2Error??>
                     <div class="invalid-feedback">
                         ${password2Error}
@@ -78,11 +78,11 @@
         </div>
 
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label">Имя :</label>
+            <label class="col-sm-2 col-form-label">${Name_message} : </label>
             <div class="col-sm-3">
-                <input type="text" name="name" value="<#if userTemp??>${userTemp.name}</#if>"
+                <input type="text" name="name" value="<#if userTemp??><#if userTemp.name??>${userTemp.name}</#if></#if>"
                        class="form-control small ${(nameError??)?string('is-invalid', '')}"
-                       placeholder="Имя"/>
+                       placeholder="${Name_message}"/>
                 <#if nameError??>
                     <div class="invalid-feedback">
                         ${nameError}
@@ -92,11 +92,11 @@
         </div>
 
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label">Фамилия :</label>
+            <label class="col-sm-2 col-form-label">${Surname_message} : </label>
             <div class="col-sm-3">
-                <input type="text" name="fam" value="<#if userTemp??>${userTemp.fam}</#if>"
+                <input type="text" name="fam" value="<#if userTemp??><#if userTemp.fam??>${userTemp.fam}</#if></#if>"
                        class="form-control small ${(famError??)?string('is-invalid', '')}"
-                       placeholder="Фамилия"/>
+                       placeholder="${Surname_message}"/>
                 <#if famError??>
                     <div class="invalid-feedback">
                         ${famError}
@@ -106,11 +106,11 @@
         </div>
 
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label">Отчество :</label>
+            <label class="col-sm-2 col-form-label">${Patronymic_message} : </label>
             <div class="col-sm-3">
-                <input type="text" name="secName" value="<#if userTemp??>${userTemp.secName}</#if>"
+                <input type="text" name="secName" value="<#if userTemp??><#if userTemp.secName??>${userTemp.secName}</#if></#if>"
                        class="form-control small ${(secNameError??)?string('is-invalid', '')}"
-                       placeholder="Отчество"/>
+                       placeholder="${Patronymic_message}"/>
                 <#if secNameError??>
                     <div class="invalid-feedback">
                         ${secNameError}
@@ -120,11 +120,11 @@
         </div>
 
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label">Email :</label>
+            <label class="col-sm-2 col-form-label">${Email_message} : </label>
             <div class="col-sm-3">
-                <input type="email" name="email" value="<#if userTemp??>${userTemp.email}</#if>"
+                <input type="email" name="email" value="<#if userTemp??><#if userTemp.email??>${userTemp.email}</#if></#if>"
                        class="form-control small ${(emailError??)?string('is-invalid', '')}"
-                       placeholder="Email"/>
+                       placeholder="${Email_message}"/>
                 <#if emailError??>
                     <div class="invalid-feedback">
                         ${emailError}
@@ -135,7 +135,7 @@
 
 
         <div class="form-group row">
-            <div class="col-sm-1 mr-4"><button type="submit" class="btn btn-primary ml-0">Изменить</button></div>
+            <div class="col-sm-1 mr-4"><button type="submit" class="btn btn-primary ml-0">${Edit_message}</button></div>
             <input type="hidden" value="${_csrf.token}" name="_csrf">
         </div>
     </form>

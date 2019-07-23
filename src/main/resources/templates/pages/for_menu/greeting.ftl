@@ -8,5 +8,10 @@
         </div>
     </div>
     </#if>
-    <img src="/static/motocross_art.jpg" class="img-fluid" alt="Welcome">
+    <div class="row justify-content-center">
+    <img src="/static/motocross_art.jpg" style="
+        height: 100%;
+        width: auto;"
+         alt="Welcome">
+    </div>
 </@c.page>

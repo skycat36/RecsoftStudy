@@ -3,16 +3,16 @@
 <@c.page>
 
     <div class="form-group row">
-        <h1><label class="col-ml-2 col-form-label">Список клиентов : </label></h1>
+        <h1><label class="col-ml-2 col-form-label">${Customer_list_message} :</label></h1>
     </div>
 
 
     <table class="table">
         <thead>
         <tr>
-            <th scope="col">Логин</th>
-            <th scope="col">Рейтинг</th>
-            <th scope="col">Кошелек</th>
+            <th scope="col">${Login_message}</th>
+            <th scope="col">${Rating_message}</th>
+            <th scope="col">${Purse_message}</th>
         </tr>
         </thead>
         <tbody>

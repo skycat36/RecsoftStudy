@@ -1,4 +1,4 @@
-<#macro action path nameAction isSave>
+<#macro action path isSave>
 <style>
     img {
         object-fit: cover;
@@ -6,7 +6,7 @@
 </style>
 
 <div class="form-group row">
-    <h1><label class="col-ml-2 col-form-label">${nameAction}</label></h1>
+    <h1><label class="col-ml-2 col-form-label">${nameAction_message}</label></h1>
 </div>
 
     <div class="row justify-content-center">
@@ -50,16 +50,16 @@
     <div class="form-group">
         <div class="custom-file col-4 col-mb-4 col-mt-4">
             <input type="file" accept="image/jpeg,image/png" name="file" id="customFile" onchange="loadFile(event)" multiple >
-            <label class="custom-file-label" for="customFile">Выберите файл</label>
+            <label class="custom-file-label" for="customFile">${Selected_file_message}</label>
         </div>
     </div>
 
     <div class="form-group row">
-        <label class="col-sm-2 col-form-label">Название :</label>
+        <label class="col-sm-2 col-form-label">${Name_message} : </label>
         <div class="col-sm-3">
             <input type="text" name="name" value="<#if product??><#if product.name??>${product.name}</#if></#if>"
                    class="form-control small ${(nameError??)?string('is-invalid', '')}"
-                   placeholder="Название"/>
+                   placeholder="${Name_message}"/>
             <#if nameError??>
                 <div class="invalid-feedback">
                     ${nameError}
@@ -69,11 +69,11 @@
     </div>
 
     <div class="form-group row">
-        <label class="col-sm-2 col-form-label">Цена :</label>
+        <label class="col-sm-2 col-form-label">${Price_message} : </label>
         <div class="col-sm-3">
             <input type="number" step="any" min="0"  name="price" value="<#if price??>${price}<#else>0</#if>"
                    class="form-control small ${(priceError??)?string('is-invalid', '')}"
-                   placeholder="Цена"/>
+                   placeholder="${Price_message}"/>
             <#if priceError??>
                 <div class="invalid-feedback">
                     ${priceError}
@@ -83,11 +83,11 @@
     </div>
 
     <div class="form-group row">
-        <label class="col-sm-2 col-form-label">Количество :</label>
+        <label class="col-sm-2 col-form-label">${Number_message} : </label>
         <div class="col-sm-3">
             <input type="number" step="0" min="0" name="count" value="<#if product??><#if product.count??>${product.count}</#if></#if>"
                    class="form-control small ${(countError??)?string('is-invalid', '')}"
-                   placeholder="Количество"/>
+                   placeholder="${Number_message}"/>
             <#if countError??>
                 <div class="invalid-feedback">
                     ${countError}
@@ -97,11 +97,11 @@
     </div>
 
     <div class="form-group row">
-        <label class="col-sm-2 col-form-label">Скидка %:</label>
+        <label class="col-sm-2 col-form-label">${Discount_message} %: </label>
         <div class="col-sm-3">
             <input type="number" step="0" min="0" name="discount" value="<#if product??><#if product.discount??>${product.discount}</#if></#if>"
                    class="form-control small ${(discountError??)?string('is-invalid', '')}"
-                   placeholder="Скидка"/>
+                   placeholder="${Discount_message}"/>
             <#if discountError??>
                 <div class="invalid-feedback">
                     ${discountError}
@@ -111,7 +111,7 @@
     </div>
 
     <div class="form-group row">
-        <label class="col-sm-2 col-form-label">Категория товара :</label>
+        <label class="col-sm-2 col-form-label">${Product_category_message} : </label>
         <div class="col-sm-3">
             <select class="custom-select" name="categoryProd" id="inputGroupSelect01" required>
                 <#list listCategory as category>
@@ -130,7 +130,7 @@
     </div>
 
     <div class="form-group row">
-        <label for="exampleFormControlSelect2">Выберите имеющиеся размеры : </label>
+        <label for="exampleFormControlSelect2 mr-2">${Choose_available_sizes_message} : </label>
         <select multiple class="form-control col-4" name="sizeUsersProd" id="exampleFormControlSelect2" required>
             <#list listSizeUser as sUser>
                 <option value="${sUser.id}"
@@ -138,19 +138,19 @@
                 ${sUser.nameSize}
             </#list>
         </select>
-        <#if sizeUsersProdError??>
-            <div class="invalid-feedback">
-                ${sizeUsersProdError}
-            </div>
-        </#if>
-    </div>
 
+    </div>
+    <#if sizeUsersProdError??>
+        <div class="invalid-feedback">
+            ${sizeUsersProdError}
+        </div>
+    </#if>
 
     <div class="form-group row">
-        <label class="col-sm-2 col-form-label">Описание :</label>
+        <label class="col-sm-2 col-form-label">${Description_message} : </label>
         <div class="col-sm-3">
             <textarea name="description" class="form-control small ${(descriptionError??)?string('is-invalid', '')}"
-                      placeholder="Описание"><#if product??><#if product.description??>${product.description}</#if></#if></textarea>
+                      placeholder="${Description_message}"><#if product??><#if product.description??>${product.description}</#if></#if></textarea>
             <#if descriptionError??>
                 <div class="invalid-feedback">
                     ${descriptionError}
@@ -161,9 +161,9 @@
 
     <div class="form-group row">
         <#if isSave>
-            <div class="col-sm-1 mr-4"><button type="submit" class="btn btn-primary ml-0">Сохранить</button></div>
+            <div class="col-sm-1 mr-4"><button type="submit" class="btn btn-primary ml-0">${Save_message}</button></div>
         <#else>
-            <div class="col-sm-1"><button type="submit" class="btn btn-primary ml-0">Создать продукт</button></div>
+            <div class="col-sm-1"><button type="submit" class="btn btn-primary ml-0">${nameAction_message}</button></div>
         </#if>
         <input type="hidden" value="${_csrf.token}" name="_csrf">
     </div>

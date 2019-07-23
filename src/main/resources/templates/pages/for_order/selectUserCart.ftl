@@ -3,26 +3,27 @@
 <@c.page>
 <form action="/order/cart/select_user/${user.id}" method="post">
     <div class="form-group row">
-        <label class="col-form-label">Имя клиента : <#if user??>${user.login}</#if></label>
+        <label class="col-form-label">${Customer_name_message} : <#if user??>${user.login}</#if></label>
     </div>
 
     <div class="form-group row">
-        <label class="col-sm-2 col-form-label" id="cashUser">Кошелек : <#if user??>${user.cash}</#if></label>
+        <label class="col-form-label mr-1">${Purse_message} :</label>
+        <label class="col-form-label mr-1" id="cashUser"><#if user??>${user.cash}</#if></label>
+        <label class="col-form-label">${RUB_message}</label>
     </div>
 
     <table class="table">
         <thead>
         <tr>
-            <th scope="col">Название</th>
-            <th scope="col">Адресс</th>
-            <th scope="col">Цена за шт.</th>
-            <th scope="col">Количество</th>
-            <th scope="col">Статус заказа</th>
+            <th scope="col">${Name_message}</th>
+            <th scope="col">${Address_message}</th>
+            <th scope="col">${Price_per_piece_message}</th>
+            <th scope="col">${Number_message}</th>
+            <th scope="col">${Order_status_message}</th>
             <th scope="col"></th>
         </tr>
         </thead>
         <tbody>
-        <#--<input type="hidden" name="orderList" value="<#if orderList??>${orderList}</#if>"/>-->
         <#list orderList as order>
         <tr id="order${order.id}">
             <td>
@@ -40,7 +41,7 @@
             </td>
 
             <td>
-                    <div class="col-sm-4"><button type="button" value="${order.id}" onclick="ajaxPostDeletePayOrderUser(${order.id})" class="btn btn-outline-primary">Отменить заказ</div>
+                    <div class="col-sm-4"><button type="button" value="${order.id}" onclick="ajaxPostDeletePayOrderUser(${order.id})" class="btn btn-outline-primary">${Cancel_the_order_message}</div>
             </td>
         </tr>
         </#list>
@@ -49,9 +50,14 @@
     </table>
 
     <div class="form-group row">
-        <label class="col-form-label" id="priseOrd"><#if priceUser != 0>Общая сумма заказа : ${priceUser}<#else>Заказов в корзине нет</#if></label>
+        <#if priceUser != 0>
+                <label class="col-form-label mr-1" id="forCashOrder">${The_total_amount_of_the_order_message} : </label>
+                <label class="col-form-label mr-1" id="priseOrd">${priceUser}</label>
+                <label class="col-form-label" id="money"> ${RUB_message}</label>
+        <#else>
+            <label class="col-form-label">${No_orders_in_cart_message}</label>
+        </#if>
     </div>
-    <#--<div class="col-sm-4"><button type="submit" value="update" name="bUpdate" class="btn btn-outline-primary">Обновить данные</div>-->
     <input type="hidden" id="csrf" name="_csrf" value="${_csrf.token}"/>
 </form>
 
@@ -102,12 +108,14 @@
                     var priseOrd = document.getElementById("priseOrd");
                     console.log(" look good");
                     if (data.priseOrders == 0) {
-                        priseOrd.innerHTML = "Заказов нет";
+                        priseOrd.remove();
+                        document.getElementById("forCashOrder").innerHTML = "${No_orders_in_cart_message}";
+                        document.getElementById("money").remove();
                     } else{
-                        priseOrd.innerHTML = "Общая сумма заказа : " + data.priseOrders;
+                        priseOrd.innerHTML = data.priseOrders;
                         console.log(" look good");
                     }
-                    document.getElementById("cashUser").innerHTML = "Кошелек : " + data.cashUser + " руб";
+                    document.getElementById("cashUser").innerHTML = data.cashUser;
                     item.remove();
                 },
                 error: function (e) {

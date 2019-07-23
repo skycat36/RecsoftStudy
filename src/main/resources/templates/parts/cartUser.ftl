@@ -1,5 +1,7 @@
-<#macro action nameAction isCart>
-
+<#macro action isCart>
+    <div class="form-group row">
+        <h1><label class="col-ml-2 col-form-label">${nameAction_message}</label></h1>
+    </div>
 
     <div class="row justify-content-center">
         <#if priceError??>
@@ -10,20 +12,22 @@
     </div>
 
     <div class="form-group row">
-        <label class="col-form-label" id="cashUser">Кошелек : <#if user??>${user.cash}</#if> руб</label>
+        <label class="col-form-label mr-1" >${Wallet_message} : </label>
+        <label class="col-form-label mr-1" id="cashUser"><#if user??>${user.cash}</#if></label>
+        <label class="col-form-label">${RUB_message}</label>
     </div>
     <form>
         <table class="table">
             <thead>
             <tr>
-                <th scope="col">Название</th>
+                <th scope="col">${Name_message}</th>
                 <#if isCart>
-                    <th scope="col">Адресс</th>
+                    <th scope="col">${Address_message}</th>
                 </#if>
-                <th scope="col">Цена за шт.</th>
-                <th scope="col">Количество</th>
+                <th scope="col">${Price_per_piece_message}</th>
+                <th scope="col">${Number_message}</th>
                 <#if isCart>
-                    <th scope="col">Статус заказа</th>
+                    <th scope="col">${Order_status_message}</th>
                 </#if>
                 <th scope="col"></th>
             </tr>
@@ -44,7 +48,6 @@
                             ${order.count}
                         <#else>
                             <div>
-                                <#--class="form-control small ${(discountError??)?string('is-invalid', '')}"-->
                                 <input  class="col-sm-10 form-control small"
                                         type="number" id="countProduct${order.id}" onchange="ajaxPostChangeCountProduct(${order.id})" step="0" min="0"
                                         max="${order.product.count + order.count}" name="count_p[]" value="${order.count}">
@@ -64,7 +67,7 @@
                                     <#else>
                                         onclick="ajaxPostDeleteNotPayOrder(${order.id})"
                                     </#if>
-                                    class="btn btn-outline-primary">Отменить заказ</button>
+                                    class="btn btn-outline-primary">${Cancel_the_order_message}</button>
                         </div>
                     </td>
                 </tr>
@@ -76,10 +79,10 @@
         <div id="notOrder">
 
             <#if priceUser != 0 && !isCart >
-                <label class="col-form-label">Адресс получателя : </label>
+                <label class="col-form-label mr-2">${Recipient_address_message} :</label>
                 <div class="col-sm-3">
                     <input type="text" name="adress" class="form-control small ${(adressError??)?string('is-invalid', '')}"
-                           placeholder="Адресс получателя"/>
+                           placeholder="${Recipient_address_message}"/>
                     <#if adressError??>
                         <div class="invalid-feedback">
                             ${adressError}
@@ -88,8 +91,8 @@
                 </div>
 
                 <div class="row justify-content-center mt-4">
-                    <button type="submit" formmethod="post" formaction="/order/cart/create_list_order" class=" col-sm-4 btn btn-outline-primary">Оформить заказ</button>
-                    <button type="submit" formmethod="post" formaction="/order/cart/delete_all" class="col-sm-4 ml-4 btn btn-outline-danger">Очистить корзину</button>
+                    <button type="submit" formmethod="post" formaction="/order/cart/create_list_order" class=" col-sm-4 btn btn-outline-primary">${Place_your_order}</button>
+                    <button type="submit" formmethod="post" formaction="/order/cart/delete_all" class="col-sm-4 ml-4 btn btn-outline-danger">${Empty_recycle_bin}</button>
                 </div>
             </#if>
         </div>
@@ -97,7 +100,13 @@
         <input type="hidden" id="csrf" name="_csrf" value="${_csrf.token}" />
     </form>
     <div class="form-group row">
-        <label class="col-form-label" id="priseOrd"><#if priceUser != 0>Общая сумма заказа : ${priceUser}<#else>Заказов нет</#if></label>
+        <#if priceUser != 0>
+            <label class="col-form-label mr-1" id="textForCashOrder">${Total_order_amount_message} : </label>
+            <label class="col-form-label mr-1" id="priseOrd">${priceUser}</label>
+            <label class="col-form-label" id="money"> ${RUB_message}</label>
+        <#else>
+            <label class="col-form-label">${No_orders_message}</label>
+        </#if>
     </div>
 
     <script>
@@ -125,7 +134,7 @@
                     var data = JSON.parse(result);
                     item.value = data.newCountData;
                     var priseOrd = document.getElementById("priseOrd");
-                    priseOrd.innerHTML = "Общая сумма заказа : " +  data.priseOrders;
+                    priseOrd.innerHTML = data.priseOrders;
                     console.log(data.newCountData + " look");
                 },
                 error: function (e) {
@@ -154,10 +163,12 @@
                     var data = JSON.parse(result);
                     var priseOrd = document.getElementById("priseOrd");
                     if (data.priseOrders == 0) {
-                        priseOrd.innerHTML = "Заказов нет";
+                        priseOrd.remove();
+                        document.getElementById("textForCashOrder").innerHTML = "${No_orders_message}";
                         document.getElementById("notOrder").remove();
+                        document.getElementById("money").remove();
                     } else{
-                        priseOrd.innerHTML = "Общая сумма заказа : " + data.priseOrders;
+                        priseOrd.innerHTML = data.priseOrders;
                         console.log(" look good");
                     }
                     item.remove();
@@ -186,13 +197,15 @@
                     var data = JSON.parse(result);
                     var priseOrd = document.getElementById("priseOrd");
                     if (data.priseOrders == 0) {
-                        priseOrd.innerHTML = "Заказов нет";
+                        priseOrd.remove();
+                        document.getElementById("textForCashOrder").innerHTML = "${No_orders_message}";
                         document.getElementById("notOrder").remove();
+                        document.getElementById("money").remove();
                     } else{
-                        priseOrd.innerHTML = "Общая сумма заказа : " + data.priseOrders;
+                        priseOrd.innerHTML = data.priseOrders;
                         console.log(" look good");
                     }
-                    document.getElementById("cashUser").innerHTML = "Кошелек : " + data.cashUser + " руб";
+                    document.getElementById("cashUser").innerHTML = data.cashUser;
                     item.remove();
                 },
                 error: function (e) {

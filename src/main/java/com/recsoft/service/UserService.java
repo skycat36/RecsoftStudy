@@ -9,8 +9,7 @@ import com.recsoft.data.repository.LanguageRepository;
 import com.recsoft.data.repository.PhotoUserRepository;
 import com.recsoft.data.repository.RoleRepository;
 import com.recsoft.data.repository.UserRepository;
-import com.recsoft.utils.ConfigureErrors;
-import com.recsoft.utils.ControllerUtils;
+import com.recsoft.utils.constants.ConfigureErrors;
 import com.recsoft.utils.ServiceUtils;
 import com.recsoft.validation.MessageGenerator;
 import io.swagger.annotations.Api;
@@ -29,7 +28,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 /* Осуществляет функции для работы с пользователем
 * @author Evgeny Popov */
@@ -62,7 +60,12 @@ public class UserService implements UserDetailsService {
 
     private LanguageRepository languageRepository;
 
+    private MessageGenerator messageGenerator;
 
+    @Autowired
+    public void setMessageGenerator(MessageGenerator messageGenerator) {
+        this.messageGenerator = messageGenerator;
+    }
 
     @Autowired
     public void setUserRepository(UserRepository userRepository) {
@@ -84,10 +87,7 @@ public class UserService implements UserDetailsService {
         this.roleRepository = roleRepository;
     }
 
-    /*Поиск пользователя в базе
-    * @param - login пользователя
-    * @return UserDetails - информация о пользователе для security.
-    * */
+
     @Override
     @ApiOperation(value = "Зегрузить пользователя по логину.")
     public UserDetails loadUserByUsername(
@@ -115,12 +115,18 @@ public class UserService implements UserDetailsService {
 
     @ApiOperation(value = "Обновляет информацию о кошельке пользователя")
     public void subtractCashUser(
-            @ApiParam(value = "Генератор сообщений пользователя.", required = true) MessageGenerator messageGenerator,
+            @ApiParam(value = "Генератор сообщений пользователя.", required = true) Language language,
             @ApiParam(value = "ID пользователя.", required = true) User user,
             @ApiParam(value = "Вычитаемая сумма.", required = true) Integer number) throws UserExeption {
 
         if (user.getCash() - number < 0){
-            throw new UserExeption(ControllerUtils.getMessageProperty(ConfigureErrors.NEED_MORE_CASH.toString(), "subtractCashUser", messageGenerator));
+            throw new UserExeption(
+                    messageGenerator.getMessageErrorProperty(
+                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                            ConfigureErrors.NEED_MORE_CASH.toString(),
+                            "subtractCashUser", language
+                    )
+            );
         }
 
         user.setCash(user.getCash() - number);
@@ -139,13 +145,12 @@ public class UserService implements UserDetailsService {
 
     @ApiOperation(value = "Создать пользователя.")
     public void addUser(
-            @ApiParam(value = "Генератор сообщений пользователя.", required = true) MessageGenerator messageGenerator,
             @ApiParam(value = "Выдергивает пользователя авторизованного.", required = true) User user,
             @ApiParam(value = "Выбранный пользователем язык.", required = true) Language language,
             @ApiParam(value = "Аватарка пользователя.", required = true) MultipartFile file) throws IOException {
 
             if (file.getSize() > 0) {
-                user.setPhotoUser(new PhotoUser(user, ServiceUtils.saveFile(messageGenerator, file, WEIGHT_IMAGE, HEIGHT_IMAGE, uploadPath)));
+                user.setPhotoUser(new PhotoUser(user, ServiceUtils.saveFile(language, file, WEIGHT_IMAGE, HEIGHT_IMAGE, uploadPath)));
                 photoUserRepository.save(user.getPhotoUser());
             }
 
@@ -162,7 +167,7 @@ public class UserService implements UserDetailsService {
 
     @ApiOperation(value = "Изменить данные пользователя.")
     public void changeUser(
-            @ApiParam(value = "Генератор сообщений пользователя.", required = true) MessageGenerator messageGenerator,
+            @ApiParam(value = "Генератор сообщений пользователя.", required = true) Language language,
             @ApiParam(value = "Текущий пользователь", required = true) User userOld,
             @ApiParam(value = "Обновленная информация пользователя", required = true) User userNew,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) MultipartFile file) throws IOException {
@@ -173,7 +178,7 @@ public class UserService implements UserDetailsService {
         }
 
         if (file.getSize() > 0) {
-            PhotoUser photoUser = new PhotoUser(userOld, ServiceUtils.saveFile(messageGenerator, file, WEIGHT_IMAGE, HEIGHT_IMAGE, uploadPath));
+            PhotoUser photoUser = new PhotoUser(userOld, ServiceUtils.saveFile(language, file, WEIGHT_IMAGE, HEIGHT_IMAGE, uploadPath));
             photoUser = photoUserRepository.save(photoUser);
             userOld.setPhotoUser(photoUser);
         }

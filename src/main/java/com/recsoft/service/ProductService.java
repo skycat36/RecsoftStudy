@@ -3,8 +3,7 @@ package com.recsoft.service;
 import com.recsoft.data.entity.*;
 import com.recsoft.data.exeption.ProductExeption;
 import com.recsoft.data.repository.*;
-import com.recsoft.utils.ConfigureErrors;
-import com.recsoft.utils.ControllerUtils;
+import com.recsoft.utils.constants.ConfigureErrors;
 import com.recsoft.utils.ServiceUtils;
 import com.recsoft.validation.MessageGenerator;
 import io.swagger.annotations.Api;
@@ -56,6 +55,13 @@ public class ProductService {
     private UserRepository userRepository;
 
     private UserProdComRepository userProdComRepository;
+
+    private MessageGenerator messageGenerator;
+
+    @Autowired
+    public void setMessageGenerator(MessageGenerator messageGenerator) {
+        this.messageGenerator = messageGenerator;
+    }
 
     @Autowired
     public void setProductRepository(ProductRepository productRepository) {
@@ -116,14 +122,14 @@ public class ProductService {
 
     @ApiOperation(value = "Создать продукт.")
     public void addProduct(
-            @ApiParam(value = "Генератор сообщений пользователя.", required = true) MessageGenerator messageGenerator,
+            @ApiParam(value = "Генератор сообщений пользователя.", required = true) Language language,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Product product,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Long idCategory,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<Long> idSizeUser,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<MultipartFile> files) throws IOException, ProductExeption {
 
         if (product != null){
-            this.createRelationsForParamersProduct(messageGenerator, idCategory, product, idSizeUser, files);
+            this.createRelationsForParamersProduct(language, idCategory, product, idSizeUser, files);
             productRepository.save(product);
             log.info("Product with name " + product.getName() + " was added.");
         }else {
@@ -132,7 +138,7 @@ public class ProductService {
     }
 
     private void createRelationsForParamersProduct(
-            @ApiParam(value = "Генератор сообщений пользователя.", required = true) MessageGenerator messageGenerator,
+            @ApiParam(value = "Генератор сообщений пользователя.", required = true) Language language,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Long idCategory,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Product product,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<Long> idSizeUser,
@@ -140,10 +146,28 @@ public class ProductService {
 
         Category category = categoryRepository.findById(idCategory).orElse(null);
         if (category == null) {
-            throw new ProductExeption(ControllerUtils.getMessageProperty(ConfigureErrors.HACKER_GO_OUT.toString(), "createRelationsForParamersProduct", messageGenerator));
+            throw new ProductExeption(
+                    messageGenerator.getMessageErrorProperty(
+                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                            ConfigureErrors.HACKER_GO_OUT.toString(),
+                            "createRelationsForParamersProduct",
+                            language
+                    )
+            );
         }
 
         product.setCategory(category);
+
+        if (idSizeUser.isEmpty()){
+            throw new ProductExeption(
+                    messageGenerator.getMessageErrorProperty(
+                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                            ConfigureErrors.SELECT_SIZE.toString(),
+                            "createRelationsForParamersProduct",
+                            language
+                    )
+            );
+        }
 
         Set<SizeUser> sizeUserSet = new HashSet<>();
         for (SizeUser sizeUser: sizeUserRepository.findAll()){
@@ -157,7 +181,7 @@ public class ProductService {
 
         for (MultipartFile multipartFile: files){
             if (multipartFile.getSize() > 0) {
-                photoProductSet.add(new PhotoProduct(ServiceUtils.saveFile(messageGenerator, multipartFile, WEIGHT_IMAGE, HEIGHT_IMAGE, uploadPath), product));
+                photoProductSet.add(new PhotoProduct(ServiceUtils.saveFile(language, multipartFile, WEIGHT_IMAGE, HEIGHT_IMAGE, uploadPath), product));
             }
         }
         product.setPhotoProducts(photoProductSet);
@@ -207,14 +231,14 @@ public class ProductService {
 
     @ApiOperation(value = "Обновить информацию о продукте")
     public void updateProduct(
-            @ApiParam(value = "Генератор сообщений пользователя.", required = true) MessageGenerator messageGenerator,
+            @ApiParam(value = "Генератор сообщений пользователя.", required = true) Language language,
             @ApiParam(value = "Обновленный продукт", required = true) Product productReal,
             @ApiParam(value = "Текущий продукт", required = true) Product productOld,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Long idCategory,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<Long> idSizeUser,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<MultipartFile> files) throws IOException, ProductExeption {
 
-        this.createRelationsForParamersProduct(messageGenerator, idCategory, productOld, idSizeUser, files);
+        this.createRelationsForParamersProduct(language, idCategory, productOld, idSizeUser, files);
 
         productOld.setCount(productReal.getCount());
         productOld.setDiscount(productReal.getDiscount());

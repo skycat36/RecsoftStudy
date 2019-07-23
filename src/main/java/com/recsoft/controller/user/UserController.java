@@ -1,10 +1,9 @@
 package com.recsoft.controller.user;
 
 import com.recsoft.data.entity.Language;
-import com.recsoft.data.entity.Status;
 import com.recsoft.data.entity.User;
 import com.recsoft.service.UserService;
-import com.recsoft.utils.ConfigureErrors;
+import com.recsoft.utils.constants.ConfigureErrors;
 import com.recsoft.utils.ControllerUtils;
 import com.recsoft.validation.MessageGenerator;
 import io.swagger.annotations.Api;
@@ -21,7 +20,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
-import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,12 +30,14 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+
+//TODO Доделать перевод полей на иностранный язык, доделать логин
 
 @Api(value = "Контроллер пользователей",
         description = "Класс-контроллер отвечающий за работу с пользователями.")
-@Controller
+@RestController
+@RequestMapping("/")
 public class UserController {
 
     @ApiModelProperty(notes = "Name of the Student",name="name",required=true,value="test name")
@@ -46,6 +46,13 @@ public class UserController {
     @ApiModelProperty(notes = "Name of the Student",name="name",required=true,value="test name")
     private UserService userService;
 
+    private MessageGenerator messageGenerator;
+
+    @Autowired
+    public void setMessageGenerator(MessageGenerator messageGenerator) {
+        this.messageGenerator = messageGenerator;
+    }
+
     @Autowired
     public void setUserService(UserService userService) {
         this.userService = userService;
@@ -53,8 +60,56 @@ public class UserController {
 
     @ApiOperation(value = "Страница приветствия пользователя")
     @GetMapping
-    public ModelAndView greeting(){
-        return new ModelAndView("/pages/for_menu/greeting");
+    public ModelAndView greeting(
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) @AuthenticationPrincipal User user
+    ){
+        ModelAndView mav = new ModelAndView("/pages/for_menu/greeting");
+        if (user != null){
+
+            user = userService.getUserById(user.getId());
+
+            ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "greeting", mav);
+
+            mav.addAllObjects(
+                    messageGenerator.getAllValueForPage(
+                            "navbar",
+                            user.getLanguage()
+                    )
+            );
+        }else {
+            this.cunstructPageForStartMenu(mav);
+        }
+
+        return mav;
+    }
+
+    @ApiOperation(value = "Изьятие ключей пользователя и выход из приложения.")
+    @GetMapping("/login")
+    public ModelAndView loginPage(
+            ) {
+        ModelAndView mav = new ModelAndView("/pages/for_menu/login");
+
+        this.cunstructPageForStartMenu(mav);
+
+        return mav;
+    }
+
+    private void cunstructPageForStartMenu(ModelAndView mav) {
+        Language language = userService.getLanguageByName("ru");
+
+        mav.addAllObjects(
+                messageGenerator.getAllValueForPage(
+                        "login",
+                        language
+                )
+        );
+
+        mav.addAllObjects(
+                messageGenerator.getAllValueForPage(
+                        "navbar",
+                        language
+                )
+        );
     }
 
     @ApiOperation(value = "Изьятие ключей пользователя и выход из приложения.")
@@ -80,50 +135,58 @@ public class UserController {
 
         mav.addObject("languageList", userService.getListNamesLanguage());
 
+        Language language = userService.getLanguageByName("ru");
+        mav.addAllObjects(
+                messageGenerator.getAllValueForPage(
+                        "registration",
+                        language
+                )
+        );
+
+        mav.addAllObjects(
+                messageGenerator.getAllValueForPage(
+                        "navbar",
+                        language
+                )
+        );
+
         return mav;
     }
 
     @PostMapping("/registration")
     @ApiOperation(value = "Регестрация пользователя.")
     public ModelAndView registrationUser(
-            @ApiParam(value = "Выдергивает пользователя с формы.", required = true) @ModelAttribute(name = "userTemp") @Valid User user,
+            @ApiParam(value = "Выдергивает пользователя с формы.", required = true) @ModelAttribute @Valid User userTemp,
             @ApiParam(value = "Проводит валидацию данных.") BindingResult bindingResult,
             @ApiParam(value = "Проверка пароля.", required = true) @RequestParam String password2,
-            @ApiParam(value = "Выбранный пользователем язык.", required = true) @RequestParam("language") String language,
+            //@ApiParam(value = "Выбранный пользователем язык.", required = true) @RequestParam("language") String language,
             @ApiParam(value = "Выбранные пользователем файл картинки.") @RequestParam("file") MultipartFile file
     ) {
 
         ModelAndView mav = new ModelAndView("redirect:/login");
         Map<String, String> errors = new HashMap<>();
 
-        Language langu = userService.getLanguageByName(language);
-        if (language == null){
-            return null;
-        }
+        Language langu = userService.getLanguageByName("ru");
 
         if (bindingResult.hasErrors()){
-            try {
-                errors.putAll(ControllerUtils.getErrors(bindingResult, langu));
-            } catch (IOException e) {
-                log.error(e.getMessage());
-            }
+                errors.putAll(messageGenerator.getErrors(bindingResult, langu));
         }
 
-        MessageGenerator messageGenerator;
-        try {
-            messageGenerator = new MessageGenerator(ControllerUtils.createPathToErroOrMessage(langu, MessageGenerator.FAIL_WHIS_OTHER_ERROR));
-        } catch (IOException e) {
-            log.error(e.getMessage());
-            return null;
-        }
-
-        if (!password2.equals(user.getPassword())){
-            errors.put(ControllerUtils.constructError("password2"),  ControllerUtils.getMessageProperty(ConfigureErrors.BAD_PASSWORD.toString(), "registrationUser", messageGenerator));
+        if (!password2.equals(userTemp.getPassword())){
+                errors.put(
+                        ControllerUtils.constructError("password2"),
+                        messageGenerator.getMessageErrorProperty(
+                                MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                                ConfigureErrors.BAD_PASSWORD.toString(),
+                                "registrationUser",
+                                langu
+                        )
+                );
         }
 
         if (errors.isEmpty()) {
             try {
-                userService.addUser(messageGenerator, user, langu, file);
+                userService.addUser(userTemp, langu, file);
             } catch (IOException e) {
                 errors.put(ControllerUtils.constructError("file"), e.getMessage());
             }
@@ -131,7 +194,20 @@ public class UserController {
 
         if (!errors.isEmpty()){
             mav.setViewName("/pages/for_user/registration");
-            mav.addObject("userTemp", user);
+            mav.addAllObjects(
+                    messageGenerator.getAllValueForPage(
+                            "registration",
+                            langu
+                    )
+            );
+
+            mav.addAllObjects(
+                    messageGenerator.getAllValueForPage(
+                            "navbar",
+                            langu
+                    )
+            );
+            mav.addObject("userTemp", userTemp);
             mav.addAllObjects(errors);
         }
 
@@ -145,7 +221,8 @@ public class UserController {
     ) {
         ModelAndView mav = new ModelAndView("/pages/for_user/changeProfile");
 
-        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), mav);
+        user = userService.getUserById(user.getId());
+        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "changeProfile", mav);
 
         return mav;
     }
@@ -165,31 +242,27 @@ public class UserController {
 
         user = userService.getUserById(user.getId());
 
-        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), mav);
-
-        MessageGenerator messageGenerator;
-        try {
-            messageGenerator = new MessageGenerator(ControllerUtils.createPathToErroOrMessage(user.getLanguage(), MessageGenerator.FAIL_WHIS_OTHER_ERROR));
-        } catch (IOException e) {
-            log.error(e.getMessage());
-            return null;
-        }
+        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "changeProfile", mav);
 
         if (bindingResult.hasErrors()){
-            try {
-                errors.putAll(ControllerUtils.getErrors(bindingResult, user.getLanguage()));
-            } catch (IOException e) {
-                log.error(e.getMessage());
-            }
+                errors.putAll(messageGenerator.getErrors(bindingResult, user.getLanguage()));
         }
 
         if (!password2.equals(changeUser.getPassword())){
-            errors.put(ControllerUtils.constructError("password2"), ControllerUtils.getMessageProperty(ConfigureErrors.BAD_PASSWORD.toString(), "changeProfile", messageGenerator));
+                errors.put(
+                        ControllerUtils.constructError("password2"),
+                        messageGenerator.getMessageErrorProperty(
+                                MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                                ConfigureErrors.BAD_PASSWORD.toString(),
+                                "changeProfile",
+                                user.getLanguage()
+                        )
+                );
         }
 
         if (errors.isEmpty()) {
             try {
-                userService.changeUser(messageGenerator, user, changeUser, file);
+                userService.changeUser(user.getLanguage(), user, changeUser, file);
             } catch (IOException e) {
                 errors.put(ControllerUtils.constructError("file"), e.getMessage());
             }

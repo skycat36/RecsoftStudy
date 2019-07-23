@@ -2,5 +2,5 @@
 <#import "../../parts/actionWithProduct.ftl" as aww>
 
 <@c.page>
-    <@aww.action "/product/add_product" "Создать продукт" false/>
+    <@aww.action "/product/add_product"false/>
 </@c.page>

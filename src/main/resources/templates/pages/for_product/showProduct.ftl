@@ -44,24 +44,24 @@
     <form action="/product/add_product" method="post" enctype="multipart/form-data">
 
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label">Цена : <#if product??>${product.price}</#if></label>
+            <label class="col-sm-2 col-form-label mr-2">${Price_message} : <#if product??>${product.price}</#if></label>
         </div>
 
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label">Количество : <#if product??>${product.count}</#if></label>
+            <label class="col-sm-2 col-form-label mr-2">${Number_message} : <#if product??>${product.count}</#if></label>
         </div>
 
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label">Скидка %: <#if product??>${product.discount}</#if></label>
+            <label class="col-sm-2 col-form-label mr-2">${Discount_message} : <#if product??>${product.discount}</#if></label>
         </div>
 
         <div class="form-group row">
-            <label class="col-form-label">Категория товара : <#if product??>${product.category.name}</#if></label>
+            <label class="col-sm-4 col-form-label mr-2">${Product_category_message} : <#if product??>${product.category.name}</#if></label>
         </div>
 
 
-        <div class="form-group row">
-            <label for="exampleFormControlSelect2">Имеющиеся размеры : </label><br>
+        <div class="col-sm-4 form-group row">
+            <label for="exampleFormControlSelect2 mr-2">${Available_sizes_message} : </label><br>
             <ul>
                 <#list product.sizeUsers as sizeUsr>
                     <li>${sizeUsr.nameSize}</li>
@@ -71,10 +71,10 @@
 
 
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label">Описание :</label>
+            <label class="col-sm-2 col-form-label">${Description_message} :</label>
             <div class="col-sm-3">
                 <textarea name="description" class="form-control small ${(descriptionError??)?string('is-invalid', '')}"
-                          placeholder="Описание" disabled><#if product??>${product.description}</#if></textarea>
+                          placeholder="${Description_message}" disabled><#if product??>${product.description}</#if></textarea>
                 <#if descriptionError??>
                     <div class="invalid-feedback">
                         ${descriptionError}
@@ -85,26 +85,26 @@
 
         <div class="form-group row">
             <#if (user.role.name != 'user')>
-                <a type="button" class="btn btn-primary ml-4" <#if product??>href="/product/edit_product/${product.id}"</#if>>Изменить данные продукта</a>
+                <a type="button" class="btn btn-primary ml-4" <#if product??>href="/product/edit_product/${product.id}"</#if>>${Change_product_data_message}</a>
             </#if>
 
             <#if (user.role.name == 'user')>
-                <a type="button" class="btn btn-primary ml-2" <#if product??>href="/order/create_order/${product.id}"</#if>>Оформить заказ</a>
+                <a type="button" class="btn btn-primary ml-2" <#if product??>href="/order/create_order/${product.id}"</#if>>${Place_your_order_message}</a>
             </#if>
         </div>
         <input type="hidden" value="${_csrf.token}" name="_csrf">
     </form>
 
      <div class="form-group row">
-         <h1><label class="col-ml-2 col-form-label">Комментарии</label></h1>
+         <h1><label class="col-ml-2 col-form-label">${Comments_message}</label></h1>
      </div>
 
     <form action="/product/show_product/${product.id}/add_comment" method="post">
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label">Оставить свой :</label>
+            <label class="col-sm-2 col-form-label">${Leave_your_message} : </label>
             <div class="col-sm-3">
                 <textarea name="comment" minlength="0" class="form-control small ${(commentError??)?string('is-invalid', '')}"
-                          placeholder="Комментарий"></textarea>
+                          placeholder="${Comments_message}"></textarea>
                 <#if commentError??>
                 <div class="invalid-feedback">
                     ${commentError}
@@ -112,7 +112,7 @@
                 </#if>
             </div>
         </div>
-        <div class="col-sm-4"><button type="submit" class="btn btn-outline-primary">Отправить</button></div>
+        <div class="col-sm-4"><button type="submit" class="btn btn-outline-primary">${Send_message}</button></div>
         <input type="hidden" value="${_csrf.token}" name="_csrf">
     </form>
     <#if product??>
@@ -126,7 +126,7 @@
                  </div>
              </div>
         <#else>
-            No message
+            ${No_comments_message}
         </#list>
     </#if>
 </@c.page>

@@ -4,7 +4,7 @@ import com.recsoft.data.entity.*;
 import com.recsoft.data.exeption.ProductExeption;
 import com.recsoft.service.ProductService;
 import com.recsoft.service.UserService;
-import com.recsoft.utils.ConfigureErrors;
+import com.recsoft.utils.constants.ConfigureErrors;
 import com.recsoft.utils.ControllerUtils;
 import com.recsoft.utils.ServiceUtils;
 import com.recsoft.validation.MessageGenerator;
@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.IOException;
@@ -44,6 +45,13 @@ public class ProductController {
 
     private UserService userService;
 
+    private MessageGenerator messageGenerator;
+
+    @Autowired
+    public void setMessageGenerator(MessageGenerator messageGenerator) {
+        this.messageGenerator = messageGenerator;
+    }
+
     @Autowired
     public void setProductService(ProductService productService) {
         this.productService = productService;
@@ -61,7 +69,8 @@ public class ProductController {
     ) {
         ModelAndView mav = new ModelAndView("/pages/for_product/productList");
 
-        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), mav);
+        user = userService.getUserById(user.getId());
+        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "productList", mav);
 
         mav.addObject("listCategory", productService.getAllCategory());
         mav.addObject("productList", productService.getAllProduct());
@@ -77,7 +86,8 @@ public class ProductController {
     ) {
         ModelAndView mav = new ModelAndView("/pages/for_product/productList");
 
-        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), mav);
+        user = userService.getUserById(user.getId());
+        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "productList", mav);
 
         mav.addObject("productList", productService.getProductListByCategory(selectCategory));
         mav.addObject("categoryProd", selectCategory);
@@ -86,6 +96,7 @@ public class ProductController {
         return mav;
     }
 
+    //@RolesAllowed(value = "ROLE_seller")
     @GetMapping("/add_product")
     @ApiOperation(value = "Отображает страницу добавления продуктов")
     public ModelAndView showAddProduct(
@@ -95,18 +106,13 @@ public class ProductController {
 
         user = userService.getUserById(user.getId());
 
-        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), mav);
+        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "addProduct", mav);
 
         if (user.getRole().getName().equals(Role.SELLER) || user.getRole().getName().equals(Role.ADMIN)) {
             mav.addObject("listSizeUser", productService.getAllSizeUser());
             mav.addObject("listCategory", productService.getAllCategory());
         }else {
-            try {
-                return ControllerUtils.createMessageForHacker(user.getLanguage());
-            } catch (IOException e) {
-                log.error(e.getMessage());
-                return null;
-            }
+            return messageGenerator.createMessageForHacker(user.getLanguage());
         }
         return mav;
     }
@@ -126,49 +132,63 @@ public class ProductController {
 
         user = userService.getUserById(user.getId());
 
-        MessageGenerator messageGenerator;
-        try {
-            messageGenerator = new MessageGenerator(ControllerUtils.createPathToErroOrMessage(user.getLanguage(), MessageGenerator.FAIL_WHIS_OTHER_ERROR));
-        } catch (IOException e) {
-            log.error(e.getMessage());
-            return null;
-        }
-
         if (productService.existProduct(product)){
-            errors.put(ControllerUtils.constructError("name"), ControllerUtils.getMessageProperty(ConfigureErrors.SELECT_ENTITY_EXIST.toString(), "addProduct", messageGenerator));
+                errors.put(
+                        ControllerUtils.constructError("name"),
+                        messageGenerator.getMessageErrorFromProperty(
+                                user.getLanguage(),
+                                MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                                ControllerUtils.constructFieldsForProperty(
+                                        "addProduct",
+                                        ConfigureErrors.SELECT_ENTITY_EXIST.toString()
+                                )
+                        )
+                );
         }
 
         if (file.size() > 4){
-            errors.put(ControllerUtils.constructError("message"), ControllerUtils.getMessageProperty(ConfigureErrors.COUNT_PHOTO_BEGER.toString(), "addProduct", messageGenerator));
+                errors.put(
+                        ControllerUtils.constructError("message"),
+                        messageGenerator.getMessageErrorProperty(
+                                MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                                ConfigureErrors.COUNT_PHOTO_BEGER.toString(),
+                                "addProduct", user.getLanguage()
+                        )
+                );
+        }
+
+        if (sizeUsersProd == null){
+            errors.put(
+                    ControllerUtils.constructError("sizeUsersProd"),
+                    messageGenerator.getMessageErrorProperty(
+                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                            ConfigureErrors.SELECT_SIZE.toString(),
+                            "addProduct", user.getLanguage()
+                    )
+            );
         }
 
         if (bindingResult.hasErrors()){
-            try {
-                errors.putAll(ControllerUtils.getErrors(bindingResult, user.getLanguage()));
-            } catch (IOException e) {
-                log.error(e.getMessage());
-            }
+                errors.putAll(messageGenerator.getErrors(bindingResult, user.getLanguage()));
         }
 
         if (errors.isEmpty()) {
             try {
-                productService.addProduct(messageGenerator, product, categoryProd, sizeUsersProd, file);
+                productService.addProduct(user.getLanguage(), product, categoryProd, sizeUsersProd, file);
             } catch (IOException | ProductExeption e) {
                 log.error(e.getMessage());
-
-                ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), mav);
-
                 mav.setViewName("/pages/for_product/addProduct");
+                ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "addProduct", mav);
+
                 this.constructPageActionWithProd(categoryProd, sizeUsersProd, mav);
                 mav.addObject(ControllerUtils.constructError("message"), e.getMessage());
                 mav.addObject("product",product);
             }
 
         }else{
-            mav.addObject("user", user);
-            mav.addObject("languageList", userService.getListNamesLanguage());
-
             mav.setViewName("/pages/for_product/addProduct");
+            ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "addProduct", mav);
+
             this.constructPageActionWithProd(categoryProd, sizeUsersProd, mav);
             mav.addAllObjects(errors);
             mav.addObject("product",product);
@@ -183,20 +203,20 @@ public class ProductController {
             @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user){
         ModelAndView mav = new ModelAndView("/pages/for_product/showProduct");
 
-        Map<String, String> errors = new HashMap<>();
-
         user = userService.getUserById(user.getId());
 
-        MessageGenerator messageGenerator;
-        try {
-            messageGenerator = new MessageGenerator(ControllerUtils.createPathToErroOrMessage(user.getLanguage(), MessageGenerator.FAIL_WHIS_OTHER_ERROR));
-        } catch (IOException e) {
-            log.error(e.getMessage());
-            return null;
-        }
+        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "showProduct", mav);
+
+        Map<String, String> errors = new HashMap<>();
 
         if (idProduct.equals("")){
-            errors.put(ControllerUtils.constructError("prod"), ControllerUtils.getMessageProperty(ConfigureErrors.SELECT_ENTITY_NOTHIN.toString(), "showProduct", messageGenerator));
+                errors.put(
+                        ControllerUtils.constructError("prod"),
+                        messageGenerator.getMessageErrorProperty(
+                                MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                                ConfigureErrors.SELECT_ENTITY_NOTHIN.toString(), "showProduct", user.getLanguage()
+                        )
+                );
         }
 
         Product product = productService.getProductById(Long.parseLong(idProduct));
@@ -223,14 +243,10 @@ public class ProductController {
 
         user = userService.getUserById(user.getId());
 
+        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "showProduct", mav);
 
         if (bindingResult.hasErrors()){
-            try {
-                errors.putAll(ControllerUtils.getErrors(bindingResult, user.getLanguage()));
-            } catch (IOException e) {
-                log.error(e.getMessage());
-                return null;
-            }
+                errors.putAll(messageGenerator.getErrors(bindingResult, user.getLanguage()));
         }else {
             productService.addComment(comment.getComment(), user.getId(), Long.parseLong(idProduct));
         }
@@ -249,10 +265,9 @@ public class ProductController {
             @ApiParam(value = "Информация об ошибках.", required = true) Map<String, String> errors
     ){
 
-        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), mav);
-
         mav.addObject("product", product);
         List<UserProdCom> coments = new ArrayList<>(product.getComents());
+        mav.addObject("user", user);
         Collections.sort(coments);
         mav.addObject("orederedComment", coments);
         mav.addAllObjects(errors);
@@ -268,15 +283,7 @@ public class ProductController {
 
         user = userService.getUserById(user.getId());
 
-        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), mav);
-
-        MessageGenerator messageGenerator;
-        try {
-            messageGenerator = new MessageGenerator(ControllerUtils.createPathToErroOrMessage(user.getLanguage(), MessageGenerator.FAIL_WHIS_OTHER_ERROR));
-        } catch (IOException e) {
-            log.error(e.getMessage());
-            return null;
-        }
+        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "editProduct", mav);
 
         if (user.getRole().getName().equals(Role.SELLER) || user.getRole().getName().equals(Role.ADMIN)) {
             mav.addObject("listSizeUser", productService.getAllSizeUser());
@@ -293,16 +300,18 @@ public class ProductController {
                 }
                 this.constructPageActionWithProd(product.getCategory().getId(), sizeUsers, mav);
             } else {
-                mav.addObject("prodError", ControllerUtils.getMessageProperty(ConfigureErrors.SELECT_ENTITY_NOTHIN.toString(), "showEditProduct", messageGenerator));
+                    mav.addObject(ControllerUtils.constructError("prod"),
+                            messageGenerator.getMessageErrorProperty(
+                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                            ConfigureErrors.SELECT_ENTITY_NOTHIN.toString(),
+                            "showEditProduct",
+                            user.getLanguage()
+                            )
+                    );
                 mav.setViewName("redirect:/product/product_list");
             }
         }else {
-            try {
-                return ControllerUtils.createMessageForHacker(user.getLanguage());
-            } catch (IOException e) {
-                log.error(e.getMessage());
-                return null;
-            }
+                return messageGenerator.createMessageForHacker(user.getLanguage());
         }
         return mav;
     }
@@ -323,20 +332,17 @@ public class ProductController {
 
         user = userService.getUserById(user.getId());
 
-        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), mav);
-
-        MessageGenerator messageGenerator;
-        try {
-            messageGenerator = new MessageGenerator(ControllerUtils.createPathToErroOrMessage(user.getLanguage(), MessageGenerator.FAIL_WHIS_OTHER_ERROR));
-        } catch (IOException e) {
-            log.error(e.getMessage());
-            return null;
-        }
-
         Product oldProduct = productService.getProductById(Long.parseLong(idProduct));
 
         if (oldProduct == null) {
-            mav.addObject(ControllerUtils.constructError("prod"), ControllerUtils.getMessageProperty(ConfigureErrors.SELECT_ENTITY_NOTHIN.toString(), "editProduct", messageGenerator));
+                mav.addObject(ControllerUtils.constructError("prod"),
+                        messageGenerator.getMessageErrorProperty(
+                                MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                                ConfigureErrors.SELECT_ENTITY_NOTHIN.toString(),
+                                "editProduct",
+                                user.getLanguage()
+                        )
+                );
             mav.setViewName("redirect:/product/product_list");
 
             return mav;
@@ -346,40 +352,58 @@ public class ProductController {
         Map<String, String> errors = new HashMap<>();
 
         if (categoryProd == null){
-            errors.put(ControllerUtils.constructError("categoryProd"), ControllerUtils.getMessageProperty(ConfigureErrors.SELECT_CATEGORY.toString(), "editProduct", messageGenerator));
+                errors.put(
+                        ControllerUtils.constructError("categoryProd"),
+                        messageGenerator.getMessageErrorProperty(
+                                MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                                ConfigureErrors.SELECT_CATEGORY.toString(),
+                                "editProduct", user.getLanguage()
+                        )
+                );
         }
 
         if (sizeUsersProd.size() == 0){
-            errors.put(ControllerUtils.constructError("sizeUsersProd"), ControllerUtils.getMessageProperty(ConfigureErrors.SELECT_SIZE.toString(), "editProduct", messageGenerator));
+                errors.put(
+                        ControllerUtils.constructError("sizeUsersProd"),
+                        messageGenerator.getMessageErrorProperty(
+                                MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                                ConfigureErrors.SELECT_SIZE.toString(),
+                                "editProduct", user.getLanguage()
+                        )
+                );
         }
 
         if (file.size() > 4){
-            errors.put(ControllerUtils.constructError("message"), ControllerUtils.getMessageProperty(ConfigureErrors.COUNT_PHOTO_BEGER.toString(), "editProduct", messageGenerator));
+                errors.put(
+                        ControllerUtils.constructError("message"),
+                        messageGenerator.getMessageErrorProperty(
+                                MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                                ConfigureErrors.COUNT_PHOTO_BEGER.toString(),
+                                "editProduct", user.getLanguage()
+                        )
+                );
         }
 
         if (bindingResult.hasErrors()){
-            try {
-                errors.putAll(ControllerUtils.getErrors(bindingResult, user.getLanguage()));
-            } catch (IOException e) {
-                log.error(e.getMessage());
-                return null;
-            }
+                errors.putAll(messageGenerator.getErrors(bindingResult, user.getLanguage()));
         }
 
         if (errors.isEmpty()) {
             try {
                 productService.deletePhotoProduct(oldProduct.getId());
-                productService.updateProduct(messageGenerator, product, oldProduct, categoryProd, sizeUsersProd, file);
+                productService.updateProduct(user.getLanguage(), product, oldProduct, categoryProd, sizeUsersProd, file);
             } catch (IOException | ProductExeption e) {
                 log.error(e.getMessage());
 
                 mav.setViewName("/pages/for_product/editProduct");
+                ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "editProduct", mav);
                 this.constructPageActionWithProd(categoryProd, sizeUsersProd, mav);
                 mav.addObject(ControllerUtils.constructError("message"), e.getMessage());
                 mav.addObject("product", product);
             }
         }else{
             mav.setViewName("/pages/for_product/editProduct");
+            ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "editProduct", mav);
             this.constructPageActionWithProd(categoryProd, sizeUsersProd, mav);
             mav.addAllObjects(errors);
             mav.addObject("product",product);

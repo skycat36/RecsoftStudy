@@ -3,7 +3,7 @@ package com.recsoft.service;
 import com.recsoft.data.entity.*;
 import com.recsoft.data.exeption.UserExeption;
 import com.recsoft.data.repository.*;
-import com.recsoft.utils.ConfigureErrors;
+import com.recsoft.utils.constants.ConfigureErrors;
 import com.recsoft.utils.ControllerUtils;
 import com.recsoft.utils.ReadbleUtils;
 import com.recsoft.validation.MessageGenerator;
@@ -41,6 +41,13 @@ public class OrderService {
     private StatusRepository statusRepository;
 
     private RoleRepository roleRepository;
+
+    private MessageGenerator messageGenerator;
+
+    @Autowired
+    public void setMessageGenerator(MessageGenerator messageGenerator) {
+        this.messageGenerator = messageGenerator;
+    }
 
     @Autowired
     public void setUserService(UserService userService) {
@@ -240,7 +247,7 @@ public class OrderService {
     }
     @ApiOperation(value = "Обновить заказы пользователя")
     public void updateOrderListWhoNotPay(
-            @ApiParam(value = "Генератор сообщений пользователя.", required = true) MessageGenerator messageGenerator,
+            @ApiParam(value = "Генератор сообщений пользователя.", required = true) Language language,
             @ApiParam(value = "Пользователь системы.", required = true) User user,
             @ApiParam(value = "Адрес куда отправлять продукт.", required = true) String adress,
             @ApiParam(value = "Информация об ошибках.", required = true) Map<String, String> errors){
@@ -252,11 +259,27 @@ public class OrderService {
         user = userService.getUserById(user.getId());
 
         if (user.getCash() < realPriceOrder){
-            errors.put(ControllerUtils.constructError("price"), ControllerUtils.getMessageProperty(ConfigureErrors.NEED_MORE_CASH.toString(), "updateOrderListWhoNotPay", messageGenerator));
+            errors.put(
+                    ControllerUtils.constructError("price"),
+                    messageGenerator.getMessageErrorProperty(
+                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                            ConfigureErrors.NEED_MORE_CASH.toString(),
+                            "updateOrderListWhoNotPay",
+                            language
+                    )
+            );
         }
 
         if (adress.equals("")){
-            errors.put(ControllerUtils.constructError("adress"), ControllerUtils.getMessageProperty(ConfigureErrors.ADRESS_EMPTY.toString(), "updateOrderListWhoNotPay", messageGenerator));
+            errors.put(
+                    ControllerUtils.constructError("adress"),
+                    messageGenerator.getMessageErrorProperty(
+                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                            ConfigureErrors.ADRESS_EMPTY.toString(),
+                            "updateOrderListWhoNotPay",
+                            language
+                    )
+            );
         }
 
         if (errors.isEmpty()){
@@ -266,7 +289,7 @@ public class OrderService {
             }
 
             try {
-                userService.subtractCashUser(messageGenerator, user, Math.abs(this.roundPriseForUser(realPriceOrder)));
+                userService.subtractCashUser(language, user, Math.abs(this.roundPriseForUser(realPriceOrder)));
                 orderRepository.saveAll(ordersUser);
             } catch (UserExeption userExeption) {
                 errors.put(ControllerUtils.constructError("price"), userExeption.getMessage());
@@ -300,16 +323,16 @@ public class OrderService {
             @ApiParam(value = "Информация о статусе товаров.", required = true) String statusOrd
     ){
 
-            Status status = statusRepository.findFirstByName(ReadbleUtils.createStatusOrderFromReadable(statusOrd));
-            if (status != null) {
-                 Order order = orderRepository.findById(idOrder).get();
-                 order.setStatus(status);
+        Status status = statusRepository.findFirstByName(ReadbleUtils.createStatusOrderFromReadable(statusOrd));
+        if (status != null) {
+            Order order = orderRepository.findById(idOrder).get();
+            order.setStatus(status);
 
-                 orderRepository.save(order);
-                 return true;
-            }else {
-                return false;
-            }
+            orderRepository.save(order);
+            return true;
+        }else {
+            return false;
+        }
     }
 
 }
