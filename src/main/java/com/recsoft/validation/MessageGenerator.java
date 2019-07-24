@@ -190,6 +190,7 @@ public class MessageGenerator {
             @ApiParam(value = "Язык для отображения.", required = true) Language language
     ) {
         ModelAndView mav = new ModelAndView("/pages/for_menu/greeting");
+        mav.addAllObjects(this.getAllValueForPage("navbar", language));
         mav.addObject("error", this.getMessageErrorProperty(MessageGenerator.FAIL_WHIS_OTHER_ERROR, ConfigureErrors.HACKER_GO_OUT.toString(), "createMessageForHacker", language));
         mav.addObject("language", language.getReadbleName());
         return mav;

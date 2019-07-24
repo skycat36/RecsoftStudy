@@ -83,8 +83,8 @@ public class UserController {
 
     @ApiOperation(value = "Изьятие ключей пользователя и выход из приложения.")
     @GetMapping("/login")
-    public ModelAndView loginPage(
-            ) {
+    public ModelAndView loginPage() {
+
         ModelAndView mav = new ModelAndView("/pages/for_menu/login");
 
         this.cunstructPageForStartMenu(mav);
@@ -157,7 +157,6 @@ public class UserController {
             @ApiParam(value = "Выдергивает пользователя с формы.", required = true) @ModelAttribute @Valid User userTemp,
             @ApiParam(value = "Проводит валидацию данных.") BindingResult bindingResult,
             @ApiParam(value = "Проверка пароля.", required = true) @RequestParam String password2,
-            //@ApiParam(value = "Выбранный пользователем язык.", required = true) @RequestParam("language") String language,
             @ApiParam(value = "Выбранные пользователем файл картинки.") @RequestParam("file") MultipartFile file
     ) {
 

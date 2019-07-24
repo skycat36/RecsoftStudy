@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.util.List;
 import java.util.UUID;
 
 @Api(value = "Класс-утилита сервисов.",
@@ -141,6 +142,19 @@ public class ServiceUtils {
             );
         }
         return resultFilename;
+    }
+
+    @ApiOperation(value = "Проверка на наличие файлов.")
+    public static boolean proveListOnEmptyFileList(
+            @ApiParam(value = "Список загружаемых файлов.", required = true) List<MultipartFile> files
+    ){
+        for (MultipartFile multipartFile: files){
+            if (multipartFile.getSize() <= 0) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
 }

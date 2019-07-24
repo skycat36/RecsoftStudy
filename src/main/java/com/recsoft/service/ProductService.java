@@ -177,19 +177,22 @@ public class ProductService {
         }
         product.setSizeUsers(sizeUserSet);
 
-        Set<PhotoProduct> photoProductSet = new HashSet<>();
+        if (ServiceUtils.proveListOnEmptyFileList(files)) {
+            Set<PhotoProduct> photoProductSet = new HashSet<>();
 
-        for (MultipartFile multipartFile: files){
-            if (multipartFile.getSize() > 0) {
-                photoProductSet.add(new PhotoProduct(ServiceUtils.saveFile(language, multipartFile, WEIGHT_IMAGE, HEIGHT_IMAGE, uploadPath), product));
+            for (MultipartFile multipartFile : files) {
+                if (multipartFile.getSize() > 0) {
+                    photoProductSet.add(new PhotoProduct(ServiceUtils.saveFile(language, multipartFile, WEIGHT_IMAGE, HEIGHT_IMAGE, uploadPath), product));
+                }
             }
+            product.setPhotoProducts(photoProductSet);
         }
-        product.setPhotoProducts(photoProductSet);
     }
 
     @ApiOperation(value = "Удалить фотографии продукта.")
     public void deletePhotoProduct(
-            @ApiParam(value = "Id продукта", required = true) Long idProduct){
+            @ApiParam(value = "Id продукта", required = true) Long idProduct
+    ){
 
         Product product = productRepository.findById(idProduct).get();
 

@@ -30,8 +30,8 @@ public class ControllerUtils {
     public static void addNeedForLanguage(
             @ApiParam(value = "Пользователь системы.", required = true) User user,
             @ApiParam(value = "Список человеко-читабельных языков.", required = true) List<String> namesLanguage,
-            MessageGenerator messageGenerator,
-            String nameView,
+            @ApiParam(value = "Генератор сообщений", required = true) MessageGenerator messageGenerator,
+            @ApiParam(value = "Название view.", required = true) String nameView,
             @ApiParam(value = "view.", required = true) ModelAndView mav) {
 
         mav.addAllObjects(messageGenerator.getAllValueForPage("navbar", user.getLanguage()));

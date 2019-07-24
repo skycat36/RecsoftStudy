@@ -1,5 +1,6 @@
 package com.recsoft.controller.product;
 
+import com.recsoft.aspect.ProveRole;
 import com.recsoft.data.entity.*;
 import com.recsoft.data.exeption.ProductExeption;
 import com.recsoft.service.ProductService;
@@ -96,7 +97,8 @@ public class ProductController {
     }
 
     //@RolesAllowed(value = "ROLE_seller")
-    @GetMapping("/add_product")
+    @ProveRole(nameRole = Role.SELLER)
+    @GetMapping(value = "/add_product")
     @ApiOperation(value = "Отображает страницу добавления продуктов")
     public ModelAndView showAddProduct(
             @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
@@ -200,6 +202,7 @@ public class ProductController {
     public ModelAndView showProduct(
             @ApiParam(value = "Id выбранного продукта.", required = true) @PathVariable String idProduct,
             @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user){
+
         ModelAndView mav = new ModelAndView("/pages/for_product/showProduct");
 
         user = userService.getUserById(user.getId());
@@ -278,6 +281,7 @@ public class ProductController {
             @ApiParam(value = "Id выбранного продукта.", required = true) @PathVariable String idProduct,
             @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
     ){
+
         ModelAndView mav = new ModelAndView("/pages/for_product/editProduct");
 
         user = userService.getUserById(user.getId());
@@ -324,8 +328,9 @@ public class ProductController {
             @ApiParam(value = "Сообщения о возможных ошибках.", required = true) BindingResult bindingResult,
             @ApiParam(value = "Id выбранной категории продукта.", required = true) @RequestParam Long categoryProd,
             @ApiParam(value = "Id выбранных размеров товара.", required = true) @RequestParam ArrayList<Long> sizeUsersProd,
-            @ApiParam(value = "Выбранные пользователем файлы картинок.", required = true) @RequestParam("file") List<MultipartFile> file
-            ){
+            @ApiParam(value = "Выбранные пользователем файлы картинок.", required = true) @RequestParam("file") List<MultipartFile> files
+
+    ){
 
         ModelAndView mav = new ModelAndView("redirect:/product/show_product/" + idProduct);
 
@@ -372,7 +377,7 @@ public class ProductController {
                 );
         }
 
-        if (file.size() > 4){
+        if (files.size() > 4){
                 errors.put(
                         ControllerUtils.constructError("message"),
                         messageGenerator.getMessageErrorProperty(
@@ -389,8 +394,10 @@ public class ProductController {
 
         if (errors.isEmpty()) {
             try {
-                productService.deletePhotoProduct(oldProduct.getId());
-                productService.updateProduct(user.getLanguage(), product, oldProduct, categoryProd, sizeUsersProd, file);
+                if (ServiceUtils.proveListOnEmptyFileList(files)) {
+                    productService.deletePhotoProduct(oldProduct.getId());
+                }
+                productService.updateProduct(user.getLanguage(), product, oldProduct, categoryProd, sizeUsersProd, files);
             } catch (IOException | ProductExeption e) {
                 log.error(e.getMessage());
 
