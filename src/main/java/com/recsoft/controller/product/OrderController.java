@@ -1,5 +1,6 @@
 package com.recsoft.controller.product;
 
+import com.recsoft.aspect.ProveRole;
 import com.recsoft.data.entity.Order;
 import com.recsoft.data.entity.Product;
 import com.recsoft.data.entity.Role;
@@ -178,8 +179,6 @@ public class OrderController {
 
 
         switch (user.getRole().getName()){
-            case Role.ADMIN: break;
-
             case Role.SELLER:{
                 ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "showCartSeller", mav);
                 mav.setViewName("/pages/for_order/showCartSeller");
@@ -345,6 +344,7 @@ public class OrderController {
         return mav;
     }
 
+    @ProveRole(nameRole = {Role.USER})
     @GetMapping("/orders_user")
     @ApiOperation(value = "Отображает корзину для покупателей или страницу продавца для работы с заказами пользователей.")
     public ModelAndView showOrdersUser(
@@ -354,23 +354,17 @@ public class OrderController {
 
         user = userService.getUserById(user.getId());
 
-        switch (user.getRole().getName()){
-            case Role.USER:{
-                mav.setViewName("/pages/for_order/showOrdersUser");
-                ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "showOrdersUser", mav);
-                List<Order> ordersUser = orderService.getOrderUser(user);
-                mav.addObject("orderList", ordersUser);
-                mav.addObject("listReadbleStatus", orderService.createListReadbleStatusOrders(ordersUser));
-                mav.addObject("priceUser", orderService.calculetePriseForUser(ordersUser));
-                break;
-            }
-            default:{
-                return messageGenerator.createMessageForHacker(user.getLanguage());
-            }
-        }
+        mav.setViewName("/pages/for_order/showOrdersUser");
+        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "showOrdersUser", mav);
+        List<Order> ordersUser = orderService.getOrderUser(user);
+        mav.addObject("orderList", ordersUser);
+        mav.addObject("listReadbleStatus", orderService.createListReadbleStatusOrders(ordersUser));
+        mav.addObject("priceUser", orderService.calculetePriseForUser(ordersUser));
+
         return mav;
     }
 
+    @ProveRole(nameRole = {Role.SELLER})
     @GetMapping("/cart/select_user/{idUser}")
     @ApiOperation(value = "Отобразить данные пользователя выбранного продавцом.")
     public ModelAndView showSelectUser(
@@ -383,18 +377,14 @@ public class OrderController {
 
         ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "selectUserCart", mav);
 
-        if (user.getRole().getName().equals(Role.SELLER) || user.getRole().getName().equals(Role.ADMIN)){
-            User selectUser = userService.getUserById(Long.parseLong(idUser));
-            List<Order> ordersUser = orderService.getOrderUser(userService.getUserById(Long.parseLong(idUser)));
+        User selectUser = userService.getUserById(Long.parseLong(idUser));
+        List<Order> ordersUser = orderService.getOrderUser(userService.getUserById(Long.parseLong(idUser)));
 
-            mav.addObject("user", selectUser);
-            mav.addObject("listStatus", ReadbleUtils.createListReadbleStatuses());
-            mav.addObject("orderList", ordersUser);
-            mav.addObject("listReadbleStatus", orderService.createListReadbleStatusOrders(ordersUser));
-            mav.addObject("priceUser", orderService.calculetePriseForUser(ordersUser));
-        }else {
-            mav = messageGenerator.createMessageForHacker(user.getLanguage());
-        }
+        mav.addObject("user", selectUser);
+        mav.addObject("listStatus", ReadbleUtils.createListReadbleStatuses());
+        mav.addObject("orderList", ordersUser);
+        mav.addObject("listReadbleStatus", orderService.createListReadbleStatusOrders(ordersUser));
+        mav.addObject("priceUser", orderService.calculetePriseForUser(ordersUser));
 
         return mav;
     }

@@ -15,6 +15,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,7 +25,7 @@ import java.util.Map;
 @Component
 public class MessageGenerator {
 
-    @ApiModelProperty(notes = "Константа названия файла свойств где хранятся различные сообщения об ошибках.",name="FAIL_WHIS_OTHER_ERROR", required=true)
+    @ApiModelProperty(notes = "Константа названия файла свойств где хранятся различные сообщения об ошибках.", name="FAIL_WHIS_OTHER_ERROR", required=true)
     public static final String FAIL_WHIS_OTHER_ERROR = "otherErrorMessage";
 
     private final String FILE_EXTENSION_PROPERTIES = ".properties";
@@ -44,6 +45,7 @@ public class MessageGenerator {
     public MessageGenerator() {
     }
 
+    @PostConstruct
     public void init() throws IOException {
         for (Language language: languageRepository.findAll()){
             tongueChestMap.put(language.getReadbleName(), new TongueChest(language));
@@ -56,20 +58,12 @@ public class MessageGenerator {
             String fileNameProperty,
             @ApiParam(value = "Название свойства.", required = true) String nameFieldProperty
     ) {
-        try {
-            if (this.tongueChestMap.isEmpty()) {
-                this.init();
-            }
-            return this.getAllProperty(language)
-                    .getTextPropertyTextField(
-                            generateProveFileNameProperty(fileNameProperty),
-                            nameFieldProperty
-                    );
 
-        } catch (IOException e) {
-            log.error(e.getMessage());
-        }
-        return null;
+        return this.getAllProperty(language)
+                .getTextPropertyTextField(
+                        generateProveFileNameProperty(fileNameProperty),
+                        nameFieldProperty
+                );
     }
 
     @ApiOperation(value = "Получить значение свойства по его названию.")
@@ -78,70 +72,45 @@ public class MessageGenerator {
             String fileNameProperty,
             @ApiParam(value = "Название свойства.", required = true) String nameFieldProperty
     ) {
-        try {
-            if (this.tongueChestMap.isEmpty()) {
-                this.init();
-            }
 
-            return this.getAllProperty(language)
-                    .getTextPropertyError(
-                            generateProveFileNameProperty(fileNameProperty),
-                            nameFieldProperty
-                    );
-
-        } catch (IOException e) {
-            log.error(e.getMessage());
-        }
-        return null;
+        return this.getAllProperty(language)
+                .getTextPropertyError(
+                        generateProveFileNameProperty(fileNameProperty),
+                        nameFieldProperty
+                );
     }
 
     @ApiOperation(value = "Получить значение свойства по его названию.")
     public TongueChest getAllProperty(
             Language language
     ) {
-        try {
-            if (this.tongueChestMap.isEmpty()) {
-                this.init();
-            }
-            return tongueChestMap.get(language.getReadbleName());
 
-        } catch (IOException e) {
-            log.error(e.getMessage());
-        }
-
-        return null;
+        return tongueChestMap.get(language.getReadbleName());
     }
 
     @ApiOperation(value = "Обработчик ошибок валидации. Возвращает карту с корректным представлением ошибок для передачи на view.")
     public Map<String, String> getErrors(
             @ApiParam(value = "Обработчик ошибок валидации обьекта в контроллерах.", required = true) BindingResult bindingResult,
             @ApiParam(value = "Язык для отображения.", required = true) Language language) {
-        try {
-            if (this.tongueChestMap.isEmpty()) {
-                this.init();
-            }
 
-            TongueChest tongueChest = this.getAllProperty(language);
-            Map<String, String> errorMap = new HashMap<>();
-            for (int i = 0; i < bindingResult.getAllErrors().size(); i++){
-                FieldError fieldError = bindingResult.getFieldErrors().get(i);
-                String nameErrorProperty = fieldError.getField() + "." + fieldError.getCode();
-                errorMap.put(
-                        bindingResult.getFieldErrors().get(i).getField() + "Error",
-                        tongueChest.getTextPropertyError(
-                                generateProveFileNameProperty(
-                                        bindingResult.getObjectName()
-                                ),
-                                nameErrorProperty
-                        )
-                );
-            }
-            return errorMap;
+        TongueChest tongueChest = this.getAllProperty(language);
+        Map<String, String> errorMap = new HashMap<>();
+        for (int i = 0; i < bindingResult.getAllErrors().size(); i++){
+            FieldError fieldError = bindingResult.getFieldErrors().get(i);
+            String nameErrorProperty = fieldError.getField() + "." + fieldError.getCode();
+            String fieldName = bindingResult.getFieldErrors().get(i).getField() + "Error";
 
-        } catch (IOException e) {
-            log.error(e.getMessage());
+            errorMap.put(
+                    fieldName,
+                    tongueChest.getTextPropertyError(
+                            generateProveFileNameProperty(
+                                    bindingResult.getObjectName()
+                            ),
+                            nameErrorProperty
+                    )
+            );
         }
-        return null;
+        return errorMap;
     }
 
 
@@ -152,36 +121,18 @@ public class MessageGenerator {
             @ApiParam(value = "Название ошибки в файле .property", required = true) String nameProperty,
             @ApiParam(value = "Название view в котором она произошла.", required = true) String view,
             @ApiParam(value = "Генератор сообщений.", required = true) Language language) {
-        try {
-            if (this.tongueChestMap.isEmpty()) {
-                this.init();
-            }
-            return this.getMessageErrorFromProperty(language, fileProperty, view + "." + nameProperty);
 
-            } catch (IOException e) {
-                log.error(e.getMessage());
-            }
-
-        return null;
-        }
+        return this.getMessageErrorFromProperty(language, fileProperty, view + "." + nameProperty);
+    }
 
     @ApiOperation(value = "Возвращает текст ошибки.")
     public Map<String, String> getAllValueForPage(
             @ApiParam(value = "Название view", required = true) String nameView,
             @ApiParam(value = "Генератор сообщений.", required = true) Language language) {
-        try {
-            if (this.tongueChestMap.isEmpty()) {
-                this.init();
-            }
-            return this.getAllProperty(language).getAllValuePropertyForTextField(
-                    generateProveFileNameProperty(nameView)
-            );
 
-        } catch (IOException e) {
-            log.error(e.getMessage());
-        }
-
-        return null;
+        return this.getAllProperty(language).getAllValuePropertyForTextField(
+                generateProveFileNameProperty(nameView)
+        );
     }
 
 

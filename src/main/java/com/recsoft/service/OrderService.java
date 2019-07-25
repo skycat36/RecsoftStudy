@@ -1,7 +1,7 @@
 package com.recsoft.service;
 
 import com.recsoft.data.entity.*;
-import com.recsoft.data.exeption.UserExeption;
+import com.recsoft.data.exeption.UserException;
 import com.recsoft.data.repository.OrderRepository;
 import com.recsoft.data.repository.ProductRepository;
 import com.recsoft.data.repository.RoleRepository;
@@ -294,8 +294,8 @@ public class OrderService {
             try {
                 userService.subtractCashUser(language, user, Math.abs(this.roundPriseForUser(realPriceOrder)));
                 orderRepository.saveAll(ordersUser);
-            } catch (UserExeption userExeption) {
-                errors.put(ControllerUtils.constructError("price"), userExeption.getMessage());
+            } catch (UserException userException) {
+                errors.put(ControllerUtils.constructError("price"), userException.getMessage());
             }
         }
 

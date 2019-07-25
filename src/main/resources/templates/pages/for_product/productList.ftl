@@ -2,7 +2,7 @@
 <@c.page>
 <form action="/product/product_list/filter" method="get">
     <div class="form-row align-items-center">
-        <div class="col-auto my-1">
+        <div class="col-auto mr-2 mt-3">
             <label class="mr-sm-2" for="inlineFormCustomSelect">${Select_category_message} </label>
             <select class="custom-select mr-sm-2" name="selectCategory" id="inlineFormCustomSelect">
                 <option value="" <#if selectCategory??>selected</#if>>${All_goods_message}</option>
@@ -11,9 +11,9 @@
                 </#list>
             </select>
         </div>
-        <div class="col-auto my-1">
-            <button type="submit" name="filterCategory" class="btn btn-primary">${Select_category_message}</button>
-        </div>
+        <#--<div class="col-auto mt-1">-->
+            <button type="submit" name="filterCategory" class="btn btn-primary mt-5">${Select_category_message}</button>
+        <#--</div>-->
     </div>
 </form>
 <div class="card-columns">

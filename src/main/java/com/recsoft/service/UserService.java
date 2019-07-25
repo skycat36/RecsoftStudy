@@ -4,7 +4,7 @@ import com.recsoft.data.entity.Language;
 import com.recsoft.data.entity.PhotoUser;
 import com.recsoft.data.entity.Role;
 import com.recsoft.data.entity.User;
-import com.recsoft.data.exeption.UserExeption;
+import com.recsoft.data.exeption.UserException;
 import com.recsoft.data.repository.LanguageRepository;
 import com.recsoft.data.repository.PhotoUserRepository;
 import com.recsoft.data.repository.RoleRepository;
@@ -29,8 +29,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 
-/* Осуществляет функции для работы с пользователем
-* @author Evgeny Popov */
 @Service
 @Api(value = "Сервис пользователей",
         description = "Класс-сервис выполняет операции связанные с пользователем, " +
@@ -117,15 +115,16 @@ public class UserService implements UserDetailsService {
     public void subtractCashUser(
             @ApiParam(value = "Генератор сообщений пользователя.", required = true) Language language,
             @ApiParam(value = "ID пользователя.", required = true) User user,
-            @ApiParam(value = "Вычитаемая сумма.", required = true) Integer number) throws UserExeption {
+            @ApiParam(value = "Вычитаемая сумма.", required = true) Integer number) throws UserException {
 
         if (user.getCash() - number < 0){
-            throw new UserExeption(
+            throw new UserException(
                     messageGenerator.getMessageErrorProperty(
                             MessageGenerator.FAIL_WHIS_OTHER_ERROR,
                             ConfigureErrors.NEED_MORE_CASH.toString(),
                             "subtractCashUser", language
-                    )
+                    ),
+                    user
             );
         }
 

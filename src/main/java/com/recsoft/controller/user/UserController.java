@@ -38,10 +38,10 @@ import java.util.Map;
 @RequestMapping("/")
 public class UserController {
 
-    @ApiModelProperty(notes = "Name of the Student",name="name",required=true,value="test name")
+    @ApiModelProperty(notes = "Name of the Student", name="name", required=true, value="test name")
     private Logger log = LoggerFactory.getLogger(UserController.class.getName());
 
-    @ApiModelProperty(notes = "Name of the Student",name="name",required=true,value="test name")
+    @ApiModelProperty(notes = "Name of the Student", name="name", required=true, value="test name")
     private UserService userService;
 
     private MessageGenerator messageGenerator;

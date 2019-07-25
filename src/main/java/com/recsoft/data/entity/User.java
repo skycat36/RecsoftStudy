@@ -23,7 +23,6 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    /* Имя. */
     @ApiModelProperty(notes = "Имя.", name="name", required=true)
     @NotBlank
     @Length(max = 50)
@@ -51,13 +50,8 @@ public class User implements UserDetails {
     @Length(max = 50)
     private String password;
 
-    //@NotBlank(message = "Поле деньги на кошельке не может быть пустым")
     @ApiModelProperty(notes = "Имеющаяся деньги на кошельке.", name="cash", required=true)
     private Integer cash;
-
-    //@NotBlank(message = "Поле рейтинг не может быть пустым")
-    @ApiModelProperty(notes = "Рейтинг пользователя.", name="rating", required=true)
-    private Integer rating;
 
     @ApiModelProperty(notes = "email пользователя.", name="email", required=true)
     @Email
@@ -94,21 +88,16 @@ public class User implements UserDetails {
             inverseJoinColumns=@JoinColumn(name="prod_id"))
     private Set<Product> products;
 
-    @ApiModelProperty(notes = "Активирован ли аккаунт пользователя.", name="activity", required=true)
-    private Boolean activity;
-
     public User() {
     }
 
-
-    public User(@NotBlank @Length(max = 50) String name, @NotBlank @Length(max = 50) String fam, @NotBlank @Length(max = 50) String secName, @NotBlank @Length(max = 50) String login, @NotBlank @Length(max = 50) String password, Integer cash, Integer rating, @Email @NotBlank String email, Role role, Language language, PhotoUser photoUser, Set<Order> orders, Set<UserProdCom> coments, Set<Product> products, Boolean activity) {
+    public User(@NotBlank @Length(max = 50) String name, @NotBlank @Length(max = 50) String fam, @NotBlank @Length(max = 50) String secName, @NotBlank @Length(max = 50) String login, @NotBlank @Length(max = 50) String password, Integer cash, @Email @NotBlank String email, Role role, Language language, PhotoUser photoUser, Set<Order> orders, Set<UserProdCom> coments, Set<Product> products) {
         this.name = name;
         this.fam = fam;
         this.secName = secName;
         this.login = login;
         this.password = password;
         this.cash = cash;
-        this.rating = rating;
         this.email = email;
         this.role = role;
         this.language = language;
@@ -116,7 +105,6 @@ public class User implements UserDetails {
         this.orders = orders;
         this.coments = coments;
         this.products = products;
-        this.activity = activity;
     }
 
     public Long getId() {
@@ -167,36 +155,12 @@ public class User implements UserDetails {
         this.cash = cash;
     }
 
-    public Integer getRating() {
-        return rating;
-    }
-
-    public void setRating(Integer rating) {
-        this.rating = rating;
-    }
-
     public String getEmail() {
         return email;
     }
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public Boolean getBlock() {
-        return activity;
-    }
-
-    public void setBlock(Boolean activity) {
-        this.activity = activity;
-    }
-
-    public Boolean getActivity() {
-        return activity;
-    }
-
-    public void setActivity(Boolean activity) {
-        this.activity = activity;
     }
 
     public String getLogin() {
@@ -243,9 +207,7 @@ public class User implements UserDetails {
         this.photoUser = photoUser;
     }
 
-    public Language getLanguage() {
-        return language;
-    }
+    public Language getLanguage() { return language; }
 
     public void setLanguage(Language language) {
         this.language = language;

@@ -11,8 +11,6 @@ import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import java.util.Set;
 
-/* Роль пользователя.
- * @author Евгений Попов */
 @Entity
 @Table(name = "role")
 @ApiModel(description = "Определяет роль пользователя.")
@@ -21,22 +19,19 @@ public class Role implements GrantedAuthority {
     @ApiModelProperty(notes = "Константы названия имеющихся ролей.", required=true)
     @Ignore
     @Transient
-    public static final String ADMIN = "admin", SELLER = "seller", USER = "user";
+    public static final String SELLER = "seller", USER = "user";
 
-    /*Идентификатор обьекта*/
     @ApiModelProperty(notes = "Идентификатор обьекта.", name="id", required=true)
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    /* Название роли. */
     @ApiModelProperty(notes = "Название роли.", name="name", required=true)
     @Column(name = "name")
     @NotBlank
     @Length(max = 50)
     private String name;
 
-    /* Список пользователей имеющих эту роль*/
     @ApiModelProperty(notes = "Список пользователей имеющих эту роль.", name="users", required=true)
     @JsonIgnore
     @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, fetch = FetchType.EAGER)

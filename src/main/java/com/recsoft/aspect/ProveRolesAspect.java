@@ -1,10 +1,10 @@
 package com.recsoft.aspect;
 
 import com.recsoft.data.entity.User;
+import com.recsoft.data.exeption.UserException;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.stereotype.Component;
 
@@ -25,10 +25,10 @@ public class ProveRolesAspect {
             ProveRole proveRole,
             User user) throws Throwable {
 
-        List<Object> list = Arrays.asList(joinPoint.getArgs());
+        List<String> listRoles = Arrays.asList(proveRole.nameRole());
 
-        if (!proveRole.nameRole().equals(user.getRole().getName())){
-            throw new Throwable("User with roles access not allow.");
+        if (!listRoles.contains(user.getRole().getName())){
+            throw new UserException("User with roles access not allow.", user);
         }
 
         return joinPoint.proceed();
