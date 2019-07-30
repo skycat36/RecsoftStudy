@@ -107,6 +107,15 @@ public class User implements UserDetails {
         this.products = products;
     }
 
+    public User(@NotBlank @Length(max = 50) String name, @NotBlank @Length(max = 50) String fam, @NotBlank @Length(max = 50) String secName, @NotBlank @Length(max = 50) String login, @NotBlank @Length(max = 50) String password, @Email @NotBlank String email) {
+        this.name = name;
+        this.fam = fam;
+        this.secName = secName;
+        this.login = login;
+        this.password = password;
+        this.email = email;
+    }
+
     public Long getId() {
         return id;
     }

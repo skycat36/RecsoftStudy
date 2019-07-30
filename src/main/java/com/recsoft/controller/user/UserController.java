@@ -38,6 +38,8 @@ import java.util.Map;
 @RequestMapping("/")
 public class UserController {
 
+    private static String DEFAULT_LANGUAGE = "ru";
+
     @ApiModelProperty(notes = "Name of the Student", name="name", required=true, value="test name")
     private Logger log = LoggerFactory.getLogger(UserController.class.getName());
 
@@ -93,7 +95,7 @@ public class UserController {
     }
 
     private void cunstructPageForStartMenu(ModelAndView mav) {
-        Language language = userService.getLanguageByName("ru");
+        Language language = userService.getLanguageByName(DEFAULT_LANGUAGE);
 
         mav.addAllObjects(
                 messageGenerator.getAllValueForPage(
@@ -133,7 +135,7 @@ public class UserController {
 
         mav.addObject("languageList", userService.getListNamesLanguage());
 
-        Language language = userService.getLanguageByName("ru");
+        Language language = userService.getLanguageByName(DEFAULT_LANGUAGE);
         mav.addAllObjects(
                 messageGenerator.getAllValueForPage(
                         "registration",
@@ -157,13 +159,13 @@ public class UserController {
             @ApiParam(value = "Выдергивает пользователя с формы.", required = true) @ModelAttribute @Valid User userTemp,
             @ApiParam(value = "Проводит валидацию данных.") BindingResult bindingResult,
             @ApiParam(value = "Проверка пароля.", required = true) @RequestParam String password2,
-            @ApiParam(value = "Выбранные пользователем файл картинки.") @RequestParam("file") MultipartFile file
+            @ApiParam(value = "Выбранные пользователем файл картинки.") @RequestParam(value = "file") MultipartFile file
     ) {
 
         ModelAndView mav = new ModelAndView("redirect:/login");
         Map<String, String> errors = new HashMap<>();
 
-        Language langu = userService.getLanguageByName("ru");
+        Language langu = userService.getLanguageByName(DEFAULT_LANGUAGE);
 
         if (bindingResult.hasErrors()){
                 errors.putAll(messageGenerator.getErrors(bindingResult, langu));

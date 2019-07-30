@@ -153,6 +153,7 @@ public class UserService implements UserDetailsService {
                 photoUserRepository.save(user.getPhotoUser());
             }
 
+            user.setCash(0);
             user.setLanguage(language);
             user.setRole(roleRepository.findFirstByName(Role.USER));
             user = userRepository.save(user);
