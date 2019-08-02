@@ -48,26 +48,36 @@
         </div>
 
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label mr-2">${Number_message} : <#if product??>${product.count}</#if></label>
-        </div>
-
-        <div class="form-group row">
             <label class="col-sm-2 col-form-label mr-2">${Discount_message} : <#if product??>${product.discount}</#if></label>
         </div>
+
+
+        <div class="form-group row">
+            <label class="col-form-label">Имеющиеся размеры и кол. товаров </br>
+                <#if productNotZero?has_content>
+                    <#list productNotZero as prodSize>
+                        ${prodSize.sizeUser.nameSize} : ${prodSize.count}
+                    </#list>
+                <#else>
+                    Товара в наличии нет.
+                </#if>
+            </label>
+        </div>
+
 
         <div class="form-group row">
             <label class="col-sm-4 col-form-label mr-2">${Product_category_message} : <#if product??>${product.category.name}</#if></label>
         </div>
 
 
-        <div class="col-sm-4 form-group row">
-            <label for="exampleFormControlSelect2 mr-2">${Available_sizes_message} : </label><br>
-            <ul>
-                <#list product.sizeUsers as sizeUsr>
-                    <li>${sizeUsr.nameSize}</li>
-                </#list>
-            </ul>
-        </div>
+        <#--<div class="col-sm-4 form-group row">-->
+            <#--<label for="exampleFormControlSelect2 mr-2">${Available_sizes_message} : </label><br>-->
+            <#--<ul>-->
+                <#--<#list product.sizeUsers as sizeUsr>-->
+                    <#--<li>${sizeUsr.nameSize}</li>-->
+                <#--</#list>-->
+            <#--</ul>-->
+        <#--</div>-->
 
 
         <div class="form-group row">
@@ -89,7 +99,7 @@
             </#if>
 
             <#if (user.role.name == 'user')>
-                <a type="button" class="btn btn-primary ml-2" <#if product??>href="/order/create_order/${product.id}"</#if>>${Place_your_order_message}</a>
+                <a type="button" class="btn btn-primary ml-2" <#if product??>href="/order/add_product_in_cart/${product.id}"</#if>>${Place_your_order_message}</a>
             </#if>
         </div>
         <input type="hidden" value="${_csrf.token}" name="_csrf">

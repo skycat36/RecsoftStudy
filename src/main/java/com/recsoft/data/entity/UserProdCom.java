@@ -17,18 +17,18 @@ public class UserProdCom implements Comparable<UserProdCom> {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @ApiModelProperty(notes = "Комментарий на товар.",name="comment",required=true)
+    @ApiModelProperty(notes = "Комментарий на товар.", name="comment", required=true)
     @Length(max = 255)
     @NotBlank
     private String comment;
 
-    @ApiModelProperty(notes = "Ссылка на пользователя сделавшего заказ.",name="user",required=true)
+    @ApiModelProperty(notes = "Ссылка на пользователя сделавшего заказ.", name="user", required=true)
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id",
             referencedColumnName = "id")
     private User user;
 
-    @ApiModelProperty(notes = "Ссылка на комментируемый продукт",name="product",required=true)
+    @ApiModelProperty(notes = "Ссылка на комментируемый продукт", name="product", required=true)
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "prod_id",
             referencedColumnName = "id")

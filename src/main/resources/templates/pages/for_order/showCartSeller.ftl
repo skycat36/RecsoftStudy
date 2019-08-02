@@ -11,7 +11,6 @@
         <thead>
         <tr>
             <th scope="col">${Login_message}</th>
-            <th scope="col">${Rating_message}</th>
             <th scope="col">${Purse_message}</th>
         </tr>
         </thead>
@@ -20,7 +19,6 @@
         <#list userList as user>
         <tr>
             <td><a href="/order/cart/select_user/${user.id}" class="card-link">${user.login}</a></td>
-            <td>${user.rating}</td>
             <td>${user.cash}</td>
         </tr>
         </#list>

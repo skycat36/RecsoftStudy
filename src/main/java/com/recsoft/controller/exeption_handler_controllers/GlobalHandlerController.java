@@ -25,12 +25,12 @@ public class GlobalHandlerController {
             return isAttachedHacker(((UserException) exception.getCause()).getUser());
         }
 
+
         return null;
     }
 
     private ModelAndView isAttachedHacker(User user){
         return messageGenerator.createMessageForHacker(user.getLanguage());
     }
-
 
 }

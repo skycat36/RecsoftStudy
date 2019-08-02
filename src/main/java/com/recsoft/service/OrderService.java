@@ -1,11 +1,10 @@
 package com.recsoft.service;
 
 import com.recsoft.data.entity.*;
+import com.recsoft.data.exeption.OrderExeption;
+import com.recsoft.data.exeption.ProductExeption;
 import com.recsoft.data.exeption.UserException;
-import com.recsoft.data.repository.OrderRepository;
-import com.recsoft.data.repository.ProductRepository;
-import com.recsoft.data.repository.RoleRepository;
-import com.recsoft.data.repository.StatusRepository;
+import com.recsoft.data.repository.*;
 import com.recsoft.utils.ControllerUtils;
 import com.recsoft.utils.ReadbleUtils;
 import com.recsoft.utils.constants.ConfigureErrors;
@@ -22,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Api(value = "Сервис заказов",
@@ -46,6 +46,27 @@ public class OrderService {
     private RoleRepository roleRepository;
 
     private MessageGenerator messageGenerator;
+
+    private SizeUserRepository sizeUserRepository;
+
+    private ProdSizeRepository prodSizeRepository;
+
+    private OrderProductRepository orderProductRepository;
+
+    @Autowired
+    public void setOrderProductRepository(OrderProductRepository orderProductRepository) {
+        this.orderProductRepository = orderProductRepository;
+    }
+
+    @Autowired
+    public void setProdSizeRepository(ProdSizeRepository prodSizeRepository) {
+        this.prodSizeRepository = prodSizeRepository;
+    }
+
+    @Autowired
+    public void setSizeUserRepository(SizeUserRepository sizeUserRepository) {
+        this.sizeUserRepository = sizeUserRepository;
+    }
 
     @Autowired
     public void setMessageGenerator(MessageGenerator messageGenerator) {
@@ -77,141 +98,221 @@ public class OrderService {
         this.roleRepository = roleRepository;
     }
 
+
+    public Order getUserCart(User user){
+        return orderRepository.findOrderByPayFalseAndUser(user);
+    }
+
+    public ProdSize getProductWithSize(Product product, SizeUser sizeUser){
+        return prodSizeRepository.findAllByProductAndSizeUser(product, sizeUser);
+    }
+
     @ApiOperation(value = "Создать заказ")
-    public void createOrder(
+    public void addProductInCart(
             @ApiParam(value = "Id выбранного продукта.", required = true) Long idProduct,
-            @ApiParam(value = "Адрес куда отправлять продукт.", required = true) String adress,
+            @ApiParam(value = "Адрес куда отправлять продукт.", required = true) Long sizeUser,
             @ApiParam(value = "Колличество выбранных продуктов.", required = true) Integer countProd,
-            @ApiParam(value = "Выбранный пользователь.", required = true) User user){
-        Product product = productRepository.findById(idProduct).get();
+            @ApiParam(value = "Выбранный пользователь.", required = true) User user) throws OrderExeption {
 
-        Status status = statusRepository.findById(DEFAULT_STATUS_ORDER).get();
+        Product product = productRepository.findById(idProduct).orElse(null);
 
-        Order order = new Order(product, user, status, adress, countProd, false);
+        SizeUser sUser = sizeUserRepository.getOne(sizeUser);
 
-        product.setCount(product.getCount() - countProd);
+        Order order = this.getUserCart(user);
+
+        ProdSize prodSize = prodSizeRepository.findAllByProductAndSizeUser(product, sUser);
+
+        if (product == null || sUser == null || order == null || prodSize == null){
+            throw new OrderExeption("Одна из сущностей для добавления продукта в корзину пустая.");
+        }
+
+        OrderProduct orderProduct = new OrderProduct(order, product, sUser, countProd);
+
+        order.getOrderProducts().add(orderProduct);
+
+        prodSize.setCount(prodSize.getCount() - countProd);
+
+        orderProductRepository.save(orderProduct);
+
+        prodSizeRepository.save(prodSize);
+
         productRepository.save(product);
 
         order = orderRepository.save(order);
         log.info("Заказ " + order.getId() + " добавлен в корзину");
     }
 
-    @ApiOperation(value = "Удалить оплаченный заказ.")
+    @ApiOperation(value = "Удалить оплаченный заказы.")
     public void deletePayOrder(
             @ApiParam(value = "Id заказа который надо удалить", required = true) Long idOrder,
-            @ApiParam(value = "Id пользователя у которого удаляют заказ", required = true) Long idUser){
+            @ApiParam(value = "Id пользователя у которого удаляют заказ", required = true) Long idUser) throws OrderExeption{
 
-        Order order = orderRepository.findById(idOrder).get();
+        Order order = orderRepository.findById(idOrder).orElse(null);
 
-        Product product = order.getProduct();
+        if (order == null){
+            throw new OrderExeption("Заказа с id " + idOrder + " нет");
+        }
 
-        Integer addCash = Integer.parseInt(String.valueOf(Math.round(product.getPrice() * order.getCount())));
+        List<OrderProduct> products = new ArrayList<>(order.getOrderProducts());
 
-        product.setCount(product.getCount() + order.getCount());
+        if (order.getStatus().getName().equals(Status.NOT_DONE)) {
+            int addCash = 0;
+            for (OrderProduct orderProduct: products){
+                addCash += Integer.parseInt(String.valueOf(Math.round(orderProduct.getProduct().getPrice() * orderProduct.getCount())));
 
-        productRepository.save(product);
+                ProdSize prodSize = this.getProductWithSize(orderProduct.getProduct(), orderProduct.getSizeUser());
+                prodSize.setCount(prodSize.getCount() + orderProduct.getCount());
+
+                prodSizeRepository.save(prodSize);
+            }
+
+            userService.addCashUser(idUser, addCash);
+        }
+
+
+        orderProductRepository.deleteAllByOrder(order);
+        orderRepository.deleteOrderById(idOrder);
+        log.info("Заказ с id = " + idOrder + " удален.");
+    }
+
+    public void deletePayProductInOrder(Long idOrderProduct, Long idUser) throws OrderExeption {
+        OrderProduct orderProduct = orderProductRepository.getOne(idOrderProduct);
+
+        if (orderProduct == null){
+            throw new OrderExeption("Продукта в корзине с id " + idOrderProduct + " нет");
+        }
+
+        ProdSize prodSize = this.getProductWithSize(orderProduct.getProduct(), orderProduct.getSizeUser());
+
+        prodSize.setCount(prodSize.getCount() + orderProduct.getCount());
+
+        int addCash = 0;
+
+        addCash = Integer.parseInt(String.valueOf(Math.round(orderProduct.getProduct().getPrice() * orderProduct.getCount())));
 
         userService.addCashUser(idUser, addCash);
 
-        orderRepository.deleteOrderById(idOrder);
-        log.info("Заказ с id = " + idOrder + " удален.");
+        prodSizeRepository.save(prodSize);
+
+        orderProductRepository.deleteById(idOrderProduct);
+        log.info("Продукт в корзине с id = " + idOrderProduct + " удален.");
     }
 
-    @ApiOperation(value = "Удалить неоплаченный заказ.")
+    public void deleteNotPayProductInOrder(Long idOrderProduct) throws OrderExeption {
+        OrderProduct orderProduct = orderProductRepository.getOne(idOrderProduct);
+
+        if (orderProduct == null){
+            throw new OrderExeption("Продукта в корзине с id " + idOrderProduct + " нет");
+        }
+
+        ProdSize prodSize = this.getProductWithSize(orderProduct.getProduct(), orderProduct.getSizeUser());
+
+        prodSize.setCount(prodSize.getCount() + orderProduct.getCount());
+
+        prodSizeRepository.save(prodSize);
+
+        orderProductRepository.deleteById(idOrderProduct);
+        log.info("Продукт в корзине с id = " + idOrderProduct + " удален.");
+    }
+
+
+
+    @ApiOperation(value = "Удалить неоплаченный заказы.")
     public void deleteOrderWhoNotPay(
-            @ApiParam(value = "Id заказа который надо удалить", required = true) Long idOrder){
+            @ApiParam(value = "Id заказа который надо удалить", required = true) Long idOrder) throws OrderExeption{
 
-        Order order = orderRepository.findById(idOrder).get();
+        Order order = orderRepository.findById(idOrder).orElse(null);
 
-        Product product = order.getProduct();
+        if (order == null){
+            throw new OrderExeption("Заказа с id " + idOrder + " нет");
+        }
 
-        product.setCount(product.getCount() + order.getCount());
+        List<OrderProduct> products = new ArrayList<>(order.getOrderProducts());
 
-        productRepository.save(product);
+        for (OrderProduct orderProduct: products){
 
+            ProdSize prodSize = this.getProductWithSize(orderProduct.getProduct(), orderProduct.getSizeUser());
+            prodSize.setCount(prodSize.getCount() + orderProduct.getCount());
+
+            prodSizeRepository.save(prodSize);
+        }
+
+
+        orderProductRepository.deleteAllByOrder(order);
         orderRepository.deleteOrderById(idOrder);
         log.info("Заказ с id = " + idOrder + " удален.");
     }
 
-    @ApiOperation(value = "Обновить количество сделанных заказов заказ.")
+    @ApiOperation(value = "Обновить количество сделанных заказов.")
     public void updateCountOrderWhoNotPay(
-            @ApiParam(value = "Id заказа который надо обновить.", required = true) long idOrder,
-            @ApiParam(value = "Обновленное количество товаров.", required = true) int countNewProd){
+            @ApiParam(value = "Id заказа который надо обновить.", required = true) long idOrderProduct,
+            @ApiParam(value = "Обновленное количество товаров.", required = true) int countNewProd) throws OrderExeption{
 
-        Order order = orderRepository.findById(idOrder).get();
-        Product product = order.getProduct();
+        OrderProduct orderProduct = orderProductRepository.findById(idOrderProduct).orElse(null);
 
-        int realCount = product.getCount() + order.getCount();
+        if (orderProduct == null){
+            throw new OrderExeption("Продукта в корзине с id " + idOrderProduct + " нет");
+        }
 
-        product.setCount(realCount - countNewProd);
-        order.setCount(countNewProd);
+        ProdSize prodSize = prodSizeRepository.findAllByProductAndSizeUser(orderProduct.getProduct(), orderProduct.getSizeUser());
 
-        productRepository.save(product);
-        orderRepository.save(order);
+        int realCount = prodSize.getCount() + orderProduct.getCount();
 
-        log.info("Заказ с id = " + idOrder + " обновлен.");
+        prodSize.setCount(realCount - countNewProd);
+        orderProduct.setCount(countNewProd);
+
+        prodSizeRepository.save(prodSize);
+        orderProductRepository.save(orderProduct);
+
+        log.info("Продукта в корзине с id = " + orderProduct.getId() + " обновлен.");
     }
 
     @ApiOperation(value = "Проверить правильность выбора количества товаров.")
     public boolean proveCountOrderedProduct(
-            @ApiParam(value = "Id заказа у которого проверяется количество товара.", required = true) long idOrder,
-            @ApiParam(value = "Обновленное количество товаров.", required = true) int countProd){
+            @ApiParam(value = "Id заказа у которого проверяется количество товара.", required = true) long idOrderProduct,
+            @ApiParam(value = "Обновленное количество товаров.", required = true) int countProd) throws OrderExeption{
 
-        Order order = orderRepository.findById(idOrder).get();
-        Product product = order.getProduct();
+        OrderProduct orderProduct = orderProductRepository.findById(idOrderProduct).orElse(null);
 
-        if (product.getCount() + order.getCount() < countProd || countProd < 0){
+        if (orderProduct == null){
+            throw new OrderExeption("Продукта в корзине с id " + idOrderProduct + " нет");
+        }
+
+        ProdSize prodSize = prodSizeRepository.findAllByProductAndSizeUser(orderProduct.getProduct(), orderProduct.getSizeUser());
+
+        if (prodSize.getCount() + orderProduct.getCount() < countProd || countProd < 0){
             return false;
         }
         return true;
     }
 
     @ApiOperation(value = "Удалить все неоплаченные заказы.")
-    public void deleteAllOrdersNotPayUser(
-            @ApiParam(value = "Id пользователя у которого удаляют неоплаченные заказы", required = true) Long idUser){
+    public void deleteAllOrderNotPayUser(
+            @ApiParam(value = "Id пользователя у которого удаляют неоплаченные заказы", required = true) Long idUser) throws OrderExeption{
 
         User user = userService.getUserById(idUser);
 
-        List<Order> ordersNotPayUser = orderRepository.findAllByUserAndPayFalse(user);
-        List<Product> productWhoNeedUpdate = new ArrayList<>();
+        Order orderNotPayUser = orderRepository.findOrderByPayFalseAndUser(user);
 
-        for (Order order: ordersNotPayUser){
-            Product product = order.getProduct();
-            product.setCount(product.getCount() + order.getCount());
-            productWhoNeedUpdate.add(product);
+        if (orderNotPayUser == null){
+            throw new OrderExeption("Неоплаченных заказов у пользователя с id " + idUser + " нет");
         }
 
-        productRepository.saveAll(productWhoNeedUpdate);
+        List<ProdSize> productWhoNeedUpdate = new ArrayList<>();
 
-        orderRepository.deleteAllByIdUserNotPay(user.getId());
+        for (OrderProduct orderProduct: orderNotPayUser.getOrderProducts()){
+            ProdSize prodSize = prodSizeRepository.findAllByProductAndSizeUser(orderProduct.getProduct(), orderProduct.getSizeUser());
+            prodSize.setCount(prodSize.getCount() + orderProduct.getCount());
+            productWhoNeedUpdate.add(prodSize);
+        }
+
+        prodSizeRepository.saveAll(productWhoNeedUpdate);
+
+        orderProductRepository.deleteAllByOrder(orderNotPayUser);
+
+        orderRepository.deleteById(orderNotPayUser.getId());
 
         log.info("Заказ с id = " + user.getId() + " удален.");
-    }
-
-    @ApiOperation(value = "Удалить оплаченные заказы пользователя.")
-    public void deleteAllOrdersWhoPayUser(
-            @ApiParam(value = "Id пользователя у которого удаляют оплаченные заказы", required = true) Long idUser){
-
-        User user = userService.getUserById(idUser);
-
-        List<Order> ordersUser = new ArrayList<>(user.getOrders());
-        List<Product> productWhoNeedUpdate = new ArrayList<>();
-
-        double addCash = 0.0;
-
-        for (Order order: ordersUser){
-            Product product = order.getProduct();
-            product.setCount(product.getCount() + order.getCount());
-            productWhoNeedUpdate.add(product);
-            addCash += order.getCount() * order.getProduct().getPrice();
-        }
-
-        productRepository.saveAll(productWhoNeedUpdate);
-
-        userService.addCashUser(idUser, Integer.parseInt(String.valueOf(Math.round(addCash))));
-
-        orderRepository.deleteAllByIdUserPay(user.getId());
-        log.info("Оплаченные заказы пользователя с id = " + user.getUsername() + " удалены.");
     }
 
     @ApiOperation(value = "Возвращает роль по названию.")
@@ -221,9 +322,9 @@ public class OrderService {
     }
 
     @ApiOperation(value = "Заказы сделанные пользователем не оплаченные.")
-    public List<Order> getOrderUserNotPay(
+    public Order getOrderUserNotPay(
             @ApiParam(value = "Пользователь у которого необходимо вернуть неоплаченные заказы", required = true) User user){
-        return orderRepository.findAllByUserAndPayFalse(user);
+        return orderRepository.findOrderByPayFalseAndUser(user);
     }
 
     @ApiOperation(value = "Заказы сделанные пользователем оплаченные.")
@@ -255,8 +356,8 @@ public class OrderService {
             @ApiParam(value = "Адрес куда отправлять продукт.", required = true) String adress,
             @ApiParam(value = "Информация об ошибках.", required = true) Map<String, String> errors){
 
-        List<Order> ordersUser = this.getOrderUserNotPay(userService.getUserById(user.getId()));
-        double realPriceOrder = this.calculetePriseForUser(ordersUser);
+        Order orderUser = this.getOrderUserNotPay(userService.getUserById(user.getId()));
+        double realPriceOrder = this.calculetePriseForUser(orderUser);
         adress = adress.trim();
 
         user = userService.getUserById(user.getId());
@@ -286,14 +387,12 @@ public class OrderService {
         }
 
         if (errors.isEmpty()){
-            for (Order order: ordersUser) {
-                order.setAdress(adress);
-                order.setPay(true);
-            }
+            orderUser.setAdress(adress);
+            orderUser.setPay(true);
 
             try {
                 userService.subtractCashUser(language, user, Math.abs(this.roundPriseForUser(realPriceOrder)));
-                orderRepository.saveAll(ordersUser);
+                orderRepository.save(orderUser);
             } catch (UserException userException) {
                 errors.put(ControllerUtils.constructError("price"), userException.getMessage());
             }
@@ -303,11 +402,11 @@ public class OrderService {
 
     @ApiOperation(value = "Сумма цен сделаных пользователем заказов.")
     public double calculetePriseForUser(
-            @ApiParam(value = "Список заказов пользователя.", required = true) List<Order> ordersUser){
+            @ApiParam(value = "Список заказов пользователя.", required = true) Order orderUser){
         double prise = 0.0;
 
-        for (Order order: ordersUser){
-            prise += order.getCount() * order.getProduct().getPrice();
+        for (OrderProduct orderProduct: orderUser.getOrderProducts()){
+            prise += orderProduct.getCount() * orderProduct.getProduct().getPrice();
         }
 
         return prise;

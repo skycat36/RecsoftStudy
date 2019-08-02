@@ -18,20 +18,15 @@ import java.util.List;
 @Transactional
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-    List<Order> findAllByUserAndPayFalse(User user);
-
     List<Order> findAllByUserAndPayTrue(User user);
 
     List<Order> findAllByUser(User user);
 
+    Order findOrderByPayFalseAndUser(User user);
+
     @Modifying
     @Query(value = "DELETE from order_m ord_m where ord_m.id = :idOrder", nativeQuery = true)
     void deleteOrderById(@Param("idOrder") Long idOrder);
-
-
-    @Modifying
-    @Query(value = "DELETE from order_m ord_m where ord_m.user_id = :idUser and ord_m.pay = false", nativeQuery = true)
-    void deleteAllByIdUserNotPay(@Param("idUser") Long idUser);
 
     @Modifying
     @Query(value = "DELETE from order_m ord_m where ord_m.user_id = :idUser and ord_m.pay = true", nativeQuery = true)

@@ -9,8 +9,6 @@ import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import java.util.Set;
 
-/* Размеры продукта.
- * @author Евгений Попов */
 @Entity
 @Table(name = "size_usr")
 @ApiModel(description = "Размер продукта.")
@@ -27,20 +25,32 @@ public class SizeUser {
     @Length(max = 50)
     private String nameSize;
 
+
+    @OneToMany(mappedBy = "sizeUser", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<OrderProduct> orderProducts;
+
+
     @ApiModelProperty(notes = "Ссылка на продукты с таким размером.", name="products", required=true)
     @JsonIgnore
-    @ManyToMany
-    @JoinTable (name="prod_size",
-            joinColumns=@JoinColumn (name="id_size"),
-            inverseJoinColumns=@JoinColumn(name="id_prod"))
-    private Set<Product> products;
+    @OneToMany(mappedBy = "sizeUser", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Set<ProdSize> products;
+
+
+    @JsonIgnore
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable (name="categ_size",
+            joinColumns=@JoinColumn (name="id_category"),
+            inverseJoinColumns=@JoinColumn(name="id_size"))
+    private Set<Category> categories;
 
     public SizeUser() {
     }
 
-    public SizeUser(@NotBlank @Length(max = 50) String nameSize, Set<Product> products) {
+    public SizeUser(@NotBlank @Length(max = 50) String nameSize, Set<OrderProduct> orderProducts, Set<ProdSize> products, Set<Category> categories) {
         this.nameSize = nameSize;
+        this.orderProducts = orderProducts;
         this.products = products;
+        this.categories = categories;
     }
 
     public Long getId() {
@@ -59,11 +69,27 @@ public class SizeUser {
         this.nameSize = nameSize;
     }
 
-    public Set<Product> getProducts() {
+    public Set<ProdSize> getProducts() {
         return products;
     }
 
-    public void setProducts(Set<Product> products) {
+    public void setProducts(Set<ProdSize> products) {
         this.products = products;
+    }
+
+    public Set<OrderProduct> getOrderProducts() {
+        return orderProducts;
+    }
+
+    public void setOrderProducts(Set<OrderProduct> orderProducts) {
+        this.orderProducts = orderProducts;
+    }
+
+    public Set<Category> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(Set<Category> categories) {
+        this.categories = categories;
     }
 }

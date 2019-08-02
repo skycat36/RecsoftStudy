@@ -23,27 +23,50 @@
     </div>
 
     <div class="form-group row">
-        <label class="col-form-label">${Amount_of_goods_message} : <#if product??>${product.count}</#if></label>
+        <label class="col-form-label">Имеющиеся размеры и кол. товаров </br>
+            <#list productNotZero as prodSize>
+                ${prodSize.sizeUser.nameSize} : ${prodSize.count}
+            </#list>
+        </label>
     </div>
 
-<form action="/order/create_order/${product.id}" method="post">
-    <div class="form-group row">
+    <#if productNotZero?has_content>
+        <form action="/order/add_product_in_cart/${product.id}" method="post">
 
-        <label class="col-form-label">${Number_of_selected_items_message} : </label>
-        <div class="col-sm-3">
-            <input type="number" name="count" min="1" step="1" value="<#if count??>${count}</#if>"
-                   class="form-control small ${(countError??)?string('is-invalid', '')}"
-                   placeholder="${Amount_of_goods}"/>
-            <#if countError??>
-                <div class="invalid-feedback">
-                    ${countError}
+            <div class="form-group row">
+                <label class="col-form-label">Выберите размер : </label>
+                    <select class="custom-select col-sm-4" name="sizeProd" required>
+                        <#list productNotZero as prodSize>
+                            <option value="${prodSize.sizeUser.id}"
+                                    <#if selProd??><#if selProd.id == prodSize.sizeUser.id>selected</#if></#if>>
+                                ${prodSize.sizeUser.nameSize}
+                            </option>
+                        </#list>
+                    </select>
+            </div>
+
+            <div class="form-group row" id="countProduct">
+
+                <label class="col-form-label">${Number_of_selected_items_message} : </label>
+                <div class="col-sm-3">
+                    <input type="number" name="count" min="1" step="1" value="<#if count??>${count}</#if>"
+                           class="form-control small ${(countError??)?string('is-invalid', '')}"
+                           placeholder="${Amount_of_goods}"/>
+                    <#if countError??>
+                        <div class="invalid-feedback">
+                            ${countError}
+                        </div>
+                    </#if>
                 </div>
-            </#if>
-        </div>
-    </div>
+            </div>
 
-    <div class="col-sm-4"><button type="submit" class="btn btn-outline-primary">${Throw_to_cart_message}</button></div>
-    <input type="hidden" name="_csrf" value="${_csrf.token}" />
-</form>
+            <div class="col-sm-4"><button type="submit" class="btn btn-outline-primary">${Throw_to_cart_message}</button></div>
+            <input type="hidden" name="_csrf" value="${_csrf.token}" />
+        </form>
+    <#else>
+        <div class="form-group row">
+            <label class="col-form-label">Товара в наличии нет.</label>
+        </div>
+    </#if>
 
 </@c.page>

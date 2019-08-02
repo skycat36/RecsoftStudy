@@ -3,6 +3,7 @@ package com.recsoft.data.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.hibernate.validator.constraints.Length;
 
 import javax.persistence.*;
@@ -15,6 +16,11 @@ import java.util.Set;
 @Table(name = "status")
 @ApiModel(description = "Статус заказа.")
 public class Status  {
+
+    @ApiModelProperty(notes = "Константы названия имеющихся ролей.", required=true)
+    @Ignore
+    @Transient
+    public static final String DONE = "done", NOT_DONE = "not_done", IN_PROCESS = "in_process";
 
     @ApiModelProperty(notes = "Идентификатор обьекта.", name="id", required=true)
     @Id

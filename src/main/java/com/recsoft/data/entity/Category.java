@@ -29,12 +29,21 @@ public class Category {
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<Product> products;
 
+    @JsonIgnore
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable (name="categ_size",
+            joinColumns=@JoinColumn (name="id_size"),
+            inverseJoinColumns=@JoinColumn(name="id_category"))
+    private Set<SizeUser> sizeUsers;
+
+
     public Category() {
     }
 
-    public Category(@NotBlank(message = "Name category cannot be empty") @Length(max = 255) String name, Set<Product> products) {
+    public Category(@NotBlank @Length(max = 255) String name, Set<Product> products, Set<SizeUser> sizeUsers) {
         this.name = name;
         this.products = products;
+        this.sizeUsers = sizeUsers;
     }
 
     public Long getId() {
@@ -59,5 +68,13 @@ public class Category {
 
     public void setProducts(Set<Product> products) {
         this.products = products;
+    }
+
+    public Set<SizeUser> getSizeUsers() {
+        return sizeUsers;
+    }
+
+    public void setSizeUsers(Set<SizeUser> sizeUsers) {
+        this.sizeUsers = sizeUsers;
     }
 }

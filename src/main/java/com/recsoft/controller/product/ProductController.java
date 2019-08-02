@@ -3,6 +3,7 @@ package com.recsoft.controller.product;
 import com.recsoft.aspect.ProveRole;
 import com.recsoft.data.entity.*;
 import com.recsoft.data.exeption.ProductExeption;
+import com.recsoft.data.repository.CategoryRepository;
 import com.recsoft.service.ProductService;
 import com.recsoft.service.UserService;
 import com.recsoft.utils.ControllerUtils;
@@ -13,10 +14,14 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -45,6 +50,13 @@ public class ProductController {
     private UserService userService;
 
     private MessageGenerator messageGenerator;
+
+    private CategoryRepository categoryRepository;
+
+    @Autowired
+    public void setCategoryRepository(CategoryRepository categoryRepository) {
+        this.categoryRepository = categoryRepository;
+    }
 
     @Autowired
     public void setMessageGenerator(MessageGenerator messageGenerator) {
@@ -95,6 +107,29 @@ public class ProductController {
         return mav;
     }
 
+    @PostMapping(value = "/get_category/{idCategory}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ApiOperation(value = "Вернуть доступные размеры товара по категории.")
+    public ResponseEntity<String> getSizesUsersByCategory(
+            @ApiParam(value = "Id удаляемого заказа.", required = true) @PathVariable Long idCategory
+    ){
+
+        Category category = categoryRepository.getOne(idCategory);
+
+        if (category == null){
+            return new ResponseEntity<>(
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("cashUser", category.getSizeUsers().toArray());
+
+        return new ResponseEntity<>(
+                JSONObject.quote(jsonObject.toString()),
+                HttpStatus.OK
+        );
+    }
+
     @ProveRole(nameRole = {Role.SELLER})
     @GetMapping(value = "/add_product")
     @ApiOperation(value = "Отображает страницу добавления продуктов")
@@ -107,89 +142,8 @@ public class ProductController {
 
         ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "addProduct", mav);
 
-        mav.addObject("listSizeUser", productService.getAllSizeUser());
         mav.addObject("listCategory", productService.getAllCategory());
 
-        return mav;
-    }
-
-
-    @PostMapping("/add_product")
-    @ApiOperation(value = "Добавить продукт в базу.")
-    public ModelAndView addProduct(
-            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user,
-            @ApiParam(value = "Выдергивает продукт с формы.", required = true) @ModelAttribute @Valid Product product,
-            @ApiParam(value = "Сообщения о возможных ошибках.") BindingResult bindingResult,
-            @ApiParam(value = "Категория выбранного продукта.", required = true) @RequestParam Long categoryProd,
-            @ApiParam(value = "Размеры товара выбранного пользователем.", required = true) @RequestParam ArrayList<Long> sizeUsersProd,
-            @ApiParam(value = "Выбранные пользователем файлы картинок.", required = true) @RequestParam("file") List<MultipartFile> file
-    ){
-        Map<String, String> errors = new HashMap<>();
-        ModelAndView mav = new ModelAndView("redirect:/product/product_list");
-
-        user = userService.getUserById(user.getId());
-
-        if (productService.existProduct(product)){
-            errors.put(
-                    ControllerUtils.constructError("name"),
-                    messageGenerator.getMessageErrorFromProperty(
-                            user.getLanguage(),
-                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
-                            ControllerUtils.constructFieldsForProperty(
-                                    "addProduct",
-                                    ConfigureErrors.SELECT_ENTITY_EXIST.toString()
-                            )
-                    )
-            );
-        }
-
-        if (file.size() > 4){
-            errors.put(
-                    ControllerUtils.constructError("message"),
-                    messageGenerator.getMessageErrorProperty(
-                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
-                            ConfigureErrors.COUNT_PHOTO_BEGER.toString(),
-                            "addProduct", user.getLanguage()
-                    )
-            );
-        }
-
-        if (sizeUsersProd == null){
-            errors.put(
-                    ControllerUtils.constructError("sizeUsersProd"),
-                    messageGenerator.getMessageErrorProperty(
-                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
-                            ConfigureErrors.SELECT_SIZE.toString(),
-                            "addProduct", user.getLanguage()
-                    )
-            );
-        }
-
-        if (bindingResult.hasErrors()){
-            errors.putAll(messageGenerator.getErrors(bindingResult, user.getLanguage()));
-        }
-
-        if (errors.isEmpty()) {
-            try {
-                productService.addProduct(user.getLanguage(), product, categoryProd, sizeUsersProd, file);
-            } catch (IOException | ProductExeption e) {
-                log.error(e.getMessage());
-                mav.setViewName("/pages/for_product/addProduct");
-                ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "addProduct", mav);
-
-                this.constructPageActionWithProd(categoryProd, sizeUsersProd, mav);
-                mav.addObject(ControllerUtils.constructError("message"), e.getMessage());
-                mav.addObject("product",product);
-            }
-
-        }else{
-            mav.setViewName("/pages/for_product/addProduct");
-            ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "addProduct", mav);
-
-            this.constructPageActionWithProd(categoryProd, sizeUsersProd, mav);
-            mav.addAllObjects(errors);
-            mav.addObject("product",product);
-        }
         return mav;
     }
 
@@ -271,171 +225,252 @@ public class ProductController {
         mav.addAllObjects(errors);
     }
 
-    @ProveRole(nameRole = {Role.SELLER})
-    @GetMapping("/edit_product/{idProduct}")
-    @ApiOperation(value = "Отобразить страницу для обновления информации о продукте.")
-    public ModelAndView showEditProduct(
-            @ApiParam(value = "Id выбранного продукта.", required = true) @PathVariable String idProduct,
-            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
-    ){
 
-        ModelAndView mav = new ModelAndView("/pages/for_product/editProduct");
+//    @PostMapping("/add_product")
+//    @ApiOperation(value = "Добавить продукт в базу.")
+//    public ModelAndView addProduct(
+//            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user,
+//            @ApiParam(value = "Выдергивает продукт с формы.", required = true) @ModelAttribute @Valid Product product,
+//            @ApiParam(value = "Сообщения о возможных ошибках.") BindingResult bindingResult,
+//            @ApiParam(value = "Категория выбранного продукта.", required = true) @RequestParam Long categoryProd,
+//            @ApiParam(value = "Размеры товара выбранного пользователем.", required = true) @RequestParam ArrayList<Integer> sizeUsersProd,
+//            @ApiParam(value = "Выбранные пользователем файлы картинок.", required = true) @RequestParam("file") List<MultipartFile> file
+//    ){
+//        Map<String, String> errors = new HashMap<>();
+//        ModelAndView mav = new ModelAndView("redirect:/product/product_list");
+//
+//        user = userService.getUserById(user.getId());
+//
+//        if (productService.existProduct(product)){
+//            errors.put(
+//                    ControllerUtils.constructError("name"),
+//                    messageGenerator.getMessageErrorFromProperty(
+//                            user.getLanguage(),
+//                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+//                            ControllerUtils.constructFieldsForProperty(
+//                                    "addProduct",
+//                                    ConfigureErrors.SELECT_ENTITY_EXIST.toString()
+//                            )
+//                    )
+//            );
+//        }
+//
+//        if (file.size() > 4){
+//            errors.put(
+//                    ControllerUtils.constructError("message"),
+//                    messageGenerator.getMessageErrorProperty(
+//                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+//                            ConfigureErrors.COUNT_PHOTO_BEGER.toString(),
+//                            "addProduct", user.getLanguage()
+//                    )
+//            );
+//        }
+//
+//        if (sizeUsersProd == null){
+//            errors.put(
+//                    ControllerUtils.constructError("sizeUsersProd"),
+//                    messageGenerator.getMessageErrorProperty(
+//                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+//                            ConfigureErrors.SELECT_SIZE.toString(),
+//                            "addProduct", user.getLanguage()
+//                    )
+//            );
+//        }
+//
+//        if (bindingResult.hasErrors()){
+//            errors.putAll(messageGenerator.getErrors(bindingResult, user.getLanguage()));
+//        }
+//
+//        if (errors.isEmpty()) {
+//            try {
+//                productService.addProduct(user.getLanguage(), product, categoryProd, sizeUsersProd, file);
+//            } catch (IOException | ProductExeption e) {
+//                log.error(e.getMessage());
+//                mav.setViewName("/pages/for_product/addProduct");
+//                ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "addProduct", mav);
+//
+//                this.constructPageActionWithProd(categoryProd, sizeUsersProd, mav);
+//                mav.addObject(ControllerUtils.constructError("message"), e.getMessage());
+//                mav.addObject("product",product);
+//            }
+//
+//        }else{
+//            mav.setViewName("/pages/for_product/addProduct");
+//            ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "addProduct", mav);
+//
+//            this.constructPageActionWithProd(categoryProd, sizeUsersProd, mav);
+//            mav.addAllObjects(errors);
+//            mav.addObject("product",product);
+//        }
+//        return mav;
+//    }
+//
 
-        user = userService.getUserById(user.getId());
-
-        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "editProduct", mav);
-
-            mav.addObject("listSizeUser", productService.getAllSizeUser());
-            mav.addObject("listCategory", productService.getAllCategory());
-
-            Product product = productService.getProductById(Long.parseLong(idProduct));
-
-            if (product != null) {
-                mav.addObject("price", product.getPrice().toString());
-                mav.addObject("product", product);
-                ArrayList<Long> sizeUsers = new ArrayList<>();
-                for (SizeUser sUser : product.getSizeUsers()) {
-                    sizeUsers.add(sUser.getId());
-                }
-                this.constructPageActionWithProd(product.getCategory().getId(), sizeUsers, mav);
-            } else {
-                mav.addObject(ControllerUtils.constructError("prod"),
-                        messageGenerator.getMessageErrorProperty(
-                                MessageGenerator.FAIL_WHIS_OTHER_ERROR,
-                                ConfigureErrors.SELECT_ENTITY_NOTHIN.toString(),
-                                "showEditProduct",
-                                user.getLanguage()
-                        )
-                );
-                mav.setViewName("redirect:/product/product_list");
-            }
-
-        return mav;
-    }
-
-    @PostMapping("/edit_product/{idProduct}")
-    @ApiOperation(value = "Изменить данные продукта.")
-    public ModelAndView editProduct(
-            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user,
-            @ApiParam(value = "Id выбранного продукта.", required = true) @PathVariable String idProduct,
-            @ApiParam(value = "Выдергивает продукт с формы.", required = true) @ModelAttribute @Valid Product product,
-            @ApiParam(value = "Сообщения о возможных ошибках.", required = true) BindingResult bindingResult,
-            @ApiParam(value = "Id выбранной категории продукта.", required = true) @RequestParam Long categoryProd,
-            @ApiParam(value = "Id выбранных размеров товара.", required = true) @RequestParam ArrayList<Long> sizeUsersProd,
-            @ApiParam(value = "Выбранные пользователем файлы картинок.", required = true) @RequestParam("file") List<MultipartFile> files
-
-    ){
-
-        ModelAndView mav = new ModelAndView("redirect:/product/show_product/" + idProduct);
-
-        user = userService.getUserById(user.getId());
-
-        Product oldProduct = productService.getProductById(Long.parseLong(idProduct));
-
-        if (oldProduct == null) {
-            mav.addObject(ControllerUtils.constructError("prod"),
-                    messageGenerator.getMessageErrorProperty(
-                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
-                            ConfigureErrors.SELECT_ENTITY_NOTHIN.toString(),
-                            "editProduct",
-                            user.getLanguage()
-                    )
-            );
-            mav.setViewName("redirect:/product/product_list");
-
-            return mav;
-        }
-
-        product.setId(oldProduct.getId());
-        Map<String, String> errors = new HashMap<>();
-
-        if (categoryProd == null){
-            errors.put(
-                    ControllerUtils.constructError("categoryProd"),
-                    messageGenerator.getMessageErrorProperty(
-                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
-                            ConfigureErrors.SELECT_CATEGORY.toString(),
-                            "editProduct", user.getLanguage()
-                    )
-            );
-        }
-
-        if (sizeUsersProd.size() == 0){
-            errors.put(
-                    ControllerUtils.constructError("sizeUsersProd"),
-                    messageGenerator.getMessageErrorProperty(
-                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
-                            ConfigureErrors.SELECT_SIZE.toString(),
-                            "editProduct", user.getLanguage()
-                    )
-            );
-        }
-
-        if (files.size() > 4){
-            errors.put(
-                    ControllerUtils.constructError("message"),
-                    messageGenerator.getMessageErrorProperty(
-                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
-                            ConfigureErrors.COUNT_PHOTO_BEGER.toString(),
-                            "editProduct", user.getLanguage()
-                    )
-            );
-        }
-
-        if (bindingResult.hasErrors()){
-            errors.putAll(messageGenerator.getErrors(bindingResult, user.getLanguage()));
-        }
-
-        if (errors.isEmpty()) {
-            try {
-                if (ServiceUtils.proveListOnEmptyFileList(files)) {
-                    productService.deletePhotoProduct(oldProduct.getId());
-                }
-                productService.updateProduct(user.getLanguage(), product, oldProduct, categoryProd, sizeUsersProd, files);
-            } catch (IOException | ProductExeption e) {
-                log.error(e.getMessage());
-
-                mav.setViewName("/pages/for_product/editProduct");
-                ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "editProduct", mav);
-                this.constructPageActionWithProd(categoryProd, sizeUsersProd, mav);
-                mav.addObject(ControllerUtils.constructError("message"), e.getMessage());
-                mav.addObject("product", product);
-            }
-        }else{
-            mav.setViewName("/pages/for_product/editProduct");
-            ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "editProduct", mav);
-            this.constructPageActionWithProd(categoryProd, sizeUsersProd, mav);
-            mav.addAllObjects(errors);
-            mav.addObject("product",product);
-        }
-
-        return mav;
-    }
-
-    @ApiOperation(value = "Дописывает информацию необходимую для выбора продукта.")
-    private void constructPageActionWithProd(
-            @ApiParam(value = "Категория продукта.", required = true) Long categoryProd,
-            @ApiParam(value = "Размеры товара.", required = true) ArrayList<Long> sizeUsersProd,
-            @ApiParam(value = "Модель хранящая параметры для передачи на экран.", required = true) ModelAndView mav) {
-
-        mav.addObject("listSizeUser", productService.getAllSizeUser());
-        mav.addObject("listCategory", productService.getAllCategory());
-        mav.addObject("sizeUsersProd", sizeUsersProd);
-        mav.addObject("categoryProd", categoryProd);
-    }
-
-    @GetMapping("/download/{idProduct}")
-    @ApiOperation(value = "Скачать изображение товара.")
-    public void downloadFile(
-            @ApiParam(value = "Для передачи файла на сторону клиента и информации о нем.", required = true) HttpServletResponse resonse,
-            @ApiParam(value = "Id выбранного продукта.", required = true) @PathVariable String idProduct) throws IOException {
-
-        Product product = productService.getProductById(Long.parseLong(idProduct));
-
-        PhotoProduct photoProduct = product.getPhotoProducts().stream().findFirst().get();
-
-        String path = uploadPath + "/" + photoProduct.getName();
-        ServiceUtils.downloadFile(resonse, path);
-    }
+//    @ProveRole(nameRole = {Role.SELLER})
+//    @GetMapping("/edit_product/{idProduct}")
+//    @ApiOperation(value = "Отобразить страницу для обновления информации о продукте.")
+//    public ModelAndView showEditProduct(
+//            @ApiParam(value = "Id выбранного продукта.", required = true) @PathVariable String idProduct,
+//            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
+//    ){
+//
+//        ModelAndView mav = new ModelAndView("/pages/for_product/editProduct");
+//
+//        user = userService.getUserById(user.getId());
+//
+//        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "editProduct", mav);
+//
+//        mav.addObject("listSizeUser", productService.getAllSizeUser());
+//        mav.addObject("listCategory", productService.getAllCategory());
+//
+//        Product product = productService.getProductById(Long.parseLong(idProduct));
+//
+//        if (product != null) {
+//            mav.addObject("price", product.getPrice().toString());
+//            mav.addObject("product", product);
+//            ArrayList<Long> sizeUsers = new ArrayList<>();
+//            for (SizeUser sUser : product.getSizeUsers()) {
+//                sizeUsers.add(sUser.getId());
+//            }
+//            this.constructPageActionWithProd(product.getCategory().getId(), sizeUsers, mav);
+//        } else {
+//            mav.addObject(ControllerUtils.constructError("prod"),
+//                    messageGenerator.getMessageErrorProperty(
+//                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+//                            ConfigureErrors.SELECT_ENTITY_NOTHIN.toString(),
+//                            "showEditProduct",
+//                            user.getLanguage()
+//                    )
+//            );
+//            mav.setViewName("redirect:/product/product_list");
+//        }
+//
+//        return mav;
+//    }
+//
+//    @PostMapping("/edit_product/{idProduct}")
+//    @ApiOperation(value = "Изменить данные продукта.")
+//    public ModelAndView editProduct(
+//            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user,
+//            @ApiParam(value = "Id выбранного продукта.", required = true) @PathVariable String idProduct,
+//            @ApiParam(value = "Выдергивает продукт с формы.", required = true) @ModelAttribute @Valid Product product,
+//            @ApiParam(value = "Сообщения о возможных ошибках.", required = true) BindingResult bindingResult,
+//            @ApiParam(value = "Id выбранной категории продукта.", required = true) @RequestParam Long categoryProd,
+//            @ApiParam(value = "Id выбранных размеров товара.", required = true) @RequestParam ArrayList<Long> sizeUsersProd,
+//            @ApiParam(value = "Выбранные пользователем файлы картинок.", required = true) @RequestParam("file") List<MultipartFile> files
+//
+//    ){
+//
+//        ModelAndView mav = new ModelAndView("redirect:/product/show_product/" + idProduct);
+//
+//        user = userService.getUserById(user.getId());
+//
+//        Product oldProduct = productService.getProductById(Long.parseLong(idProduct));
+//
+//        if (oldProduct == null) {
+//            mav.addObject(ControllerUtils.constructError("prod"),
+//                    messageGenerator.getMessageErrorProperty(
+//                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+//                            ConfigureErrors.SELECT_ENTITY_NOTHIN.toString(),
+//                            "editProduct",
+//                            user.getLanguage()
+//                    )
+//            );
+//            mav.setViewName("redirect:/product/product_list");
+//
+//            return mav;
+//        }
+//
+//        product.setId(oldProduct.getId());
+//        Map<String, String> errors = new HashMap<>();
+//
+//        if (categoryProd == null){
+//            errors.put(
+//                    ControllerUtils.constructError("categoryProd"),
+//                    messageGenerator.getMessageErrorProperty(
+//                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+//                            ConfigureErrors.SELECT_CATEGORY.toString(),
+//                            "editProduct", user.getLanguage()
+//                    )
+//            );
+//        }
+//
+//        if (sizeUsersProd.size() == 0){
+//            errors.put(
+//                    ControllerUtils.constructError("sizeUsersProd"),
+//                    messageGenerator.getMessageErrorProperty(
+//                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+//                            ConfigureErrors.SELECT_SIZE.toString(),
+//                            "editProduct", user.getLanguage()
+//                    )
+//            );
+//        }
+//
+//        if (files.size() > 4){
+//            errors.put(
+//                    ControllerUtils.constructError("message"),
+//                    messageGenerator.getMessageErrorProperty(
+//                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+//                            ConfigureErrors.COUNT_PHOTO_BEGER.toString(),
+//                            "editProduct", user.getLanguage()
+//                    )
+//            );
+//        }
+//
+//        if (bindingResult.hasErrors()){
+//            errors.putAll(messageGenerator.getErrors(bindingResult, user.getLanguage()));
+//        }
+//
+//        if (errors.isEmpty()) {
+//            try {
+//                if (ServiceUtils.proveListOnEmptyFileList(files)) {
+//                    productService.deletePhotoProduct(oldProduct.getId());
+//                }
+//                productService.updateProduct(user.getLanguage(), product, oldProduct, categoryProd, sizeUsersProd, files);
+//            } catch (IOException | ProductExeption e) {
+//                log.error(e.getMessage());
+//
+//                mav.setViewName("/pages/for_product/editProduct");
+//                ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "editProduct", mav);
+//                this.constructPageActionWithProd(categoryProd, sizeUsersProd, mav);
+//                mav.addObject(ControllerUtils.constructError("message"), e.getMessage());
+//                mav.addObject("product", product);
+//            }
+//        }else{
+//            mav.setViewName("/pages/for_product/editProduct");
+//            ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "editProduct", mav);
+//            this.constructPageActionWithProd(categoryProd, sizeUsersProd, mav);
+//            mav.addAllObjects(errors);
+//            mav.addObject("product",product);
+//        }
+//
+//        return mav;
+//    }
+//
+//    @ApiOperation(value = "Дописывает информацию необходимую для выбора продукта.")
+//    private void constructPageActionWithProd(
+//            @ApiParam(value = "Категория продукта.", required = true) Long categoryProd,
+//            @ApiParam(value = "Размеры товара.", required = true) ArrayList<Long> sizeUsersProd,
+//            @ApiParam(value = "Модель хранящая параметры для передачи на экран.", required = true) ModelAndView mav) {
+//
+//        mav.addObject("listSizeUser", productService.getAllSizeUser());
+//        mav.addObject("listCategory", productService.getAllCategory());
+//        mav.addObject("sizeUsersProd", sizeUsersProd);
+//        mav.addObject("categoryProd", categoryProd);
+//    }
+//
+//    @GetMapping("/download/{idProduct}")
+//    @ApiOperation(value = "Скачать изображение товара.")
+//    public void downloadFile(
+//            @ApiParam(value = "Для передачи файла на сторону клиента и информации о нем.", required = true) HttpServletResponse resonse,
+//            @ApiParam(value = "Id выбранного продукта.", required = true) @PathVariable String idProduct) throws IOException {
+//
+//        Product product = productService.getProductById(Long.parseLong(idProduct));
+//
+//        PhotoProduct photoProduct = product.getPhotoProducts().stream().findFirst().get();
+//
+//        String path = uploadPath + "/" + photoProduct.getName();
+//        ServiceUtils.downloadFile(resonse, path);
+//    }
 
 }

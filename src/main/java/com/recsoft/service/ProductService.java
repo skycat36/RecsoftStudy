@@ -19,9 +19,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Api(value = "Сервис продуктов",
@@ -125,11 +127,11 @@ public class ProductService {
             @ApiParam(value = "Генератор сообщений пользователя.", required = true) Language language,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Product product,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Long idCategory,
-            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<Long> idSizeUser,
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<Integer> countSizesProduct,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<MultipartFile> files) throws IOException, ProductExeption {
 
         if (product != null){
-            this.createRelationsForParamersProduct(language, idCategory, product, idSizeUser, files);
+            this.createRelationsForParamersProduct(language, idCategory, product, countSizesProduct, files);
             productRepository.save(product);
             log.info("Product with name " + product.getName() + " was added.");
         }else {
@@ -141,7 +143,7 @@ public class ProductService {
             @ApiParam(value = "Генератор сообщений пользователя.", required = true) Language language,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Long idCategory,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Product product,
-            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<Long> idSizeUser,
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<Integer> countSizesProduct,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<MultipartFile> files) throws IOException, ProductExeption {
 
         Category category = categoryRepository.findById(idCategory).orElse(null);
@@ -158,24 +160,16 @@ public class ProductService {
 
         product.setCategory(category);
 
-        if (idSizeUser.isEmpty()){
-            throw new ProductExeption(
-                    messageGenerator.getMessageErrorProperty(
-                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
-                            ConfigureErrors.SELECT_SIZE.toString(),
-                            "createRelationsForParamersProduct",
-                            language
-                    )
-            );
+        Set<ProdSize> prodSizes = new HashSet<>();
+        List<SizeUser> sizeUserList = new ArrayList<>(product.getCategory().getSizeUsers());
+
+        for (int i = 0; i < sizeUserList.size(); i++){
+
+            ProdSize prodSize = new ProdSize(countSizesProduct.get(i), product, sizeUserList.get(i));
+            prodSizes.add(prodSize);
         }
 
-        Set<SizeUser> sizeUserSet = new HashSet<>();
-        for (SizeUser sizeUser: sizeUserRepository.findAll()){
-            if (idSizeUser.contains(sizeUser.getId())){
-                sizeUserSet.add(sizeUser);
-            }
-        }
-        product.setSizeUsers(sizeUserSet);
+        product.setProdSizes(prodSizes);
 
         if (ServiceUtils.proveListOnEmptyFileList(files)) {
             Set<PhotoProduct> photoProductSet = new HashSet<>();
@@ -238,17 +232,28 @@ public class ProductService {
             @ApiParam(value = "Обновленный продукт", required = true) Product productReal,
             @ApiParam(value = "Текущий продукт", required = true) Product productOld,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Long idCategory,
-            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<Long> idSizeUser,
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<Integer> countSizesProduct,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<MultipartFile> files) throws IOException, ProductExeption {
 
-        this.createRelationsForParamersProduct(language, idCategory, productOld, idSizeUser, files);
+        this.createRelationsForParamersProduct(language, idCategory, productOld, countSizesProduct, files);
 
-        productOld.setCount(productReal.getCount());
+        productOld.setProdSizes(productReal.getProdSizes());
         productOld.setDiscount(productReal.getDiscount());
         productOld.setDescription(productReal.getDescription());
         productOld.setPrice(productReal.getPrice());
         productOld.setName(productReal.getName());
         productRepository.save(productOld);
         log.info("Product with Id " + productReal.getId() + " was update.");
+    }
+
+    public List<ProdSize> getRealProductWhatCountNotZero(Product product){
+        return product.getProdSizes()
+                .stream()
+                .filter(x -> x.getCount() > 0)
+                .collect(Collectors.toList());
+    }
+
+    public SizeUser getSizeUserById(Long idSizeUser){
+        return sizeUserRepository.getOne(idSizeUser);
     }
 }

@@ -11,8 +11,6 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.Set;
 
-/* Информация о товаре
- * @author Евгений Попов */
 @Entity
 @Table(name = "product")
 @ApiModel(description = "Данные о продукте.")
@@ -40,11 +38,6 @@ public class Product {
                 inverseJoinColumns=@JoinColumn(name="user_id"))
     private Set<User> users;
 
-    @ApiModelProperty(notes = "Список сделанных заказов на товар.", name="orders", required=true)
-    @JsonIgnore
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private Set<Order> orders;
-
     @ApiModelProperty(notes = "Ссылка на категорию товара.", name="category", required=true)
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(referencedColumnName = "id")
@@ -56,11 +49,13 @@ public class Product {
     private Set<UserProdCom> coments;
 
     @ApiModelProperty(notes = "Список ссылок на имеющиеся размеры товара.", name="sizeUsers", required=true)
-    @ManyToMany
-    @JoinTable (name="prod_size",
-            joinColumns=@JoinColumn (name="id_prod"),
-            inverseJoinColumns=@JoinColumn(name="id_size"))
-    private Set<SizeUser> sizeUsers;
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Set<ProdSize> prodSizes;
+
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<OrderProduct> orderProducts;
+
 
     @ApiModelProperty(notes = "Цена за товар.", name="price", required=true)
     @Min(value = 0)
@@ -72,19 +67,6 @@ public class Product {
     @NotNull
     private Integer discount;
 
-    @ApiModelProperty(notes = "Лайки.", name="like", required=true)
-    @Column(name = "like_p")
-    private Integer like;
-
-    @ApiModelProperty(notes = "Дизлайки.", name="dislike", required=true)
-    @Column(name = "dislike_p")
-    private Integer dislike;
-
-    @ApiModelProperty(notes = "Количество имеюихся товаров.", name="count", required=true)
-    @Min(value = 0)
-    @NotNull
-    private Integer count;
-
     @ApiModelProperty(notes = "Фотографии товара.", name="photoProducts", required=true)
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<PhotoProduct> photoProducts;
@@ -92,28 +74,17 @@ public class Product {
     public Product() {
     }
 
-    public Product(@NotBlank @Length(max = 255) String name, @NotBlank @Length(max = 255) String description, Set<User> users, Set<Order> orders, Category category, Set<UserProdCom> coments, Set<SizeUser> sizeUsers, @Min(value = 0) @NotNull Double price, @Min(value = 0) @NotNull Integer discount, Integer like, Integer dislike, @Min(value = 0) @NotNull Integer count, Set<PhotoProduct> photoProducts) {
+    public Product(@NotBlank @Length(max = 255) String name, @NotBlank @Length(max = 255) String description, Set<User> users, Category category, Set<UserProdCom> coments, Set<ProdSize> prodSizes, Set<OrderProduct> orderProducts, @Min(value = 0) @NotNull Double price, @Min(value = 0) @NotNull Integer discount, Set<PhotoProduct> photoProducts) {
         this.name = name;
         this.description = description;
         this.users = users;
-        this.orders = orders;
         this.category = category;
         this.coments = coments;
-        this.sizeUsers = sizeUsers;
+        this.prodSizes = prodSizes;
+        this.orderProducts = orderProducts;
         this.price = price;
         this.discount = discount;
-        this.like = like;
-        this.dislike = dislike;
-        this.count = count;
         this.photoProducts = photoProducts;
-    }
-
-    public Set<SizeUser> getSizeUsers() {
-        return sizeUsers;
-    }
-
-    public void setSizeUsers(Set<SizeUser> sizeUsers) {
-        this.sizeUsers = sizeUsers;
     }
 
     public Long getId() {
@@ -148,14 +119,6 @@ public class Product {
         this.users = users;
     }
 
-    public Set<Order> getOrders() {
-        return orders;
-    }
-
-    public void setOrders(Set<Order> orders) {
-        this.orders = orders;
-    }
-
     public Category getCategory() {
         return category;
     }
@@ -180,30 +143,6 @@ public class Product {
         this.discount = discount;
     }
 
-    public Integer getLike() {
-        return like;
-    }
-
-    public void setLike(Integer like) {
-        this.like = like;
-    }
-
-    public Integer getDislike() {
-        return dislike;
-    }
-
-    public void setDislike(Integer dislike) {
-        this.dislike = dislike;
-    }
-
-    public Integer getCount() {
-        return count;
-    }
-
-    public void setCount(Integer count) {
-        this.count = count;
-    }
-
     public Set<PhotoProduct> getPhotoProducts() {
         return photoProducts;
     }
@@ -218,5 +157,21 @@ public class Product {
 
     public void setComents(Set<UserProdCom> coments) {
         this.coments = coments;
+    }
+
+    public Set<OrderProduct> getOrderProducts() {
+        return orderProducts;
+    }
+
+    public void setOrderProducts(Set<OrderProduct> orderProducts) {
+        this.orderProducts = orderProducts;
+    }
+
+    public Set<ProdSize> getProdSizes() {
+        return prodSizes;
+    }
+
+    public void setProdSizes(Set<ProdSize> prodSizes) {
+        this.prodSizes = prodSizes;
     }
 }

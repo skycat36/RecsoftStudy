@@ -62,7 +62,7 @@
             <div class="card-body">
                 <a href="/product/show_product/${product.id}" class="card-link">${Look_message}</a>
                 <#if (user.role.name == 'user')>
-                    <a href="/order/create_order/${product.id}" class="card-link">${Add_to_cart_message}</a>
+                    <a href="/order/add_product_in_cart/${product.id}" class="card-link">${Add_to_cart_message}</a>
                 </#if>
             </div>
         </div>
