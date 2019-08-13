@@ -23,6 +23,8 @@
                 <th scope="col">${Name_message}</th>
                 <#if isCart>
                     <th scope="col">${Address_message}</th>
+                <#else>
+                    <th scope="col">Размер</th>
                 </#if>
                 <th scope="col">${Price_per_piece_message}</th>
                 <th scope="col">${Number_message}</th>
@@ -33,76 +35,79 @@
             </tr>
             </thead>
             <tbody>
-
-            <#list orderList as order>
-                <tr id="order${order.id}">
-                    <td>
-                        <a href="/product/show_product/${order.product.id}">${order.product.name}</a>
-                    </td>
-                    <#if isCart>
-                        <td>${order.adress}</td>
-                    </#if>
-                    <td>${order.product.price}</td>
-                    <td>
+            <#if productInCartList??>
+                <#list productInCartList as productInCart>
+                    <tr id="order${productInCart.id}">
+                        <td>
+                            <a href="/product/show_product/${productInCart.product.id}">${productInCart.product.name}</a>
+                        </td>
                         <#if isCart>
-                            ${order.count}
+                            <td>${productInCart.order.adress}</td>
                         <#else>
-                            <div>
-                                <input  class="col-sm-10 form-control small"
-                                        type="number" id="countProduct${order.id}" onchange="ajaxPostChangeCountProduct(${order.id})" step="0" min="0"
-                                        max="${order.product.count + order.count}" name="count_p[]" value="${order.count}">
-                            </div>
-
+                            <td>${productInCart.sizeUser.nameSize}</td>
                         </#if>
-                    </td>
-                    <#if isCart>
-                        <td>${listReadbleStatus[order_index]}</td>
-                    </#if>
-                    <td>
-                        <div class="col-sm-4">
-                            <#if isCart><#else></#if>
-                            <button type="button" formmethod="post"
-                                    <#if isCart>
-                                        onclick="ajaxPostDeletePayOrder(${order.id})"
-                                    <#else>
-                                        onclick="ajaxPostDeleteNotPayOrder(${order.id})"
-                                    </#if>
-                                    class="btn btn-outline-primary">${Cancel_the_order_message}</button>
-                        </div>
-                    </td>
-                </tr>
-            </#list>
+                        <td>${productInCart.product.price}</td>
+                        <td>
+                            <#if isCart>
+                                ${productInCart.count}
+                            <#else>
+                                <div>
+                                    <input  class="col-sm-3 form-control small"
+                                            type="number" id="countProduct${productInCart.id}" onchange="ajaxPostChangeCountProduct(${productInCart.id})" step="0" min="0"
+                                            name="count_p[]" value="${productInCart.count}">
+                                </div>
+
+                            </#if>
+                        </td>
+                        <#if isCart>
+                            <td>${listReadbleStatus[productInCart_index]}</td>
+                        </#if>
+                        <td>
+                            <div class="col-sm-2 ml-1">
+                                <#if isCart><#else></#if>
+                                <button type="button" formmethod="post"
+                                        <#if isCart>
+                                            onclick="ajaxPostDeletePayOrder(${productInCart.id})"
+                                        <#else>
+                                            onclick="ajaxPostDeleteNotPayOrder(${productInCart.id})"
+                                        </#if>
+                                        class="btn btn-outline-primary">${Cancel_the_order_message}</button>
+                            </div>
+                        </td>
+                    </tr>
+                </#list>
+            </#if>
 
             </tbody>
         </table>
+        <#if priceUser??>
+            <div id="notOrder">
 
-        <div id="notOrder">
+                <#if priceUser != 0 && !isCart >
+                    <label class="col-form-label mr-2">${Recipient_address_message} :</label>
+                    <div class="col-sm-3">
+                        <input type="text" name="adress" class="form-control small ${(adressError??)?string('is-invalid', '')}"
+                               placeholder="${Recipient_address_message}"/>
+                        <#if adressError??>
+                            <div class="invalid-feedback">
+                                ${adressError}
+                            </div>
+                        </#if>
+                    </div>
 
-            <#if priceUser != 0 && !isCart >
-                <label class="col-form-label mr-2">${Recipient_address_message} :</label>
-                <div class="col-sm-3">
-                    <input type="text" name="adress" class="form-control small ${(adressError??)?string('is-invalid', '')}"
-                           placeholder="${Recipient_address_message}"/>
-                    <#if adressError??>
-                        <div class="invalid-feedback">
-                            ${adressError}
-                        </div>
-                    </#if>
-                </div>
-
-                <div class="row justify-content-center mt-4">
-                    <button type="submit" formmethod="post" formaction="/order/cart/create_list_order" class=" col-sm-4 btn btn-outline-primary">${Place_your_order}</button>
-                    <button type="submit" formmethod="post" formaction="/order/cart/delete_all" class="col-sm-4 ml-4 btn btn-outline-danger">${Empty_recycle_bin}</button>
-                </div>
-            </#if>
-        </div>
-
+                    <div class="row justify-content-center mt-4">
+                        <button type="submit" formmethod="post" formaction="/order/cart/create_list_order" class=" col-sm-4 btn btn-outline-primary">${Place_your_order}</button>
+                        <button type="submit" formmethod="post" formaction="/order/cart/delete_all" class="col-sm-4 ml-4 btn btn-outline-danger">${Empty_recycle_bin}</button>
+                    </div>
+                </#if>
+            </div>
+        </#if>
         <input type="hidden" id="csrf" name="_csrf" value="${_csrf.token}" />
     </form>
     <div class="form-group row">
-        <#if priceUser != 0>
+        <#if priceUser??>
             <label class="col-form-label mr-1" id="textForCashOrder">${Total_order_amount_message} : </label>
-            <label class="col-form-label mr-1" id="priseOrd">${priceUser}</label>
+            <label class="col-form-label mr-1" id="priseOrd"><#if priceUser??>${priceUser}</#if></label>
             <label class="col-form-label" id="money"> ${RUB_message}</label>
         <#else>
             <label class="col-form-label">${No_orders_message}</label>

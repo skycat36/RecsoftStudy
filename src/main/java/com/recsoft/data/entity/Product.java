@@ -3,6 +3,7 @@ package com.recsoft.data.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.hibernate.validator.constraints.Length;
 
 import javax.persistence.*;
@@ -15,6 +16,11 @@ import java.util.Set;
 @Table(name = "product")
 @ApiModel(description = "Данные о продукте.")
 public class Product {
+
+    @ApiModelProperty(notes = "Константы для несуществующего продукта.", required=true)
+    @Ignore
+    @Transient
+    public static final String NONE = "none";
 
     @ApiModelProperty(notes = "Идентификатор обьекта.", name="id", required=true)
     @Id
@@ -39,7 +45,7 @@ public class Product {
     private Set<User> users;
 
     @ApiModelProperty(notes = "Ссылка на категорию товара.", name="category", required=true)
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(referencedColumnName = "id")
     private Category category;
 
@@ -52,7 +58,7 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<ProdSize> prodSizes;
 
-
+    @JsonIgnore
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<OrderProduct> orderProducts;
 

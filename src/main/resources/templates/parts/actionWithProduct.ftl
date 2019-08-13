@@ -83,20 +83,6 @@
         </div>
 
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label">${Number_message} : </label>
-            <div class="col-sm-3">
-                <input type="number" step="0" min="0" name="count" value="<#if product??><#if product.count??>${product.count}</#if></#if>"
-                       class="form-control small ${(countError??)?string('is-invalid', '')}"
-                       placeholder="${Number_message}"/>
-                <#if countError??>
-                    <div class="invalid-feedback">
-                        ${countError}
-                    </div>
-                </#if>
-            </div>
-        </div>
-
-        <div class="form-group row">
             <label class="col-sm-2 col-form-label">${Discount_message} %: </label>
             <div class="col-sm-3">
                 <input type="number" step="0" min="0" name="discount" value="<#if product??><#if product.discount??>${product.discount}</#if></#if>"
@@ -113,7 +99,7 @@
         <div class="form-group row">
             <label class="col-sm-2 col-form-label">${Product_category_message} : </label>
             <div class="col-sm-3">
-                <select class="custom-select" name="categoryProd" id="inputGroupSelect01" required>
+                <select class="custom-select" name="categoryProd" onchange="<#if isSave>selectWhatChangeCategory()<#else>selectWhatAddCategory()</#if>" id="selCateg" required>
                     <#list listCategory as category>
                         <option value="${category.id}"
                                 <#if categoryProd??><#if category.id == categoryProd>selected</#if></#if>>
@@ -129,33 +115,20 @@
             </div>
         </div>
 
-
-        <div id="sizesUser" class="form-group row" hidden>
-            <label for="exampleFormControlSelect2 mr-2">${Choose_available_sizes_message} : </label> </br>
-            <div id="isChangeCategory">
-
-                <table class="table table-borderless">
-                    <tbody>
-                    <#if isSave>
-                        <#list listSizeUser as sUser>
-                            <tr>
-                                <td>Mark</td>
-                                <td>Otto</td>
-                                <td>@mdo</td>
-                            </tr>
-                            <tr>
-                                <td>Jacob</td>
-                                <td>Thornton</td>
-                                <td>@fat</td>
-                            </tr>
-                        </#list>
-                    </#if>
-                    </tbody>
-                </table>
-
-            </div>
-
+        <div class="form-group row">
+            <label class="col-form-label">Имеющиеся размеры и кол. товаров</label>
         </div>
+        <div class="form-group row" id="for_categ_size">
+            <#if productSizes?has_content>
+                <#list productSizes as prodSize>
+                    <label class="col-form-label ml-1 mr-1">${prodSize.sizeUser.nameSize} :</label>
+                    <input type="number" step="0" min="0" name="sizeUsersProd[]" value="<#if prodSize??><#if prodSize.count??>${prodSize.count}<#else>0</#if></#if>"
+                           class="form-control small col-sm-2 ${(sizeUsersProdError??)?string('is-invalid', '')}"
+                    />
+                </#list>
+            </#if>
+        </div>
+
         <#if sizeUsersProdError??>
             <div class="invalid-feedback">
                 ${sizeUsersProdError}
@@ -204,43 +177,64 @@
 
             var imgActive = document.querySelectorAll('.carousel-item')[0];
             imgActive.classList.add('active');
-            console.log(imgActive, 'imgActive')
+            console.log(imgActive, 'imgActive');
         };
 
 
-        function selectCategory(idCategory) {
-            var token = document.getElementById("csrf").value;
-            console.log(token);
+        function selectWhatAddCategory() {
 
+            var idCategory = document.getElementById("selCateg").value;
+
+            var token = document.getElementById("csrf").value;
+
+            // DO POST
             $.ajax({
                 type: "POST",
                 contentType: "application/json",
-                url: window.location + "/delete/" + idOrder,
+                url: "/product/get_sizes_by_categ/" + idCategory,
                 headers: {
                     "Accept": "application/json",
                     "Content-Type": "application/json",
                     'X-Csrf-Token': token
                 },
-                success: function (result) {
-                    var item = document.getElementById("order" + idOrder);
-                    var data = JSON.parse(result);
-                    var priseOrd = document.getElementById("priseOrd");
-                    if (data.priseOrders == 0) {
-                        priseOrd.remove();
-                        document.getElementById("textForCashOrder").innerHTML = "${No_orders_message}";
-                        document.getElementById("notOrder").remove();
-                        document.getElementById("money").remove();
-                    } else{
-                        priseOrd.innerHTML = data.priseOrders;
-                        console.log(" look good");
-                    }
-                    document.getElementById("cashUser").innerHTML = data.cashUser;
-                    item.remove();
+                dataType: 'html',
+                 success: function (result) {
+                     document.open();
+                     document.write(result);
+                 },
+                error: function (e) {
+                    console.log("ERROR: ", e);
+                }
+            });
+
+        }
+
+        function selectWhatChangeCategory() {
+
+            var idCategory = document.getElementById("selCateg").value;
+
+            var idProduct<#if product??> = <#if product.id??>${product.id}</#if></#if>;
+
+            var token = document.getElementById("csrf").value;
+
+            // DO POST
+            $.ajax({
+                type: "POST",
+                contentType: "application/json",
+                url: "/product/" + idProduct + "/change_sizes_by_categ/" + idCategory,
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                    'X-Csrf-Token': token
+                },
+                success: function () {
+                    location.reload();
                 },
                 error: function (e) {
                     console.log("ERROR: ", e);
                 }
             });
+
         }
 
     </script>

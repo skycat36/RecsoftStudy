@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.validator.constraints.Length;
 
 import javax.persistence.*;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -23,7 +24,7 @@ public class Order {
     private User user;
 
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<OrderProduct> orderProducts;
 
 
@@ -42,12 +43,6 @@ public class Order {
     private Boolean pay;
 
     public Order() {
-    }
-
-    public Order(User user, Status status, Boolean pay) {
-        this.user = user;
-        this.status = status;
-        this.pay = pay;
     }
 
     public Order(User user, Set<OrderProduct> orderProducts, Status status, @Length(max = 255) String adress, Boolean pay) {

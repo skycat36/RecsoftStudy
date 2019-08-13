@@ -1,13 +1,17 @@
 package com.recsoft.utils;
 
+import com.recsoft.data.entity.OrderProduct;
 import com.recsoft.data.entity.User;
 import com.recsoft.validation.MessageGenerator;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.hibernate.mapping.Collection;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Api(value = "Класс-утилита контроллеров.",
         description = "Добавляет корректное отображение сообщений-логов отображаемых ошибок и добавления стандартных для контроллеров параметров.")
@@ -39,6 +43,24 @@ public class ControllerUtils {
         mav.addObject("user", user);
         mav.addObject("languageList", namesLanguage);
         mav.addObject("language", user.getLanguage().getReadbleName());
+    }
+
+    public static String stringWithoutSpace(String str){
+        StringBuffer stringBuffer = new StringBuffer();
+
+        for (char character : str.toCharArray()){
+            if (character != 160) {
+                stringBuffer.append(character);
+            }
+        }
+        return stringBuffer.toString();
+    }
+
+    public static List<OrderProduct> sortOrderProducts(Set<OrderProduct> orderProductList){
+        return orderProductList
+                .stream()
+                .sorted()
+                .collect(Collectors.toList());
     }
 
 }

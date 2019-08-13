@@ -12,7 +12,7 @@ import java.util.Set;
 @Entity
 @Table(name = "size_usr")
 @ApiModel(description = "Размер продукта.")
-public class SizeUser {
+public class SizeUser implements Comparable<SizeUser> {
 
     @ApiModelProperty(notes = "Идентификатор обьекта.", name="id", required=true)
     @Id
@@ -25,22 +25,20 @@ public class SizeUser {
     @Length(max = 50)
     private String nameSize;
 
-
+    @JsonIgnore
     @OneToMany(mappedBy = "sizeUser", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<OrderProduct> orderProducts;
 
-
     @ApiModelProperty(notes = "Ссылка на продукты с таким размером.", name="products", required=true)
     @JsonIgnore
-    @OneToMany(mappedBy = "sizeUser", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "sizeUser", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<ProdSize> products;
 
-
     @JsonIgnore
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable (name="categ_size",
-            joinColumns=@JoinColumn (name="id_category"),
-            inverseJoinColumns=@JoinColumn(name="id_size"))
+            joinColumns=@JoinColumn (name="id_size"),
+            inverseJoinColumns=@JoinColumn(name="id_category"))
     private Set<Category> categories;
 
     public SizeUser() {
@@ -91,5 +89,10 @@ public class SizeUser {
 
     public void setCategories(Set<Category> categories) {
         this.categories = categories;
+    }
+
+    @Override
+    public int compareTo(SizeUser o) {
+        return this.getId().compareTo(o.getId());
     }
 }

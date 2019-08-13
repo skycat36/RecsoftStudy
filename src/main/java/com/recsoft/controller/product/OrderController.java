@@ -28,6 +28,8 @@ import org.springframework.web.servlet.ModelAndView;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/order")
@@ -82,12 +84,13 @@ public class OrderController {
 
         ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "createOrder", mav);
 
-        Product product = productService.getProductById(Long.parseLong(idProduct));
+        Product product = productService.getProductById(idProduct);
 
         mav.addObject("product", product);
 
         mav.addObject("productNotZero", productService.getRealProductWhatCountNotZero(product));
 
+        this.constructPageCartUser(mav, user);
 
         return mav;
     }
@@ -103,12 +106,11 @@ public class OrderController {
         ModelAndView mav = new ModelAndView("redirect:/product/product_list");
         Map<String, String> errors = new HashMap<>();
 
-        Product product = productService.getProductById(Long.parseLong(idProduct));
+        Product product = productService.getProductById(idProduct);
 
         ProdSize prodSize = orderService.getProductWithSize(product, productService.getSizeUserById(sizeProd));
 
         user = userService.getUserById(user.getId());
-
 
         if (count == null){
             errors.put(
@@ -149,7 +151,7 @@ public class OrderController {
 
         if (errors.isEmpty()) {
             try {
-                orderService.addProductInCart(Long.parseLong(idProduct), sizeProd, count, user);
+                orderService.addProductInCart(Long.parseLong(ControllerUtils.stringWithoutSpace(idProduct)), sizeProd, count, user);
             } catch (OrderExeption orderExeption) {
                 log.error(orderExeption.getMessage());
                 return messageGenerator.createMessageForHacker(user.getLanguage());
@@ -157,78 +159,152 @@ public class OrderController {
         }else{
             ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "createOrder", mav);
             mav.addAllObjects(errors);
-            mav.addObject("product", productService.getProductById(Long.parseLong(idProduct)));
+            mav.addObject("product", productService.getProductById(idProduct));
             mav.addObject("count", count);
+            mav.addObject("productNotZero", productService.getRealProductWhatCountNotZero(product));
             mav.setViewName("/pages/for_order/createOrder");
+            this.constructPageCartUser(mav, user);
         }
         return mav;
     }
-//
-//    @GetMapping("/cart")
-//    @ApiOperation(value = "Отображает корзину для покупателей или страницу продавца для работы с заказами пользователей.")
-//    public ModelAndView showCart(
-//            @ApiParam(value = "Выдергивает пользователя авторизованного") @AuthenticationPrincipal User user
-//    ) {
-//        ModelAndView mav = new ModelAndView();
-//        Map<String, String> errors = new HashMap<>();
-//
-//        user = userService.getUserById(user.getId());
-//
-//
-//
-//        switch (user.getRole().getName()){
-//            case Role.SELLER:{
-//                ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "showCartSeller", mav);
-//                mav.setViewName("/pages/for_order/showCartSeller");
-//                constructPageCartSeller(mav);
-//                break;
-//            }
-//
-//            case Role.USER:{
-//                ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "showCartUser", mav);
-//                mav.setViewName("/pages/for_order/showCartUser");
-//                constructPageCartUser(mav, user);
-//
-//                break;
-//            }
-//
-//            default:{
-//                mav = new ModelAndView("/pages/for_menu/greeting");
-//                mav.addAllObjects(messageGenerator.getAllValueForPage("navbar", user.getLanguage()));
-//                errors.put(
-//                        "error",
-//                        messageGenerator.getMessageErrorProperty(
-//                                MessageGenerator.FAIL_WHIS_OTHER_ERROR,
-//                                ConfigureErrors.THIS_USER_NO.toString(),
-//                                "showCart",
-//                                user.getLanguage()
-//                        )
-//                );
-//                mav.addAllObjects(errors);
-//                break;
-//            }
-//        }
-//        return mav;
-//    }
-//
-//    @ApiOperation(value = "Добавляет параметры для отображения корзины покупателя.")
-//    private void constructPageCartUser(
-//            @ApiParam(value = "Модель хранящая параметры для передачи на экран.", required = true)  ModelAndView mav,
-//            @ApiParam(value = "Данные пользователя.", required = true) User user){
-//
-//        List<Order> ordersUser = orderService.getOrderUserNotPay(user);
-//
-//        mav.addObject("orderList", ordersUser);
-//        mav.addObject("priceUser", orderService.calculetePriseForUser(ordersUser));
-//    }
-//
-//    @ApiOperation(value = "Добавляет параметры для отображения корзины продавца.")
-//    private void constructPageCartSeller(
-//            @ApiParam(value = "Модель хранящая параметры для передачи на экран.", required = true) ModelAndView mav){
-//
-//        Role buyer = orderService.getRoleByName(Role.USER);
-//        mav.addObject("userList", userService.getAllUserWithRoleUser(buyer));
-//    }
+
+    @GetMapping("/cart")
+    @ApiOperation(value = "Отображает корзину для покупателей или страницу продавца для работы с заказами пользователей.")
+    public ModelAndView showCart(
+            @ApiParam(value = "Выдергивает пользователя авторизованного") @AuthenticationPrincipal User user
+    ) {
+        ModelAndView mav = new ModelAndView();
+        Map<String, String> errors = new HashMap<>();
+
+        user = userService.getUserById(user.getId());
+
+
+
+        switch (user.getRole().getName()){
+            case Role.SELLER:{
+                ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "showCartSeller", mav);
+                mav.setViewName("/pages/for_order/showCartSeller");
+                this.constructPageCartSeller(mav);
+                break;
+            }
+
+            case Role.USER:{
+                ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "showCartUser", mav);
+                mav.setViewName("/pages/for_order/showCartUser");
+                this.constructPageCartUser(mav, user);
+
+                break;
+            }
+
+            default:{
+                mav = new ModelAndView("/pages/for_menu/greeting");
+                mav.addAllObjects(messageGenerator.getAllValueForPage("navbar", user.getLanguage()));
+                errors.put(
+                        "error",
+                        messageGenerator.getMessageErrorProperty(
+                                MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                                ConfigureErrors.THIS_USER_NO.toString(),
+                                "showCart",
+                                user.getLanguage()
+                        )
+                );
+                mav.addAllObjects(errors);
+                break;
+            }
+        }
+        return mav;
+    }
+
+    @ApiOperation(value = "Добавляет параметры для отображения корзины покупателя.")
+    private void constructPageCartUser(
+            @ApiParam(value = "Модель хранящая параметры для передачи на экран.", required = true)  ModelAndView mav,
+            @ApiParam(value = "Данные пользователя.", required = true) User user){
+
+        Order order = orderService.getUserCart(user);
+
+        if (!order.getOrderProducts().isEmpty()) {
+            mav.addObject("productInCartList", ControllerUtils.sortOrderProducts(order.getOrderProducts()));
+            mav.addObject("priceUser", orderService.calculetePriseForUser(order));
+        }
+    }
+
+    @ApiOperation(value = "Добавляет параметры для отображения корзины продавца.")
+    private void constructPageCartSeller(
+            @ApiParam(value = "Модель хранящая параметры для передачи на экран.", required = true) ModelAndView mav){
+
+        Role role = orderService.getRoleByName(Role.USER);
+        mav.addObject("userList", userService.getAllUserWithRoleUser(role));
+    }
+
+    @PostMapping("/cart/create_list_order")
+    @ApiOperation(value = "Оплатить сделанные заказы")
+    public ModelAndView createOrderListUser(
+            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user,
+            @ApiParam(value = "Адрес куда отправлять продукт.", required = true) @RequestParam String adress,
+            @ApiParam(value = "Список количества обновленных товаров.", required = true)  @RequestParam(value = "count_p[]", required = true) Integer[] countProducts
+    ) throws OrderExeption {
+        Map<String, String> errors = new HashMap<>();
+        ModelAndView mav = new ModelAndView("redirect:/order/orders_user");
+        user = userService.getUserById(user.getId());
+
+        Order order = orderService.getUserCart(user);
+
+        List<OrderProduct> orderProductList = ControllerUtils.sortOrderProducts(order.getOrderProducts());
+
+        if (orderProductList.size() != countProducts.length){
+            return messageGenerator.createMessageForHacker(user.getLanguage());
+        }
+
+        for (int i = 0; i < orderProductList.size(); i++){
+            if (!orderService.proveCountOrderedProduct(orderProductList.get(i).getId(), countProducts[i])){
+                return messageGenerator.createMessageForHacker(user.getLanguage());
+            }
+        }
+
+
+        orderService.updateOrderListWhoNotPay(user.getLanguage(), user, adress, errors);
+
+        if (!errors.isEmpty()){
+            mav.setViewName("/pages/for_order/showCartUser");
+            this.constructPageCartUser(mav, user);
+            ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "showCartUser", mav);
+            mav.addAllObjects(errors);
+        }
+
+        return mav;
+    }
+
+
+    @PostMapping(value = "/cart/delete_not_pay/{idOrder}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ApiOperation(value = "Удалить неоплаченный заказ пользователя")
+    public ResponseEntity<String> deleteOrderUserWhoNotPay(
+            @ApiParam(value = "Id заказа который удаляют.", required = true)  @PathVariable String idOrder,
+            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
+    ) throws OrderExeption {
+        orderService.deleteNotPayProductInOrder(Long.parseLong(idOrder));
+
+        user = userService.getUserById(user.getId());
+
+        Order orderNotPay = orderService.getOrderUserNotPay(user);
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("priseOrders", orderService.calculetePriseForUser(orderNotPay));
+
+        return new ResponseEntity<>(
+                JSONObject.quote(jsonObject.toString()),
+                HttpStatus.OK);
+    }
+
+    @PostMapping("/cart/delete_all")
+    @ApiOperation(value = "Удалить все неоплаченные заказы пользователя")
+    public ModelAndView deleteOrderUserWhoNotPay(
+            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
+    ) throws OrderExeption {
+        Order order = orderService.getUserCart(user);
+        orderService.deleteOrderWhoNotPay(order.getId());
+
+        return new ModelAndView("redirect:/order/cart");
+    }
+
 //
 //    @PostMapping("/orders_user/delete/{idOrder}")
 //    @ApiOperation(value = "Удалить заказ пользователя")
@@ -249,36 +325,7 @@ public class OrderController {
 //                JSONObject.quote(jsonObject.toString()),
 //                HttpStatus.OK);
 //    }
-//
-//    @PostMapping("/cart/delete_all")
-//    @ApiOperation(value = "Удалить все неоплаченные заказы пользователя")
-//    public ModelAndView deleteOrderUserWhoNotPay(
-//            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
-//    ){
-//        orderService.deleteAllOrdersNotPayUser(user.getId());
-//
-//        return new ModelAndView("redirect:/order/cart");
-//    }
-//
-//    @PostMapping(value = "/cart/delete_not_pay/{idOrder}", consumes = MediaType.APPLICATION_JSON_VALUE)
-//    @ApiOperation(value = "Удалить неоплаченный заказ пользователя")
-//    public ResponseEntity<String> deleteOrderUserWhoNotPay(
-//            @ApiParam(value = "Id заказа который удаляют.", required = true)  @PathVariable String idOrder,
-//            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
-//    ){
-//        orderService.deleteOrderWhoNotPay(Long.parseLong(idOrder));
-//
-//        user = userService.getUserById(user.getId());
-//
-//        List<Order> orderListNotPay = orderService.getOrderUserNotPay(user);
-//        JSONObject jsonObject = new JSONObject();
-//        jsonObject.put("priseOrders", orderService.calculetePriseForUser(orderListNotPay));
-//
-//        return new ResponseEntity<>(
-//                JSONObject.quote(jsonObject.toString()),
-//                HttpStatus.OK);
-//    }
-//
+
 //    @PostMapping(value = "/cart/change_count_prod/{idOrder}", consumes = MediaType.APPLICATION_JSON_VALUE)
 //    @ApiOperation(value = "Обновить количество сделанных неоплаченных заказов")
 //    public ResponseEntity<String> changeCountOrderInCart(
@@ -312,35 +359,7 @@ public class OrderController {
 //        }
 //    }
 //
-//    @PostMapping("/cart/create_list_order")
-//    @ApiOperation(value = "Оплатить сделанные заказы")
-//    public ModelAndView createOrderListUser(
-//            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user,
-//            @ApiParam(value = "Адрес куда отправлять продукт.", required = true) @RequestParam String adress,
-//            @ApiParam(value = "Список количества обновленных товаров .", required = true)  @RequestParam(value = "count_p[]", required = true) Integer[] countProducts
-//    ){
-//        Map<String, String> errors = new HashMap<>();
-//        ModelAndView mav = new ModelAndView("redirect:/order/orders_user");
-//        user = userService.getUserById(user.getId());
-//
-//        List<Order> ordersNotPay = orderService.getOrderUserNotPay(user);
-////        for (int i = 0; i < ordersNotPay.size(); i++){
-////            if (!ordersNotPay.get(i).getCount().equals(countProducts[i])){
-////                return messageGenerator.createMessageForHacker(user.getLanguage());
-////            }
-////        }
-//
-//        orderService.updateOrderListWhoNotPay(user.getLanguage(), user, adress, errors);
-//
-//        if (!errors.isEmpty()){
-//            mav.setViewName("/pages/for_order/showCartUser");
-//            this.constructPageCartUser(mav, user);
-//            ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "showCartUser", mav);
-//            mav.addAllObjects(errors);
-//        }
-//
-//        return mav;
-//    }
+
 //
 //    @ProveRole(nameRole = {Role.USER})
 //    @GetMapping("/orders_user")

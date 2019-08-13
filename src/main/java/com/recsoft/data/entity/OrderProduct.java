@@ -6,14 +6,14 @@ import javax.persistence.*;
 
 @Entity
 @Table(name = "order_product")
-public class OrderProduct {
+public class OrderProduct implements Comparable<OrderProduct> {
 
     @ApiModelProperty(notes = "Идентификатор обьекта.", name="id", required=true)
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_order",
             referencedColumnName = "id")
     private Order order;
@@ -30,6 +30,9 @@ public class OrderProduct {
     private SizeUser sizeUser;
 
     private Integer count;
+
+    public OrderProduct() {
+    }
 
     public OrderProduct(Order order, Product product, SizeUser sizeUser, Integer count) {
         this.order = order;
@@ -76,5 +79,10 @@ public class OrderProduct {
 
     public void setCount(Integer count) {
         this.count = count;
+    }
+
+    @Override
+    public int compareTo(OrderProduct o) {
+        return this.getId().compareTo(o.getId());
     }
 }

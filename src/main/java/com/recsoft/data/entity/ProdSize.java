@@ -8,7 +8,7 @@ import javax.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "prod_size")
-public class ProdSize {
+public class ProdSize implements Comparable<ProdSize> {
 
     @ApiModelProperty(notes = "Идентификатор обьекта.", name="id", required=true)
     @Id
@@ -25,6 +25,7 @@ public class ProdSize {
     @JoinColumn(name = "id_prod",
             referencedColumnName = "id")
     private Product product;
+
 
     @ApiModelProperty(notes = "Ссылка на имеющийся размер", name="product", required=true)
     @ManyToOne(fetch = FetchType.EAGER)
@@ -73,5 +74,9 @@ public class ProdSize {
         this.sizeUser = sizeUser;
     }
 
+    @Override
+    public int compareTo(ProdSize o) {
+        return this.sizeUser.getId().compareTo(o.sizeUser.getId());
+    }
 
 }

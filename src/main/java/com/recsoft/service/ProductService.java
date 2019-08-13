@@ -3,6 +3,7 @@ package com.recsoft.service;
 import com.recsoft.data.entity.*;
 import com.recsoft.data.exeption.ProductExeption;
 import com.recsoft.data.repository.*;
+import com.recsoft.utils.ControllerUtils;
 import com.recsoft.utils.ServiceUtils;
 import com.recsoft.utils.constants.ConfigureErrors;
 import com.recsoft.validation.MessageGenerator;
@@ -14,15 +15,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -59,6 +59,20 @@ public class ProductService {
     private UserProdComRepository userProdComRepository;
 
     private MessageGenerator messageGenerator;
+
+    private ProdSizeRepository prodSizeRepository;
+
+    private OrderProductRepository orderProductRepository;
+
+    @Autowired
+    public void setOrderProductRepository(OrderProductRepository orderProductRepository) {
+        this.orderProductRepository = orderProductRepository;
+    }
+
+    @Autowired
+    public void setProdSizeRepository(ProdSizeRepository prodSizeRepository) {
+        this.prodSizeRepository = prodSizeRepository;
+    }
 
     @Autowired
     public void setMessageGenerator(MessageGenerator messageGenerator) {
@@ -97,12 +111,22 @@ public class ProductService {
 
     @ApiOperation(value = "Вернуть продукт по ID")
     public Product getProductById(
-            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Long idProd){
-        return productRepository.findById(idProd).get();
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) String idProd){
+        Long idProduct = Long.parseLong(ControllerUtils.stringWithoutSpace(idProd));
+        return productRepository.findById(idProduct).get();
     }
 
     @ApiOperation(value = "Вернуть список всех продуктов")
     public List<Product> getAllProduct(){
+//        List<Product> productList = productRepository.findAll();
+//        for (Product product: productList){
+//            Set<ProdSize> prodSizes = new HashSet<>();
+//            for (SizeUser sizeUser: product.getCategory().getSizeUsers()){
+//                prodSizes.add(new ProdSize(0, product, sizeUser));
+//            }
+//            product.setProdSizes(prodSizes);
+//            productRepository.save(product);
+//        }
         return productRepository.findAll();
     }
 
@@ -111,6 +135,8 @@ public class ProductService {
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Product product){
         return productRepository.findProductByName(product.getName()) != null;
     }
+
+
 
     @ApiOperation(value = "Вернуть список всех размеров.")
     public List<SizeUser> getAllSizeUser(){
@@ -131,8 +157,10 @@ public class ProductService {
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<MultipartFile> files) throws IOException, ProductExeption {
 
         if (product != null){
+            product.setProdSizes(new HashSet<>());
             this.createRelationsForParamersProduct(language, idCategory, product, countSizesProduct, files);
             productRepository.save(product);
+            prodSizeRepository.saveAll(product.getProdSizes());
             log.info("Product with name " + product.getName() + " was added.");
         }else {
             log.error("Product with name " + product.getName() + " don't added.");
@@ -143,10 +171,11 @@ public class ProductService {
             @ApiParam(value = "Генератор сообщений пользователя.", required = true) Language language,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Long idCategory,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Product product,
-            @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<Integer> countSizesProduct,
+            @ApiParam(value = "Выдергивает пользователя авторизованного", required = false) List<Integer> countSizesProduct,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<MultipartFile> files) throws IOException, ProductExeption {
 
         Category category = categoryRepository.findById(idCategory).orElse(null);
+
         if (category == null) {
             throw new ProductExeption(
                     messageGenerator.getMessageErrorProperty(
@@ -158,18 +187,19 @@ public class ProductService {
             );
         }
 
-        product.setCategory(category);
+        if (product.getProdSizes().isEmpty()) {
 
-        Set<ProdSize> prodSizes = new HashSet<>();
-        List<SizeUser> sizeUserList = new ArrayList<>(product.getCategory().getSizeUsers());
+            product.setCategory(category);
+            Set<ProdSize> prodSizes = new HashSet<>();
+            List<SizeUser> sizeUserList = new ArrayList<>(product.getCategory().getSizeUsers());
+            Collections.sort(sizeUserList);
 
-        for (int i = 0; i < sizeUserList.size(); i++){
-
-            ProdSize prodSize = new ProdSize(countSizesProduct.get(i), product, sizeUserList.get(i));
-            prodSizes.add(prodSize);
+            for (int i = 0; i < sizeUserList.size(); i++) {
+                ProdSize prodSize = new ProdSize(countSizesProduct.get(i), product, sizeUserList.get(i));
+                prodSizes.add(prodSize);
+            }
+            product.setProdSizes(prodSizes);
         }
-
-        product.setProdSizes(prodSizes);
 
         if (ServiceUtils.proveListOnEmptyFileList(files)) {
             Set<PhotoProduct> photoProductSet = new HashSet<>();
@@ -226,6 +256,34 @@ public class ProductService {
         log.info("Comment with Id " + userProdCom.getId() + " was added.");
     }
 
+    public void changeCategoryProduct(Long idProduct, Long idCategory) throws ProductExeption {
+
+        Product product = this.getProductById(idProduct.toString());
+        Category category = this.getCategoryById(idCategory);
+
+        if (product == null || category == null) {
+            throw new ProductExeption("Продукта или категории не существует.");
+        }
+
+        prodSizeRepository.deleteAllByIdProduct(product.getId());
+        orderProductRepository.deleteAllByIdProduct(product.getId());
+
+        product.setCategory(category);
+
+        Set<ProdSize> prodSizes = new HashSet<>();
+        List<SizeUser> sizeUserList = new ArrayList<>(product.getCategory().getSizeUsers());
+        Collections.sort(sizeUserList);
+
+        for (int i = 0; i < sizeUserList.size(); i++) {
+            ProdSize prodSize = new ProdSize(0, product, sizeUserList.get(i));
+            prodSizes.add(prodSize);
+        }
+        product.setProdSizes(prodSizes);
+
+        prodSizeRepository.saveAll(product.getProdSizes());
+        productRepository.save(product);
+    }
+
     @ApiOperation(value = "Обновить информацию о продукте")
     public void updateProduct(
             @ApiParam(value = "Генератор сообщений пользователя.", required = true) Language language,
@@ -235,15 +293,65 @@ public class ProductService {
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<Integer> countSizesProduct,
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) List<MultipartFile> files) throws IOException, ProductExeption {
 
-        this.createRelationsForParamersProduct(language, idCategory, productOld, countSizesProduct, files);
 
-        productOld.setProdSizes(productReal.getProdSizes());
+        for (Integer countSizes : countSizesProduct) {
+            if (countSizes < 0) {
+                throw new ProductExeption("Количество продуктов не может быть меньше 0");
+            }
+        }
+
+        Category category = categoryRepository.findById(idCategory).orElse(null);
+
+        if (category == null) {
+            throw new ProductExeption("Категории товара не существует.");
+        }
+
+        if (category.getSizeUsers().size() != countSizesProduct.size()){
+            throw new ProductExeption("Количество продуктов сформировано неправильно.");
+        }
+
+        if (!productOld.getCategory().getId().equals(category.getId())){
+            prodSizeRepository.deleteAllByIdProduct(productOld.getId());
+            orderProductRepository.deleteAllByIdProduct(productOld.getId());
+            productOld.setCategory(category);
+            productOld.setProdSizes(new HashSet<>());
+        }
+
+        this.createRelationsForParamersProduct(language, idCategory, productOld, null, files);
+
+        List<ProdSize> prodSizeList = new ArrayList<>(productOld.getProdSizes());
+        Collections.sort(prodSizeList);
+        for (int i = 0; i < prodSizeList.size(); i++) {
+            if (countSizesProduct.get(i) < 0) {
+                throw new ProductExeption("Количество продуктов не может быть меньше 0");
+            }
+            prodSizeList.get(i).setCount(countSizesProduct.get(i));
+        }
+        prodSizeRepository.saveAll(prodSizeList);
+
         productOld.setDiscount(productReal.getDiscount());
         productOld.setDescription(productReal.getDescription());
         productOld.setPrice(productReal.getPrice());
         productOld.setName(productReal.getName());
         productRepository.save(productOld);
         log.info("Product with Id " + productReal.getId() + " was update.");
+    }
+
+    public List<ProdSize> getNewListProdSizeForProductWithSizes(Long idProduct, List<Integer> countSizesProduct) throws ProductExeption{
+        Product product = this.getProductById(idProduct.toString());
+
+        List<ProdSize> prodSizeList = new ArrayList<>(product.getProdSizes());
+        Collections.sort(prodSizeList);
+
+        if (prodSizeList.size() != countSizesProduct.size()){
+            throw new ProductExeption("Невозможно составить массив размеров для товара.");
+        }
+
+        for (int i=0; i < prodSizeList.size(); i++){
+            prodSizeList.get(i).setCount(countSizesProduct.get(i));
+        }
+
+        return prodSizeList;
     }
 
     public List<ProdSize> getRealProductWhatCountNotZero(Product product){
@@ -255,5 +363,9 @@ public class ProductService {
 
     public SizeUser getSizeUserById(Long idSizeUser){
         return sizeUserRepository.getOne(idSizeUser);
+    }
+
+    public Category getCategoryById(Long idCategory){
+        return categoryRepository.findById(idCategory).orElse(null);
     }
 }

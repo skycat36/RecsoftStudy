@@ -2,7 +2,7 @@
 
 <@c.page>
 
-    <div class="form-group row">
+    <div class="form-group row" xmlns="http://www.w3.org/1999/html">
         <h1 class="mb-3">${Add_to_cart_message}</h1>
     </div>
 
@@ -34,7 +34,10 @@
         <form action="/order/add_product_in_cart/${product.id}" method="post">
 
             <div class="form-group row">
-                <label class="col-form-label">Выберите размер : </label>
+                <label class="col-form-label">Выберите размер</label>
+            </div>
+
+            <div class="form-group row">
                     <select class="custom-select col-sm-4" name="sizeProd" required>
                         <#list productNotZero as prodSize>
                             <option value="${prodSize.sizeUser.id}"

@@ -13,12 +13,14 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.hibernate.exception.SQLGrammarException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -100,11 +102,19 @@ public class OrderService {
 
 
     public Order getUserCart(User user){
-        return orderRepository.findOrderByPayFalseAndUser(user);
+
+        Order order = orderRepository.findOrderByPayFalseAndUser(user);
+
+        if (order == null){
+            Status defStatus = statusRepository.getOne(this.DEFAULT_STATUS_ORDER);
+            order = orderRepository.save(new Order(user, new HashSet<>(), defStatus, "", false));
+        }
+
+        return order;
     }
 
     public ProdSize getProductWithSize(Product product, SizeUser sizeUser){
-        return prodSizeRepository.findAllByProductAndSizeUser(product, sizeUser);
+        return prodSizeRepository.findByProductAndSizeUser(product.getId(), sizeUser.getId());
     }
 
     @ApiOperation(value = "Создать заказ")
@@ -120,25 +130,33 @@ public class OrderService {
 
         Order order = this.getUserCart(user);
 
-        ProdSize prodSize = prodSizeRepository.findAllByProductAndSizeUser(product, sUser);
+        ProdSize prodSize = prodSizeRepository.findByProductAndSizeUser(product.getId(), sUser.getId());
 
         if (product == null || sUser == null || order == null || prodSize == null){
             throw new OrderExeption("Одна из сущностей для добавления продукта в корзину пустая.");
         }
 
-        OrderProduct orderProduct = new OrderProduct(order, product, sUser, countProd);
+        OrderProduct orderProduct = orderProductRepository.getOrderProductByOrderAndProductAndSizeUser(order, product, sUser);
+
+        if (orderProduct == null) {
+            orderProduct = new OrderProduct(order, product, sUser, countProd);
+        } else {
+            orderProduct.setCount(orderProduct.getCount() + countProd);
+        }
 
         order.getOrderProducts().add(orderProduct);
 
         prodSize.setCount(prodSize.getCount() - countProd);
 
-        orderProductRepository.save(orderProduct);
+
 
         prodSizeRepository.save(prodSize);
 
         productRepository.save(product);
 
         order = orderRepository.save(order);
+
+        orderProductRepository.save(orderProduct);
         log.info("Заказ " + order.getId() + " добавлен в корзину");
     }
 
@@ -170,7 +188,7 @@ public class OrderService {
         }
 
 
-        orderProductRepository.deleteAllByOrder(order);
+        orderProductRepository.deleteAllByIdOrder(order.getId());
         orderRepository.deleteOrderById(idOrder);
         log.info("Заказ с id = " + idOrder + " удален.");
     }
@@ -237,10 +255,8 @@ public class OrderService {
             prodSizeRepository.save(prodSize);
         }
 
-
-        orderProductRepository.deleteAllByOrder(order);
-        orderRepository.deleteOrderById(idOrder);
-        log.info("Заказ с id = " + idOrder + " удален.");
+        orderProductRepository.deleteAllByIdOrder(order.getId());
+        log.info("Заказы карзины с id = " + idOrder + " удалены.");
     }
 
     @ApiOperation(value = "Обновить количество сделанных заказов.")
@@ -254,7 +270,7 @@ public class OrderService {
             throw new OrderExeption("Продукта в корзине с id " + idOrderProduct + " нет");
         }
 
-        ProdSize prodSize = prodSizeRepository.findAllByProductAndSizeUser(orderProduct.getProduct(), orderProduct.getSizeUser());
+        ProdSize prodSize = prodSizeRepository.findByProductAndSizeUser(orderProduct.getProduct().getId(), orderProduct.getSizeUser().getId());
 
         int realCount = prodSize.getCount() + orderProduct.getCount();
 
@@ -278,7 +294,9 @@ public class OrderService {
             throw new OrderExeption("Продукта в корзине с id " + idOrderProduct + " нет");
         }
 
-        ProdSize prodSize = prodSizeRepository.findAllByProductAndSizeUser(orderProduct.getProduct(), orderProduct.getSizeUser());
+        SizeUser sizeUser = orderProduct.getSizeUser();
+
+        ProdSize prodSize = prodSizeRepository.findByProductAndSizeUser(orderProduct.getProduct().getId(), orderProduct.getSizeUser().getId());
 
         if (prodSize.getCount() + orderProduct.getCount() < countProd || countProd < 0){
             return false;
@@ -301,15 +319,15 @@ public class OrderService {
         List<ProdSize> productWhoNeedUpdate = new ArrayList<>();
 
         for (OrderProduct orderProduct: orderNotPayUser.getOrderProducts()){
-            ProdSize prodSize = prodSizeRepository.findAllByProductAndSizeUser(orderProduct.getProduct(), orderProduct.getSizeUser());
+            ProdSize prodSize = prodSizeRepository.findByProductAndSizeUser(orderProduct.getProduct().getId(), orderProduct.getSizeUser().getId());
             prodSize.setCount(prodSize.getCount() + orderProduct.getCount());
             productWhoNeedUpdate.add(prodSize);
         }
 
         prodSizeRepository.saveAll(productWhoNeedUpdate);
 
-        orderProductRepository.deleteAllByOrder(orderNotPayUser);
-
+        orderProductRepository.deleteAllByIdOrder(orderNotPayUser.getId());
+//!!!!!!!!!!!!!!!!!!!!
         orderRepository.deleteById(orderNotPayUser.getId());
 
         log.info("Заказ с id = " + user.getId() + " удален.");
@@ -408,7 +426,6 @@ public class OrderService {
         for (OrderProduct orderProduct: orderUser.getOrderProducts()){
             prise += orderProduct.getCount() * orderProduct.getProduct().getPrice();
         }
-
         return prise;
     }
 

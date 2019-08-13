@@ -29,11 +29,10 @@ public class Category {
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<Product> products;
 
-    @JsonIgnore
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable (name="categ_size",
-            joinColumns=@JoinColumn (name="id_size"),
-            inverseJoinColumns=@JoinColumn(name="id_category"))
+            joinColumns=@JoinColumn (name="id_category"),
+            inverseJoinColumns=@JoinColumn(name="id_size"))
     private Set<SizeUser> sizeUsers;
 
 
