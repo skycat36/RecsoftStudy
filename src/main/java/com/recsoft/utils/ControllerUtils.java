@@ -45,17 +45,6 @@ public class ControllerUtils {
         mav.addObject("language", user.getLanguage().getReadbleName());
     }
 
-    public static String stringWithoutSpace(String str){
-        StringBuffer stringBuffer = new StringBuffer();
-
-        for (char character : str.toCharArray()){
-            if (character != 160) {
-                stringBuffer.append(character);
-            }
-        }
-        return stringBuffer.toString();
-    }
-
     public static List<OrderProduct> sortOrderProducts(Set<OrderProduct> orderProductList){
         return orderProductList
                 .stream()

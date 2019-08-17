@@ -90,7 +90,9 @@ public class OrderController {
 
         mav.addObject("productNotZero", productService.getRealProductWhatCountNotZero(product));
 
-        this.constructPageCartUser(mav, user);
+        Order order = orderService.getUserCart(user);
+
+        this.constructPageCartUser(mav, order, user);
 
         return mav;
     }
@@ -151,7 +153,7 @@ public class OrderController {
 
         if (errors.isEmpty()) {
             try {
-                orderService.addProductInCart(Long.parseLong(ControllerUtils.stringWithoutSpace(idProduct)), sizeProd, count, user);
+                orderService.addProductInCart(Long.parseLong(idProduct), sizeProd, count, user);
             } catch (OrderExeption orderExeption) {
                 log.error(orderExeption.getMessage());
                 return messageGenerator.createMessageForHacker(user.getLanguage());
@@ -163,7 +165,8 @@ public class OrderController {
             mav.addObject("count", count);
             mav.addObject("productNotZero", productService.getRealProductWhatCountNotZero(product));
             mav.setViewName("/pages/for_order/createOrder");
-            this.constructPageCartUser(mav, user);
+            Order order = orderService.getUserCart(user);
+            this.constructPageCartUser(mav, order, user);
         }
         return mav;
     }
@@ -191,7 +194,8 @@ public class OrderController {
             case Role.USER:{
                 ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "showCartUser", mav);
                 mav.setViewName("/pages/for_order/showCartUser");
-                this.constructPageCartUser(mav, user);
+                Order order = orderService.getUserCart(user);
+                this.constructPageCartUser(mav, order, user);
 
                 break;
             }
@@ -218,9 +222,8 @@ public class OrderController {
     @ApiOperation(value = "Добавляет параметры для отображения корзины покупателя.")
     private void constructPageCartUser(
             @ApiParam(value = "Модель хранящая параметры для передачи на экран.", required = true)  ModelAndView mav,
+            Order order,
             @ApiParam(value = "Данные пользователя.", required = true) User user){
-
-        Order order = orderService.getUserCart(user);
 
         if (!order.getOrderProducts().isEmpty()) {
             mav.addObject("productInCartList", ControllerUtils.sortOrderProducts(order.getOrderProducts()));
@@ -266,7 +269,7 @@ public class OrderController {
 
         if (!errors.isEmpty()){
             mav.setViewName("/pages/for_order/showCartUser");
-            this.constructPageCartUser(mav, user);
+            this.constructPageCartUser(mav, order, user);
             ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "showCartUser", mav);
             mav.addAllObjects(errors);
         }
@@ -275,13 +278,13 @@ public class OrderController {
     }
 
 
-    @PostMapping(value = "/cart/delete_not_pay/{idOrder}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/cart/delete_not_pay/{idOrderProduct}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Удалить неоплаченный заказ пользователя")
     public ResponseEntity<String> deleteOrderUserWhoNotPay(
-            @ApiParam(value = "Id заказа который удаляют.", required = true)  @PathVariable String idOrder,
+            @ApiParam(value = "Id заказа который удаляют.", required = true)  @PathVariable String idOrderProduct,
             @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
     ) throws OrderExeption {
-        orderService.deleteNotPayProductInOrder(Long.parseLong(idOrder));
+        orderService.deleteNotPayProductInOrder(Long.parseLong(idOrderProduct));
 
         user = userService.getUserById(user.getId());
 
@@ -305,146 +308,183 @@ public class OrderController {
         return new ModelAndView("redirect:/order/cart");
     }
 
-//
-//    @PostMapping("/orders_user/delete/{idOrder}")
-//    @ApiOperation(value = "Удалить заказ пользователя")
-//    public ResponseEntity<String> deleteOrderUser(
-//            @ApiParam(value = "Id заказа который удаляют.", required = true)  @PathVariable String idOrder,
-//            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
-//    ){
-//        orderService.deletePayOrder(Long.parseLong(idOrder), user.getId());
-//        user = userService.getUserById(user.getId());
-//
-//        List<Order> orderListPay = orderService.getOrderUserPay(user);
-//
-//        JSONObject jsonObject = new JSONObject();
-//        jsonObject.put("cashUser", user.getCash());
-//        jsonObject.put("priseOrders", orderService.calculetePriseForUser(orderListPay));
-//
-//        return new ResponseEntity<>(
-//                JSONObject.quote(jsonObject.toString()),
-//                HttpStatus.OK);
-//    }
+    @PostMapping(value = "/cart/change_count_prod/{idOrderProduct}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ApiOperation(value = "Обновить количество сделанных неоплаченных заказов")
+    public ResponseEntity<String> changeCountOrderInCart(
+            @ApiParam(value = "Id заказа который изменяют.", required = true)  @PathVariable String idOrderProduct,
+            @ApiParam(value = "Обновленное количество товара.", required = true) @RequestBody  String newCountData,
+            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
+    ) throws OrderExeption {
 
-//    @PostMapping(value = "/cart/change_count_prod/{idOrder}", consumes = MediaType.APPLICATION_JSON_VALUE)
-//    @ApiOperation(value = "Обновить количество сделанных неоплаченных заказов")
-//    public ResponseEntity<String> changeCountOrderInCart(
-//            @ApiParam(value = "Id заказа который изменяют.", required = true)  @PathVariable String idOrder,
-//            @ApiParam(value = "Обновленное количество товара.", required = true) @RequestBody  String newCountData,
-//            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
-//    ){
-//
-//        if (orderService.proveCountOrderedProduct(Long.parseLong(idOrder), Integer.parseInt(newCountData))) {
-//            orderService.updateCountOrderWhoNotPay(Long.parseLong(idOrder), Integer.parseInt(newCountData));
-//            user = userService.getUserById(user.getId());
-//
-//            List<Order> orderListNotPay = orderService.getOrderUserNotPay(user);
-//            JSONObject jsonObject = new JSONObject();
-//            jsonObject.put("newCountData", Integer.parseInt(newCountData));
-//            jsonObject.put("priseOrders", orderService.calculetePriseForUser(orderListNotPay));
-//
-//            return new ResponseEntity<>(
-//                    JSONObject.quote(jsonObject.toString()),
-//                    HttpStatus.OK);
-//        }
-//        else {
-//            return new ResponseEntity<>(
-//                    messageGenerator.getMessageErrorProperty(
-//                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
-//                            ConfigureErrors.SELECT_BAD.toString(),
-//                            "changeCountOrderInCart",
-//                            user.getLanguage()
-//                    ),
-//                    HttpStatus.BAD_REQUEST);
-//        }
-//    }
-//
+        if (orderService.proveCountOrderedProduct(Long.parseLong(idOrderProduct), Integer.parseInt(newCountData))) {
+            orderService.updateCountOrderWhoNotPay(Long.parseLong(idOrderProduct), Integer.parseInt(newCountData));
+            user = userService.getUserById(user.getId());
 
-//
-//    @ProveRole(nameRole = {Role.USER})
-//    @GetMapping("/orders_user")
-//    @ApiOperation(value = "Отображает корзину для покупателей или страницу продавца для работы с заказами пользователей.")
-//    public ModelAndView showOrdersUser(
-//            @ApiParam(value = "Выдергивает пользователя авторизованного") @AuthenticationPrincipal User user
-//    ) {
-//        ModelAndView mav = new ModelAndView();
-//
-//        user = userService.getUserById(user.getId());
-//
-//        mav.setViewName("/pages/for_order/showOrdersUser");
-//        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "showOrdersUser", mav);
-//        List<Order> ordersUser = orderService.getOrderUser(user);
-//        mav.addObject("orderList", ordersUser);
-//        mav.addObject("listReadbleStatus", orderService.createListReadbleStatusOrders(ordersUser));
-//        mav.addObject("priceUser", orderService.calculetePriseForUser(ordersUser));
-//
-//        return mav;
-//    }
-//
-//    @ProveRole(nameRole = {Role.SELLER})
-//    @GetMapping("/cart/select_user/{idUser}")
-//    @ApiOperation(value = "Отобразить данные пользователя выбранного продавцом.")
-//    public ModelAndView showSelectUser(
-//            @ApiParam(value = "Id выбранного пользователя.", required = true)  @PathVariable String idUser,
-//            @ApiParam(value = "Выдергивает пользователя авторизованного") @AuthenticationPrincipal User user
-//    ){
-//        ModelAndView mav = new ModelAndView("/pages/for_order/selectUserCart");
-//
-//        user = userService.getUserById(user.getId());
-//
-//        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "selectUserCart", mav);
-//
-//        User selectUser = userService.getUserById(Long.parseLong(idUser));
-//        List<Order> ordersUser = orderService.getOrderUser(userService.getUserById(Long.parseLong(idUser)));
-//
-//        mav.addObject("user", selectUser);
-//        mav.addObject("listStatus", ReadbleUtils.createListReadbleStatuses());
-//        mav.addObject("orderList", ordersUser);
-//        mav.addObject("listReadbleStatus", orderService.createListReadbleStatusOrders(ordersUser));
-//        mav.addObject("priceUser", orderService.calculetePriseForUser(ordersUser));
-//
-//        return mav;
-//    }
-//
-//
-//
-//    @PostMapping(value = "/cart/select_user/{idUser}/change_status", consumes = MediaType.APPLICATION_JSON_VALUE)
-//    @ApiOperation(value = "Изменить статус сделанного заказа")
-//    public ResponseEntity<String> changeStatusOrderForSelectUser(
-//            @ApiParam(value = "Обновленный статус заказа.", required = true) @RequestBody  String stringJsonFromPage
-//    ){
-//        JSONObject jsonObject = new JSONObject(stringJsonFromPage);
-//
-//        if (orderService.updateStatusOrders(jsonObject.getLong("idOrder"), jsonObject.getString("newStatusOrder"))){
-//
-//            return new ResponseEntity<>(
-//                    HttpStatus.OK);
-//        }else {
-//
-//            return new ResponseEntity<>(
-//                    HttpStatus.BAD_REQUEST);
-//        }
-//    }
-//
-//    @PostMapping(value = "/cart/select_user/{idUser}/delete/{idOrder}", consumes = MediaType.APPLICATION_JSON_VALUE)
-//    @ApiOperation(value = "Удаление заказа пользователя продавцом.")
-//    public ResponseEntity<String> sellerDeleteOrderUser(
-//            @ApiParam(value = "Id удаляемого заказа.", required = true) @PathVariable String idOrder,
-//            @ApiParam(value = "Id пользователя у которого удаляют заказ.", required = true) @PathVariable String idUser
-//    ){
-//        User user = userService.getUserById(Long.parseLong(idUser));
-//
-//        orderService.deletePayOrder(Long.parseLong(idOrder), user.getId());
-//
-//        List<Order> orderListPay = orderService.getOrderUserPay(user);
-//
-//        JSONObject jsonObject = new JSONObject();
-//        jsonObject.put("cashUser", user.getCash());
-//        jsonObject.put("priseOrders", orderService.calculetePriseForUser(orderListPay));
-//
-//        return new ResponseEntity<>(
-//                JSONObject.quote(jsonObject.toString()),
-//                HttpStatus.OK);
-//    }
+            Order orderNotPay = orderService.getOrderUserNotPay(user);
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("newCountData", Integer.parseInt(newCountData));
+            jsonObject.put("priseOrders", orderService.calculetePriseForUser(orderNotPay));
+
+            return new ResponseEntity<>(
+                    JSONObject.quote(jsonObject.toString()),
+                    HttpStatus.OK);
+        }
+        else {
+            return new ResponseEntity<>(
+                    messageGenerator.getMessageErrorProperty(
+                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                            ConfigureErrors.SELECT_BAD.toString(),
+                            "changeCountOrderInCart",
+                            user.getLanguage()
+                    ),
+                    HttpStatus.BAD_REQUEST);
+        }
+    }
+
+
+    @ProveRole(nameRole = {Role.USER})
+    @GetMapping("/orders_user")
+    @ApiOperation(value = "Отображает корзину для покупателей или страницу продавца для работы с заказами пользователей.")
+    public ModelAndView showOrdersUser(
+            @ApiParam(value = "Выдергивает пользователя авторизованного") @AuthenticationPrincipal User user
+    ) {
+        ModelAndView mav = new ModelAndView();
+
+        user = userService.getUserById(user.getId());
+
+        List<Order> ordersUser = orderService.getOrderUser(user);
+
+        mav.setViewName("/pages/for_order/showOrdersUser");
+        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "showOrdersUser", mav);
+
+        mav.addObject("orderList", ordersUser);
+        mav.addObject("listReadbleStatus", orderService.createListReadbleStatusOrders(ordersUser));
+        mav.addObject("priceUser", this.getPriceWithAllOrder(ordersUser));
+
+        return mav;
+    }
+
+    private int getPriceWithAllOrder(List<Order> ordersUser) {
+        int price = 0;
+
+        for (Order order: ordersUser) {
+            price += orderService.calculetePriseForUser(order);
+        }
+        return price;
+    }
+
+    @PostMapping("/orders_user/delete/{idOrder}")
+    @ApiOperation(value = "Удалить заказ пользователя")
+    public ResponseEntity<String> deleteOrderUser(
+            @ApiParam(value = "Id заказа который удаляют.", required = true)  @PathVariable String idOrder,
+            @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user
+    ) throws OrderExeption {
+        orderService.deletePayOrder(Long.parseLong(idOrder), user.getId());
+        user = userService.getUserById(user.getId());
+
+        List<Order> orderListPay = orderService.getOrderUserPay(user);
+
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("cashUser", user.getCash());
+        jsonObject.put("priseOrders", this.getPriceWithAllOrder(orderListPay));
+
+        return new ResponseEntity<>(
+                JSONObject.quote(jsonObject.toString()),
+                HttpStatus.OK);
+    }
+
+    @PostMapping("/orders_user/show_product_in_order/{idOrder}")
+    @ApiOperation(value = "Отображает корзину для покупателей или страницу продавца для работы с заказами пользователей.")
+    public ModelAndView showOrdersUser(
+            @ApiParam(value = "Выдергивает пользователя авторизованного") @AuthenticationPrincipal User user,
+            @ApiParam(value = "??????????", required = true)  @PathVariable String idOrder
+    ) {
+        ModelAndView mav = new ModelAndView();
+
+        user = userService.getUserById(user.getId());
+
+        Order order = orderService.getOrderById(Long.parseLong(idOrder));
+
+        mav.setViewName("/pages/for_order/containerProductsInOrder");
+        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "navbar", mav);
+
+        mav.addObject("order", order);
+        this.constructPageCartUser(mav, order, user);
+
+        mav.addObject("priceOrder", orderService.calculetePriseForUser(order));
+
+        return mav;
+    }
+
+
+    @ProveRole(nameRole = {Role.SELLER})
+    @GetMapping("/cart/select_user/{idUser}")
+    @ApiOperation(value = "Отобразить данные пользователя выбранного продавцом.")
+    public ModelAndView showSelectUser(
+            @ApiParam(value = "Id выбранного пользователя.", required = true)  @PathVariable String idUser,
+            @ApiParam(value = "Выдергивает пользователя авторизованного") @AuthenticationPrincipal User user
+    ){
+        ModelAndView mav = new ModelAndView("/pages/for_order/selectUserCart");
+
+        user = userService.getUserById(user.getId());
+
+        ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "selectUserCart", mav);
+
+        User selectUser = userService.getUserById(Long.parseLong(idUser));
+        List<Order> ordersUser = orderService.getOrderUser(selectUser);
+
+        mav.addObject("user", selectUser);
+        mav.addObject("listStatus", ReadbleUtils.createListReadbleStatuses());
+        mav.addObject("orderList", ordersUser);
+        mav.addObject("listReadbleStatus", orderService.createListReadbleStatusOrders(ordersUser));
+        mav.addObject("priceUser", this.getPriceWithAllOrder(ordersUser));
+
+        return mav;
+    }
+
+    @PostMapping(value = "/cart/select_user/{idUser}/change_status", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ApiOperation(value = "Изменить статус сделанного заказа")
+    public ResponseEntity<String> changeStatusOrderForSelectUser(
+            @ApiParam(value = "Обновленный статус заказа.", required = true) @RequestBody  String stringJsonFromPage
+    ){
+        JSONObject jsonObject = new JSONObject(stringJsonFromPage);
+
+        if (orderService.updateStatusOrders(jsonObject.getLong("idOrder"), jsonObject.getString("newStatusOrder"))){
+
+            return new ResponseEntity<>(
+                    HttpStatus.OK);
+        }else {
+
+            return new ResponseEntity<>(
+                    HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping(value = "/cart/select_user/{idUser}/delete/{idOrder}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ApiOperation(value = "Удаление заказа пользователя продавцом.")
+    public ResponseEntity<String> sellerDeleteOrderUser(
+            @ApiParam(value = "Id удаляемого заказа.", required = true) @PathVariable String idOrder,
+            @ApiParam(value = "Id пользователя у которого удаляют заказ.", required = true) @PathVariable String idUser
+    ) {
+        User user = userService.getUserById(Long.parseLong(idUser));
+
+        try {
+            orderService.deletePayOrder(Long.parseLong(idOrder), user.getId());
+        } catch (OrderExeption orderExeption) {
+            return new ResponseEntity<>(
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        List<Order> orderListPay = orderService.getOrderUserPay(user);
+
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("cashUser", user.getCash());
+        jsonObject.put("priseOrders", this.getPriceWithAllOrder(orderListPay));
+
+        return new ResponseEntity<>(
+                JSONObject.quote(jsonObject.toString()),
+                HttpStatus.OK);
+    }
 
 }

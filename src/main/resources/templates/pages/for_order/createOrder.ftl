@@ -31,7 +31,7 @@
     </div>
 
     <#if productNotZero?has_content>
-        <form action="/order/add_product_in_cart/${product.id}" method="post">
+        <form action="/order/add_product_in_cart/#{product.id}" method="post">
 
             <div class="form-group row">
                 <label class="col-form-label">Выберите размер</label>
@@ -40,7 +40,7 @@
             <div class="form-group row">
                     <select class="custom-select col-sm-4" name="sizeProd" required>
                         <#list productNotZero as prodSize>
-                            <option value="${prodSize.sizeUser.id}"
+                            <option value="#{prodSize.sizeUser.id}"
                                     <#if selProd??><#if selProd.id == prodSize.sizeUser.id>selected</#if></#if>>
                                 ${prodSize.sizeUser.nameSize}
                             </option>

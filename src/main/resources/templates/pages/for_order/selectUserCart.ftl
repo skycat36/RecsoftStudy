@@ -1,7 +1,6 @@
 <#import "../../parts/common.ftl" as c>
 
 <@c.page>
-<form action="/order/cart/select_user/${user.id}" method="post">
     <div class="form-group row">
         <label class="col-form-label">${Customer_name_message} : <#if user??>${user.login}</#if></label>
     </div>
@@ -15,35 +14,34 @@
     <table class="table">
         <thead>
         <tr>
-            <th scope="col">${Name_message}</th>
+            <th scope="col">№ заказа</th>
             <th scope="col">${Address_message}</th>
-            <th scope="col">${Price_per_piece_message}</th>
-            <th scope="col">${Number_message}</th>
             <th scope="col">${Order_status_message}</th>
             <th scope="col"></th>
         </tr>
         </thead>
         <tbody>
         <#list orderList as order>
-        <tr id="order${order.id}">
-            <td>
-                <a href="/product/show_product/${order.product.id}">${order.product.name}</a>
-            </td>
-            <td>${order.adress}</td>
-            <td>${order.product.price}</td>
-            <td>${order.count}</td>
-            <td>
-                    <select class="custom-select col-sm-8" name="statusOrd[]" id="changeStatus${order.id}" onchange="ajaxPostChangeStatusProductUser(${order.id})">
-                    <#list listStatus as status>
-                        <option value="${status}" <#if (status == listReadbleStatus[order_index])>selected</#if>>${status}</option>
-                    </#list>
+            <tr id="order#{order.id}">
+                <#--!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!-->
+                <td>
+                    <form id="form#{order.id}" method="post" action="/order/orders_user/show_product_in_order/#{order.id}">
+                        <a href="#" class="text-primary" onclick="document.getElementById('form#{order.id}').submit();">#{order.id}</a>
+                        <input type="hidden" id="csrf" name="_csrf" value="${_csrf.token}" />
+                    </form>
+                </td>
+                <td>${order.adress}</td>
+                <td>
+                    <select class="custom-select col-sm-8" name="statusOrd[]" id="changeStatus#{order.id}" onchange="ajaxPostChangeStatusProductUser(#{order.id})">
+                        <#list listStatus as status>
+                            <option value="${status}" <#if (status == listReadbleStatus[order_index])>selected</#if>>${status}</option>
+                        </#list>
                     </select>
-            </td>
-
-            <td>
-                    <div class="col-sm-4"><button type="button" value="${order.id}" onclick="ajaxPostDeletePayOrderUser(${order.id})" class="btn btn-outline-primary">${Cancel_the_order_message}</div>
-            </td>
-        </tr>
+                </td>
+                <td>
+                    <div class="col-sm-4"><button type="button" value="#{order.id}" onclick="ajaxPostDeletePayOrderUser(#{order.id})" class="btn btn-outline-primary">${Cancel_the_order_message}</div>
+                </td>
+            </tr>
         </#list>
 
         </tbody>
@@ -59,7 +57,8 @@
         </#if>
     </div>
     <input type="hidden" id="csrf" name="_csrf" value="${_csrf.token}"/>
-</form>
+
+
 
     <script>
         function ajaxPostChangeStatusProductUser(idOrder) {
@@ -72,14 +71,14 @@
             $.ajax({
                 type: "POST",
                 contentType: "application/json",
-                url: window.location + "/change_status",
+                url: "/order/cart/select_user/" + #{user.id} + "/change_status",
                 data: JSON.stringify({'newStatusOrder' : newStatusOrder, 'idOrder' : idOrder}),
                 headers: {
                     "Accept": "application/json",
                     "Content-Type": "application/json",
                     'X-Csrf-Token': token
                 },
-                dataType: 'json',
+                //dataType: 'json',
                 success: function () {
                     console.log("ok");
                 },
@@ -96,7 +95,7 @@
             $.ajax({
                 type: "POST",
                 contentType: "application/json",
-                url: window.location + "/delete/" + idOrder,
+                url: "/order/cart/select_user/" + #{user.id} + "/delete/" + idOrder,
                 headers: {
                     "Accept": "application/json",
                     "Content-Type": "application/json",

@@ -95,11 +95,11 @@
 
         <div class="form-group row">
             <#if (user.role.name != 'user')>
-                <a type="button" class="btn btn-primary ml-4" <#if product??>href="/product/edit_product/${product.id}"</#if>>${Change_product_data_message}</a>
+                <a type="button" class="btn btn-primary ml-4" <#if product??>href="/product/edit_product/#{product.id}"</#if>>${Change_product_data_message}</a>
             </#if>
 
             <#if (user.role.name == 'user')>
-                <a type="button" class="btn btn-primary ml-2" <#if product??>href="/order/add_product_in_cart/${product.id}"</#if>>${Place_your_order_message}</a>
+                <a type="button" class="btn btn-primary ml-2" <#if product??>href="/order/add_product_in_cart/#{product.id}"</#if>>${Place_your_order_message}</a>
             </#if>
         </div>
         <input type="hidden" value="${_csrf.token}" name="_csrf">
@@ -109,7 +109,7 @@
          <h1><label class="col-ml-2 col-form-label">${Comments_message}</label></h1>
      </div>
 
-    <form action="/product/show_product/${product.id}/add_comment" method="post">
+    <form action="/product/show_product/#{product.id}/add_comment" method="post">
         <div class="form-group row">
             <label class="col-sm-2 col-form-label">${Leave_your_message} : </label>
             <div class="col-sm-3">

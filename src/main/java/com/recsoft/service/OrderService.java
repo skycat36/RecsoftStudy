@@ -117,6 +117,10 @@ public class OrderService {
         return prodSizeRepository.findByProductAndSizeUser(product.getId(), sizeUser.getId());
     }
 
+    public Order getOrderById(Long idOrder){
+        return orderRepository.getOne(idOrder);
+    }
+
     @ApiOperation(value = "Создать заказ")
     public void addProductInCart(
             @ApiParam(value = "Id выбранного продукта.", required = true) Long idProduct,
@@ -293,8 +297,6 @@ public class OrderService {
         if (orderProduct == null){
             throw new OrderExeption("Продукта в корзине с id " + idOrderProduct + " нет");
         }
-
-        SizeUser sizeUser = orderProduct.getSizeUser();
 
         ProdSize prodSize = prodSizeRepository.findByProductAndSizeUser(orderProduct.getProduct().getId(), orderProduct.getSizeUser().getId());
 

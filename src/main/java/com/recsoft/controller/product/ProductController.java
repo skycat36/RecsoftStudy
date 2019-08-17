@@ -141,7 +141,7 @@ public class ProductController {
 
         ModelAndView mav = new ModelAndView("/pages/for_product/showProduct");
 
-        idProduct = ControllerUtils.stringWithoutSpace(idProduct);
+        idProduct = idProduct;
 
         user = userService.getUserById(user.getId());
 
@@ -360,7 +360,7 @@ public class ProductController {
     private void constructPageActionWithProd(
             @ApiParam(value = "Категория продукта.", required = true) Long categoryProd,
             List<Integer> sizeUsersProd,
-            @ApiParam(value = "Модель хранящая параметры для передачи на экран.", required = true) ModelAndView mav) throws ProductExeption {
+            @ApiParam(value = "Модель хранящая параметры для передачи на экран.", required = true) ModelAndView mav) {
 
         Category category = productService.getCategoryById(categoryProd);
         List<ProdSize> prodSizeList = new ArrayList<>();
@@ -402,7 +402,7 @@ public class ProductController {
     ){
 
         try {
-            productService.changeCategoryProduct(Long.parseLong(idProduct), Long.parseLong(idCategory));
+            productService.changeCategoryProduct(Long.parseLong(idProduct), Long.parseLong(idCategory), user.getLanguage());
         } catch (ProductExeption productExeption) {
             return new ResponseEntity<>(
                     HttpStatus.BAD_REQUEST);
@@ -418,7 +418,7 @@ public class ProductController {
     public ModelAndView showAddProduct(
             @ApiParam(value = "Авторизированный пользователь системы.", required = true) @AuthenticationPrincipal User user,
             @RequestParam(required = false) Integer idCategoryProd
-    ) throws ProductExeption {
+    ) {
         ModelAndView mav = new ModelAndView("/pages/for_product/addProduct");
 
         user = userService.getUserById(user.getId());
@@ -447,7 +447,7 @@ public class ProductController {
             @ApiParam(value = "Категория выбранного продукта.", required = true) @RequestParam Long categoryProd,
             @ApiParam(value = "Размеры товара выбранного пользователем.", required = true) @RequestParam("sizeUsersProd[]") ArrayList<Integer> sizeUsersProd,
             @ApiParam(value = "Выбранные пользователем файлы картинок.", required = true) @RequestParam("file") List<MultipartFile> file
-    ) throws ProductExeption {
+    ) {
         Map<String, String> errors = new HashMap<>();
         ModelAndView mav = new ModelAndView("redirect:/product/product_list");
 
@@ -505,7 +505,6 @@ public class ProductController {
                 mav.addObject(ControllerUtils.constructError("message"), e.getMessage());
                 mav.addObject("product",product);
             }
-
         }else{
             mav.setViewName("/pages/for_product/addProduct");
             ControllerUtils.addNeedForLanguage(user, userService.getListNamesLanguage(), messageGenerator, "addProduct", mav);

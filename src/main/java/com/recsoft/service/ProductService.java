@@ -112,21 +112,12 @@ public class ProductService {
     @ApiOperation(value = "Вернуть продукт по ID")
     public Product getProductById(
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) String idProd){
-        Long idProduct = Long.parseLong(ControllerUtils.stringWithoutSpace(idProd));
+        Long idProduct = Long.parseLong(idProd);
         return productRepository.findById(idProduct).get();
     }
 
     @ApiOperation(value = "Вернуть список всех продуктов")
     public List<Product> getAllProduct(){
-//        List<Product> productList = productRepository.findAll();
-//        for (Product product: productList){
-//            Set<ProdSize> prodSizes = new HashSet<>();
-//            for (SizeUser sizeUser: product.getCategory().getSizeUsers()){
-//                prodSizes.add(new ProdSize(0, product, sizeUser));
-//            }
-//            product.setProdSizes(prodSizes);
-//            productRepository.save(product);
-//        }
         return productRepository.findAll();
     }
 
@@ -135,8 +126,6 @@ public class ProductService {
             @ApiParam(value = "Выдергивает пользователя авторизованного", required = true) Product product){
         return productRepository.findProductByName(product.getName()) != null;
     }
-
-
 
     @ApiOperation(value = "Вернуть список всех размеров.")
     public List<SizeUser> getAllSizeUser(){
@@ -163,7 +152,8 @@ public class ProductService {
             prodSizeRepository.saveAll(product.getProdSizes());
             log.info("Product with name " + product.getName() + " was added.");
         }else {
-            log.error("Product with name " + product.getName() + " don't added.");
+            log.error("Product with don't added.");
+            throw new ProductExeption("");
         }
     }
 
@@ -194,9 +184,23 @@ public class ProductService {
             List<SizeUser> sizeUserList = new ArrayList<>(product.getCategory().getSizeUsers());
             Collections.sort(sizeUserList);
 
-            for (int i = 0; i < sizeUserList.size(); i++) {
-                ProdSize prodSize = new ProdSize(countSizesProduct.get(i), product, sizeUserList.get(i));
-                prodSizes.add(prodSize);
+            if (countSizesProduct == null){
+                sizeUserList.forEach(e -> prodSizes.add(new ProdSize(0, product, e)));
+            }else {
+
+                if (sizeUserList.size() != countSizesProduct.size()){
+                    throw new ProductExeption(messageGenerator.getMessageErrorProperty(
+                            MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                            ConfigureErrors.SELECT_ENTITY_NOTHIN.toString(),
+                            "createRelationsForParamersProduct",
+                            language
+                    ));
+                }
+
+                for (int i = 0; i < sizeUserList.size(); i++) {
+                    ProdSize prodSize = new ProdSize(countSizesProduct.get(i), product, sizeUserList.get(i));
+                    prodSizes.add(prodSize);
+                }
             }
             product.setProdSizes(prodSizes);
         }
@@ -256,13 +260,18 @@ public class ProductService {
         log.info("Comment with Id " + userProdCom.getId() + " was added.");
     }
 
-    public void changeCategoryProduct(Long idProduct, Long idCategory) throws ProductExeption {
+    public void changeCategoryProduct(Long idProduct, Long idCategory, Language language) throws ProductExeption {
 
         Product product = this.getProductById(idProduct.toString());
         Category category = this.getCategoryById(idCategory);
 
         if (product == null || category == null) {
-            throw new ProductExeption("Продукта или категории не существует.");
+            throw new ProductExeption(messageGenerator.getMessageErrorProperty(
+                    MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                    ConfigureErrors.SELECT_CATEGORY.toString(),
+                    "createRelationsForParamersProduct",
+                    language
+            ));
         }
 
         prodSizeRepository.deleteAllByIdProduct(product.getId());
@@ -274,10 +283,8 @@ public class ProductService {
         List<SizeUser> sizeUserList = new ArrayList<>(product.getCategory().getSizeUsers());
         Collections.sort(sizeUserList);
 
-        for (int i = 0; i < sizeUserList.size(); i++) {
-            ProdSize prodSize = new ProdSize(0, product, sizeUserList.get(i));
-            prodSizes.add(prodSize);
-        }
+        sizeUserList.forEach(e -> prodSizes.add(new ProdSize(0, product, e)));
+
         product.setProdSizes(prodSizes);
 
         prodSizeRepository.saveAll(product.getProdSizes());
@@ -296,18 +303,33 @@ public class ProductService {
 
         for (Integer countSizes : countSizesProduct) {
             if (countSizes < 0) {
-                throw new ProductExeption("Количество продуктов не может быть меньше 0");
+                throw new ProductExeption(messageGenerator.getMessageErrorProperty(
+                        MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                        ConfigureErrors.COUNT_LESS_ZERO.toString(),
+                        "createRelationsForParamersProduct",
+                        language
+                ));
             }
         }
 
         Category category = categoryRepository.findById(idCategory).orElse(null);
 
         if (category == null) {
-            throw new ProductExeption("Категории товара не существует.");
+            throw new ProductExeption(messageGenerator.getMessageErrorProperty(
+                    MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                    ConfigureErrors.SELECT_CATEGORY.toString(),
+                    "createRelationsForParamersProduct",
+                    language
+            ));
         }
 
         if (category.getSizeUsers().size() != countSizesProduct.size()){
-            throw new ProductExeption("Количество продуктов сформировано неправильно.");
+            throw new ProductExeption(messageGenerator.getMessageErrorProperty(
+                    MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                    ConfigureErrors.COUNT_BEGER_THEN_THIS.toString(),
+                    "createRelationsForParamersProduct",
+                    language
+            ));
         }
 
         if (!productOld.getCategory().getId().equals(category.getId())){
@@ -323,7 +345,12 @@ public class ProductService {
         Collections.sort(prodSizeList);
         for (int i = 0; i < prodSizeList.size(); i++) {
             if (countSizesProduct.get(i) < 0) {
-                throw new ProductExeption("Количество продуктов не может быть меньше 0");
+                throw new ProductExeption(messageGenerator.getMessageErrorProperty(
+                        MessageGenerator.FAIL_WHIS_OTHER_ERROR,
+                        ConfigureErrors.COUNT_LESS_ZERO.toString(),
+                        "createRelationsForParamersProduct",
+                        language
+                ));
             }
             prodSizeList.get(i).setCount(countSizesProduct.get(i));
         }
@@ -335,23 +362,6 @@ public class ProductService {
         productOld.setName(productReal.getName());
         productRepository.save(productOld);
         log.info("Product with Id " + productReal.getId() + " was update.");
-    }
-
-    public List<ProdSize> getNewListProdSizeForProductWithSizes(Long idProduct, List<Integer> countSizesProduct) throws ProductExeption{
-        Product product = this.getProductById(idProduct.toString());
-
-        List<ProdSize> prodSizeList = new ArrayList<>(product.getProdSizes());
-        Collections.sort(prodSizeList);
-
-        if (prodSizeList.size() != countSizesProduct.size()){
-            throw new ProductExeption("Невозможно составить массив размеров для товара.");
-        }
-
-        for (int i=0; i < prodSizeList.size(); i++){
-            prodSizeList.get(i).setCount(countSizesProduct.get(i));
-        }
-
-        return prodSizeList;
     }
 
     public List<ProdSize> getRealProductWhatCountNotZero(Product product){

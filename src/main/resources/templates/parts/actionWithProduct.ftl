@@ -101,7 +101,7 @@
             <div class="col-sm-3">
                 <select class="custom-select" name="categoryProd" onchange="<#if isSave>selectWhatChangeCategory()<#else>selectWhatAddCategory()</#if>" id="selCateg" required>
                     <#list listCategory as category>
-                        <option value="${category.id}"
+                        <option value="#{category.id}"
                                 <#if categoryProd??><#if category.id == categoryProd>selected</#if></#if>>
                             ${category.name}
                         </option>
@@ -213,7 +213,7 @@
 
             var idCategory = document.getElementById("selCateg").value;
 
-            var idProduct<#if product??> = <#if product.id??>${product.id}</#if></#if>;
+            var idProduct<#if product??> = <#if product.id??>#{product.id}</#if></#if>;
 
             var token = document.getElementById("csrf").value;
 

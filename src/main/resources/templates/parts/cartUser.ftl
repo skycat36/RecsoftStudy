@@ -37,9 +37,9 @@
             <tbody>
             <#if productInCartList??>
                 <#list productInCartList as productInCart>
-                    <tr id="order${productInCart.id}">
+                    <tr id="order#{productInCart.id}">
                         <td>
-                            <a href="/product/show_product/${productInCart.product.id}">${productInCart.product.name}</a>
+                            <a href="/product/show_product/#{productInCart.product.id}">${productInCart.product.name}</a>
                         </td>
                         <#if isCart>
                             <td>${productInCart.order.adress}</td>
@@ -53,7 +53,7 @@
                             <#else>
                                 <div>
                                     <input  class="col-sm-3 form-control small"
-                                            type="number" id="countProduct${productInCart.id}" onchange="ajaxPostChangeCountProduct(${productInCart.id})" step="0" min="0"
+                                            type="number" id="countProduct#{productInCart.id}" onchange="ajaxPostChangeCountProduct(#{productInCart.id})" step="0" min="0"
                                             name="count_p[]" value="${productInCart.count}">
                                 </div>
 
@@ -67,9 +67,9 @@
                                 <#if isCart><#else></#if>
                                 <button type="button" formmethod="post"
                                         <#if isCart>
-                                            onclick="ajaxPostDeletePayOrder(${productInCart.id})"
+                                            onclick="ajaxPostDeletePayOrder(#{productInCart.id})"
                                         <#else>
-                                            onclick="ajaxPostDeleteNotPayOrder(${productInCart.id})"
+                                            onclick="ajaxPostDeleteNotPayOrder(#{productInCart.id})"
                                         </#if>
                                         class="btn btn-outline-primary">${Cancel_the_order_message}</button>
                             </div>
@@ -115,8 +115,9 @@
     </div>
 
     <script>
-        function ajaxPostChangeCountProduct(idOrder) {
-            var formData = document.getElementById("countProduct" + idOrder).value;
+        function ajaxPostChangeCountProduct(idOrderProduct) {
+            console.log(idOrderProduct);
+            var formData = document.getElementById("countProduct" + Number.parseInt(idOrderProduct)).value;
             var token = document.getElementById("csrf").value;
             console.log(token);
             console.log(formData);
@@ -125,7 +126,7 @@
             $.ajax({
                 type: "POST",
                 contentType: "application/json",
-                url: window.location + "/change_count_prod/" + idOrder,
+                url: window.location + "/change_count_prod/" + Number.parseInt(idOrderProduct),
                 data: formData,
                 headers: {
                     "Accept": "application/json",
@@ -134,7 +135,7 @@
                 },
                 dataType: 'json',
                 success: function (result) {
-                    var item = document.getElementById("countProduct" + idOrder);
+                    var item = document.getElementById("countProduct" + Number.parseInt(idOrderProduct));
                     item.classList.remove('is-invalid');
                     var data = JSON.parse(result);
                     item.value = data.newCountData;
@@ -143,28 +144,28 @@
                     console.log(data.newCountData + " look");
                 },
                 error: function (e) {
-                    var item = document.getElementById("countProduct" + idOrder);
+                    var item = document.getElementById("countProduct" + Number.parseInt(idOrderProduct));
                     item.classList.add('is-invalid');
                     console.log("ERROR: ", e);
                 }
             });
         }
 
-        function ajaxPostDeleteNotPayOrder(idOrder) {
+        function ajaxPostDeleteNotPayOrder(idOrderProduct) {
             var token = document.getElementById("csrf").value;
             console.log(token);
 
             $.ajax({
                 type: "POST",
                 contentType: "application/json",
-                url: window.location + "/delete_not_pay/" + idOrder,
+                url: window.location + "/delete_not_pay/" + idOrderProduct,
                 headers: {
                     "Accept": "application/json",
                     "Content-Type": "application/json",
                     'X-Csrf-Token': token
                 },
                 success: function (result) {
-                    var item = document.getElementById("order" + idOrder);
+                    var item = document.getElementById("order" + idOrderProduct);
                     var data = JSON.parse(result);
                     var priseOrd = document.getElementById("priseOrd");
                     if (data.priseOrders == 0) {
